@@ -10,6 +10,8 @@ You are setting up one project. The developer is involved the whole way: this is
 
 ## 1. Preconditions (fail hard)
 
+If a check fails because something is missing, follow "Setup gaps" in the orchestrator rules (one list, offer to run the safe steps) before writing a STOPPED report.
+
 - The working directory is inside a git repository (`git rev-parse --show-toplevel`). Work from its root.
 - The tracker CLI is installed and logged in: `gh` for GitHub, `glab` for GitLab (see step 3 for how to tell). Check `gh auth status` or `glab auth status`.
 
@@ -32,7 +34,7 @@ Look at the project, quickly:
 - `CLAUDE.md`, `AGENTS.md`, `README`, `docs/`; whether `docs/GLOSSARY.md` and `CHANGELOG.md` exist
 - the tracker: `git remote get-url origin` (github.com means GitHub and `gh`; a GitLab host means GitLab and `glab`; anything else: ask)
 - the default branch
-- skills available: `.claude/skills/*/SKILL.md` in the project, `~/.claude/skills/*/SKILL.md`, and skills inside installed plugins. Read each one's name and description only.
+- skills available: `.claude/skills/*/SKILL.md` in the project, `~/.claude/skills/*/SKILL.md`, and skills inside installed plugins. Read each one's name and description only, and note the absolute path of each `SKILL.md`; the config stores paths, not plugin names.
 
 ## 5. Propose, then confirm
 
@@ -40,11 +42,11 @@ Show a table of roles and the skills you suggest for each:
 
 | Role | Suggested skills |
 |---|---|
-| story-writer | glossary and project conventions |
+| task-writer | glossary and project conventions |
 | test-writer | language, testing libraries, project conventions |
 | implementer | language, framework (for example Android, Kotlin, Compose), project conventions |
 | reviewer | same as the implementer |
-| slice-reviewer | same as the implementer |
+| story-reviewer | same as the implementer |
 
 The implementer and both reviewers share a list on purpose: they judge by the same rules.
 
@@ -56,7 +58,7 @@ The developer may give paths to skills (local `SKILL.md` files, or skills for an
 
 Propose two commands from the build files. Do not run the full suite now.
 - `test_full`: the full unit-test command, for example `./gradlew testDebugUnitTest` (or `./gradlew test`, depending on the modules and variants).
-- `test_story`: the form that runs one test class, with `{class}` as the placeholder, for example `./gradlew :app:testDebugUnitTest --tests "{class}"`.
+- `test_task`: the form that runs one test class, with `{class}` as the placeholder, for example `./gradlew :app:testDebugUnitTest --tests "{class}"`.
 
 Say that these are proposals and that the first baseline check will exercise them. Never guess a command that the build files do not support. If there is no build tool you recognize, ask.
 
@@ -70,15 +72,15 @@ tracker: github | gitlab
 tracker_cli: gh | glab
 default_branch: <name>
 test_full: <command>
-test_story: <command with {class}>
+test_task: <command with {class}>
 
 skills:
-  common: [<name or absolute path to SKILL.md>, ...]
-  story-writer: [<in addition to common>]
+  common: [<absolute path to SKILL.md>, ...]
+  task-writer: [<in addition to common>]
   test-writer: [<in addition to common>]
   implementer: [<in addition to common>]
   reviewer: [<in addition to common>]
-  slice-reviewer: [<in addition to common>]
+  story-reviewer: [<in addition to common>]
 ```
 
 Put the shared list under `common` and only the differences under each role.

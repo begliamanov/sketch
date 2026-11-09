@@ -1,11 +1,11 @@
 # name|tools|model
 # One line per agent in core/agents/. The installer adds `tools` and `model` to the frontmatter.
 # model: inherit uses the session's model. Change a line, rerun install.sh.
-story-writer|Read, Grep, Glob, Bash, Write, Edit|inherit
+task-writer|Read, Grep, Glob, Bash, Write, Edit|inherit
 test-writer|Read, Grep, Glob, Bash, Write, Edit|inherit
 implementer|Read, Grep, Glob, Bash, Write, Edit|inherit
 reviewer|Read, Grep, Glob, Bash|inherit
-slice-reviewer|Read, Grep, Glob, Bash|opus
+story-reviewer|Read, Grep, Glob, Bash|opus
 tester|Read, Grep, Glob, Bash|inherit
 pr-agent|Read, Grep, Glob, Bash, Edit|inherit
 drift-notetaker|Read, Bash|inherit
