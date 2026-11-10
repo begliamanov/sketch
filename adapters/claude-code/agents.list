@@ -4,7 +4,7 @@
 task-writer|Read, Grep, Glob, Bash, Write, Edit|inherit
 test-writer|Read, Grep, Glob, Bash, Write, Edit|inherit
 implementer|Read, Grep, Glob, Bash, Write, Edit|inherit
-reviewer|Read, Grep, Glob, Bash|inherit
+task-reviewer|Read, Grep, Glob, Bash|inherit
 story-reviewer|Read, Grep, Glob, Bash|opus
 tester|Read, Grep, Glob, Bash|inherit
 pr-agent|Read, Grep, Glob, Bash, Edit|inherit

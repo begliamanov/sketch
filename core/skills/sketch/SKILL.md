@@ -1,6 +1,6 @@
 ---
 name: sketch
-description: Starts a story. Does a very light check whether something like the idea already exists, lets the developer explain, then leads like a senior developer: proposes the next story, asks only what is unclear for it, and plays back its understanding. Saves the sketch, the story brief and glossary proposals. Usage - /sketch <idea> [--skill <path-to-SKILL.md>].
+description: Starts a story. Does a very light check whether something like the idea already exists, lets the developer explain, then leads like a senior developer. It proposes the next story, asks only what is unclear for it, and plays back its understanding. Saves the sketch, the story brief and glossary proposals. Usage - /sketch <idea> [--skill <path-to-SKILL.md>].
 disable-model-invocation: true
 ---
 

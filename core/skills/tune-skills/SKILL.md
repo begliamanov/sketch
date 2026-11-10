@@ -45,7 +45,7 @@ Show a table of roles and the skills you suggest for each:
 | task-writer | glossary and project conventions |
 | test-writer | language, testing libraries, project conventions |
 | implementer | language, framework (for example Android, Kotlin, Compose), project conventions |
-| reviewer | same as the implementer |
+| task-reviewer | same as the implementer |
 | story-reviewer | same as the implementer |
 
 The implementer and both reviewers share a list on purpose: they judge by the same rules.
@@ -79,7 +79,7 @@ skills:
   task-writer: [<in addition to common>]
   test-writer: [<in addition to common>]
   implementer: [<in addition to common>]
-  reviewer: [<in addition to common>]
+  task-reviewer: [<in addition to common>]
   story-reviewer: [<in addition to common>]
 ```
 
