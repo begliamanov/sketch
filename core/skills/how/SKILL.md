@@ -18,6 +18,8 @@ If the answer is not in them, say so plainly. Do not guess how the system behave
 
 ## No question: overview and where you are
 
+Start with one line: `sketch {{VERSION}}`.
+
 1. Show the flow in a few lines:
 
 ```
@@ -37,6 +39,8 @@ If the answer is not in them, say so plainly. Do not guess how the system behave
 3. Mention that `/how <question>` answers questions, with two or three example questions.
 
 ## A question
+
+If the question is about the version ("/how which version"), answer `sketch {{VERSION}}`.
 
 Answer it directly, then point to the file it comes from. Typical questions:
 - **What a command does** ("how does /stop work"): from that command's `SKILL.md`, in a few steps.
