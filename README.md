@@ -4,6 +4,8 @@ You talk. Agents build. You merge.
 
 Sketch turns a feature into **stories**: thin end-to-end pieces that work for real through every layer, like a slice of cake (screen, logic, storage), each big enough to be worth your review. (*The Pragmatic Programmer* calls this a tracer bullet.) For each story, agents write the tests first, implement, review their own work, and open a PR into your feature branch. Then they stop and wait for you. **No agent ever merges.**
 
+Version: **0.0.1** (see `VERSION` and `CHANGELOG.md`).
+
 > Status: designed and written, **not yet run end to end**. The Claude Code adapter installs cleanly. Everything else is marked *unverified* below.
 
 ---
@@ -29,7 +31,7 @@ Lost? `/how`.
 
 ## Setup
 
-The system is plain Markdown in `core/`. A harness adapter copies it to where the harness looks and fills in two placeholders: `{{CORE}}` becomes the path of a filled-in copy of `core/` (so files that point to each other resolve), and `{{CORE_SOURCE}}` the path of the repo's `core/` (used by `/retro`, which edits the source).
+The system is plain Markdown in `core/`. A harness adapter copies it to where the harness looks and fills in three placeholders: `{{CORE}}` becomes the path of a filled-in copy of `core/` (so files that point to each other resolve), `{{CORE_SOURCE}}` the path of the repo's `core/` (used by `/retro`, which edits the source), and `{{VERSION}}` the contents of `VERSION`.
 
 | Harness | Adapter | Status |
 |---|---|---|
