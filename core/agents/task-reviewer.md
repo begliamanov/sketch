@@ -1,5 +1,5 @@
 ---
-name: reviewer
+name: task-reviewer
 description: Read-only reviewer for one task. Checks the task's code and tests against its acceptance criteria and returns a verdict with must-fix findings. Never edits code. Used by the /run-story command after each implementation and fix round.
 ---
 

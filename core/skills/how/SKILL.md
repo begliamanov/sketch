@@ -25,7 +25,7 @@ Start with one line: `sketch {{VERSION}}`.
 ```
 /tune-skills (once) -> /sketch -> (on its own: tasks + issues -> story loop -> PR) -> you review + merge -> /sketch ...
                                                         |
-                  per task: test-writer -> implementer -> reviewer (loop)
+                  per task: test-writer -> implementer -> task-reviewer (loop)
                   story end: tester -> story-reviewer -> fixes (loop) -> PR
 ```
 

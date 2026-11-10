@@ -157,10 +157,10 @@ per task, one at a time, in blocking order
  │      ▼                                                       │
  │ implementer   code until green (never touches tests) t-N: ...
  │      ▼                                                       │
- │ reviewer      read-only: criteria covered? tests untouched?  │
+ │ task-reviewer read-only: criteria covered? tests untouched?  │
  │      │        changelog? scope? proof for every must-fix     │
  │      ├─ SATISFIED ───────────────────────────► done          │
- │      └─ CHANGES NEEDED → fresh implementer → fresh reviewer  │
+ │      └─ CHANGES NEEDED → new implementer → new task-reviewer │
  │                          (max 2 rounds, then FLAG and move on)
  └──────────────────────────────────────────────────────────────┘
 
@@ -250,7 +250,7 @@ Read-only helper. It never changes a file, runs tests, or touches git or the tra
 
 /tune-skills (once) -> /sketch -> (on its own: tasks + issues -> story loop -> PR) -> you review + merge -> /sketch ...
                                                         |
-                  per task: test-writer -> implementer -> reviewer (loop)
+                  per task: test-writer -> implementer -> task-reviewer (loop)
                   story end: tester -> story-reviewer -> fixes (loop) -> PR
 
 You are here: story 2 "Offline notes list", stopped (manual: "end of day"),
@@ -295,7 +295,7 @@ If the answer isn't in the docs, it says so instead of guessing.
 | task-writer | no | splits the brief into tasks, creates issues |
 | test-writer | tests only | complete red test set per task; re-checks disputed tests |
 | implementer | yes | makes tests green, fixes findings, never edits tests |
-| reviewer | **read-only** | per task, against the criteria |
+| task-reviewer | **read-only** | per task, against the criteria |
 | story-reviewer | **read-only** | whole story diff, Opus |
 | tester | no | runs commands, keeps raw logs, PASS / FAIL / CANNOT RUN |
 | pr-agent | no | pushes the story branch, opens the PR |

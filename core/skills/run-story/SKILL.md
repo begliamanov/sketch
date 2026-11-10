@@ -1,6 +1,6 @@
 ---
 name: run-story
-description: Runs the implementation loop for the current story. Baseline check, then for each task the test-writer, implementer and reviewer, then the full suite and the story-end review with a fix loop, then opens the story PR into the feature branch. Never merges.
+description: Runs the implementation loop for the current story. Baseline check, then for each task the test-writer, implementer and task-reviewer, then the full suite and the story-end review with a fix loop, then opens the story PR into the feature branch. Never merges.
 disable-model-invocation: true
 ---
 
@@ -40,9 +40,9 @@ For each task, update the state after every step, check for `/pause` and `/stop`
 - If it reports a conflict with an **earlier task's** test, flag the task: "conflicts with <id>'s test". That is a decision for the developer.
 - At 3 attempts, or the same failure twice in a row, flag the task.
 
-**c. Review.** Run `reviewer`. Set `status: in-review`.
+**c. Review.** Run `task-reviewer`. Set `status: in-review`.
 - `SATISFIED`: set `status: done`. Journal a REVIEW line if there were nice-to-have items.
-- `CHANGES NEEDED`: if `review_rounds` is below 2, run a **fresh** `implementer` in mode `fix` with the must-fix findings quoted verbatim, then a **fresh** `reviewer`. If the same finding comes back unchanged, or the cap is reached, flag the task with the unresolved must-fix findings, and journal a CAP line.
+- `CHANGES NEEDED`: if `review_rounds` is below 2, run a **fresh** `implementer` in mode `fix` with the must-fix findings quoted verbatim, then a **fresh** `task-reviewer`. If the same finding comes back unchanged, or the cap is reached, flag the task with the unresolved must-fix findings, and journal a CAP line.
 
 **d. Assumptions.** Read the implementer's report. Any assumption that differs from the story brief goes to the journal as ASSUME.
 
