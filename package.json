@@ -1,0 +1,11 @@
+{
+  "name": "sketch",
+  "version": "0.1.0",
+  "description": "Sketch: stories, tasks and a review loop that never merges.",
+  "type": "module",
+  "keywords": ["pi-package"],
+  "license": "UNLICENSED",
+  "pi": {
+    "extensions": ["./adapters/pi/extensions"]
+  }
+}

@@ -4,9 +4,9 @@ You talk. Agents build. You merge.
 
 Sketch turns a feature into **stories**: thin end-to-end pieces that work for real through every layer, like a slice of cake (screen, logic, storage), each big enough to be worth your review. (*The Pragmatic Programmer* calls this a tracer bullet.) For each story, agents write the tests first, implement, review their own work, and open a PR into your feature branch. Then they stop and wait for you. **No agent ever merges.**
 
-Version: **0.0.1** (see `VERSION` and `CHANGELOG.md`).
+Version: **0.1.0** (see `VERSION` and `CHANGELOG.md`).
 
-> Status: designed and written, **not yet run end to end**. The Claude Code adapter installs cleanly. Everything else is marked *unverified* below.
+> Status: **run end to end in Claude Code**. The Pi adapter syncs but the loop has not been run on it yet. Everything else is marked *unverified* below.
 
 ---
 
@@ -35,8 +35,8 @@ The system is plain Markdown in `core/`. A harness adapter copies it to where th
 
 | Harness | Adapter | Status |
 |---|---|---|
-| Claude Code | `adapters/claude-code/` | Installs. Loop not run yet. |
-| Pi | none yet | Unverified |
+| Claude Code | `adapters/claude-code/` | Installs. Loop run end to end. |
+| Pi | `adapters/pi/` | Syncs. Loop not run yet. |
 | Cline | none yet | Unverified |
 | GitHub Copilot (VS Code) | none yet | Unverified |
 | Anything else | none yet | See "Writing an adapter" |
@@ -62,17 +62,23 @@ adapters/claude-code/install.sh uninstall    # remove only what it generated
 
 Details and known limits: [`adapters/claude-code/README.md`](adapters/claude-code/README.md).
 
-### Pi *(unverified)*
+### Pi
 
-No adapter yet. What a Pi adapter would map, from what Pi documents (check against your version):
+Sketch is a Pi package: `package.json` at the repo root loads the `/sketch-sync` extension from `adapters/pi/extensions/`. Pi has no built-in subagents, so you also need the `pi-subagents` package, which reads the agents that `/sketch-sync` copies.
+
+1. Install the package: `pi install <path to this repo>` (or `pi install git:github.com/begliamanov/sketch`).
+2. In Pi, run `/sketch-sync`, then `/reload`.
+3. Run the commands as skills: `/skill:tune-skills` once per project, then `/skill:sketch <idea>`.
 
 | Sketch | Pi |
 |---|---|
-| `core/skills/<name>/SKILL.md` (commands) | prompt templates (`~/.pi/agent/prompts/<name>.md`) or skills (`~/.pi/agent/skills/`) |
-| `core/agents/*.md` (subagents) | Pi has no built-in subagents. You need an extension or package that adds them |
-| `settings.snippet.json` deny list | needs an extension that blocks commands. Prompts alone are not a guardrail |
+| `core/skills/<name>/SKILL.md` | `~/.pi/agent/skills/<name>/SKILL.md` |
+| `core/agents/*.md` | `~/.pi/agent/agents/<name>.md`, with `tools` and `model` added from `adapters/pi/agents.list` |
+| `core/` (shared docs) | `~/.pi/agent/sketch/core/`, with the placeholders filled in |
 
-Open question from the design notes: does the pi-pstack package already provide subagents we can reuse?
+- Update: pull the repo, run `/sketch-sync`, then `/reload`. Remove: `/sketch-sync remove`, then `/reload`. A manifest at `~/.pi/agent/sketch/manifest.json` lists what was written. The sync never overwrites a file it did not create, and stops with a message instead.
+- Models: set per agent in `adapters/pi/agents.list` (`inherit` uses your session's model). Only `story-reviewer` is pinned.
+- Not built: the command deny-list guard. Prompts alone are not a guardrail, so enforce denials with a permission package such as `pi-permission-system`.
 
 ### Cline *(unverified)*
 
@@ -326,7 +332,7 @@ sketch/                         this repo
 
 ## Known gaps
 
-- Never run end to end. First-run checklist: [`adapters/claude-code/README.md`](adapters/claude-code/README.md#not-verified).
+- Run end to end only in Claude Code, not on Pi yet. Checklist for anything not yet confirmed: [`adapters/claude-code/README.md`](adapters/claude-code/README.md#not-verified).
 - `gh` sub-issues and blocking links: untested. `glab`: tested by hand.
-- No adapters for Pi, Cline or Copilot yet.
+- No adapters for Cline or Copilot yet.
 - Why each decision was made: [`docs/design-notes.md`](docs/design-notes.md).

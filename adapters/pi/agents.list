@@ -1,0 +1,13 @@
+# name|tools|model
+# One line per agent in core/agents/. /sketch-sync adds `tools` and `model` to the frontmatter.
+# tools: Pi tool names, comma separated. The reviewers have no write or edit tool.
+# model: inherit uses the session's model; otherwise provider/id. Change a line, run /sketch-sync.
+task-writer|read, grep, find, ls, bash, write, edit|inherit
+test-writer|read, grep, find, ls, bash, write, edit|inherit
+implementer|read, grep, find, ls, bash, write, edit|inherit
+task-reviewer|read, grep, find, ls, bash|inherit
+story-reviewer|read, grep, find, ls, bash|github-copilot/claude-opus-5.5
+tester|read, grep, find, ls, bash|inherit
+pr-agent|read, grep, find, ls, bash, edit|inherit
+drift-notetaker|read, bash|inherit
+retro-agent|read, grep, find, ls, bash, write|inherit
