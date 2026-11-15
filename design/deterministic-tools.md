@@ -95,6 +95,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | `tests` agreed: `run`, `failures`, `classify`, `summary`, `expect-red`, `skipped-diff`, `failures-diff`. `logs-old` dropped for now. Needs `test_format` config key. |
 | 2026-11-15 | `repo-check tree-clean` agreed: build. Untracked files count as dirty. |
 | 2026-11-15 | `repo-check changelog` agreed: build. Input is the piped diff of `CHANGELOG.md`. |
 | 2026-11-15 | `repo-check tests-unchanged` agreed: build. New config key for the test-file pattern; `/tune-skills` must ask for it. |
@@ -118,14 +119,14 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit; reads changed file names from stdin, test pattern via `--tests` | **agreed**: build; needs a new `config.md` key for the test-file pattern (`/tune-skills` must ask for it) |
 | `repo-check` | `changelog` | One new `CHANGELOG.md` line under Unreleased ending in `(#issue)`; reads the diff from stdin, issue via `--issue` | **agreed**: build; must handle this repo's CHANGELOG heading format |
 | `repo-check` | `tree-clean` | OK or list dirty files (untracked included) from `git status --porcelain` on stdin | **agreed**: build; one definition of "clean" for `run-story`, `resume-story`, `pause`, `stop` and the post-agent check |
-| `tests` | `run` | Run the configured test command once, keep the full log, print exit code, log path, branch, SHA | proposed (asked) |
-| `tests` | `failures` | List failing test names and first lines of each message from a raw log | proposed |
-| `tests` | `classify` | PASS / FAIL / CANNOT RUN / UNKNOWN from exit code and log; UNKNOWN goes to an LLM | proposed |
-| `tests` | `summary` | Counts of passed, failed, skipped tests | proposed |
-| `tests` | `expect-red` | Given a task's test names: each ran and failed, none passed; assertion failure vs compile/import error | proposed |
-| `tests` | `skipped-diff` | Compare skipped/disabled counts between two logs | proposed |
-| `tests` | `failures-diff` | Same failing tests in two runs? ("same failure twice" rule) | proposed |
-| `tests` | `logs-old` | List logs older than N stories, deletes nothing | proposed (recommend later) |
+| `tests` | `run` | Run the configured test command once, keep the full log, print exit code, log path, branch, SHA | **agreed**: build |
+| `tests` | `failures` | List failing test names and first lines of each message from a raw log | **agreed**: build |
+| `tests` | `classify` | PASS / FAIL / CANNOT RUN / UNKNOWN from exit code and log; UNKNOWN goes to an LLM | **agreed**: build |
+| `tests` | `summary` | Counts of passed, failed, skipped tests | **agreed**: build |
+| `tests` | `expect-red` | Given a task's test names: each ran and failed, none passed; assertion failure vs compile/import error | **agreed**: build |
+| `tests` | `skipped-diff` | Compare skipped/disabled counts between two logs | **agreed**: build |
+| `tests` | `failures-diff` | Same failing tests in two runs? ("same failure twice" rule) | **agreed**: build |
+| `tests` | `logs-old` | List logs older than N stories, deletes nothing | **rejected** for now (cleanup can wait until logs hurt) |
 | `plan` | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | proposed |
 | `plan` | `tasks-order` | Run order, skipping tasks blocked by a flagged one | proposed |
 | `plan` | `config-check` | `config.md` has every key, every skill path exists | proposed |
