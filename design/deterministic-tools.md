@@ -15,7 +15,7 @@ Use deterministic tools (scripts, hooks, CLI) wherever a step does not need judg
 
 ## Principles (from the developer)
 
-- **Tools, plural.** Many small tools, each does one thing and does it perfectly. No toolbox CLI with subcommands. (agreed)
+- **Tools, plural.** One tool per domain (a file or a concern), each does that one thing perfectly, with subcommands for its features. No single toolbox CLI for everything. (agreed, revised)
 - **No dependencies on anything outside.** Definition below is still open (Q5). (agreed in spirit)
 - The tool list must be reworked so every entry is a single-purpose tool. The tier tables below are the first draft and several entries (`preflight`, `reconcile`, `pr`, `test`, `issues publish`) are too big and must be split. (agreed)
 
@@ -24,7 +24,7 @@ Use deterministic tools (scripts, hooks, CLI) wherever a step does not need judg
 | # | Question | Status |
 |---|---|---|
 | Q1 | Implementation language: bash, or one dependency-free Python script? (Install script is already bash; harness-neutral either way.) | open |
-| Q2 | One CLI or separate tools? | **decided: separate tools**, one job each |
+| Q2 | One CLI or separate tools? | **decided: one tool per domain**, with subcommands (revised 2026-11-15; first said separate single-job tools) |
 | Q3 | Do agent reports get a small structured footer (verdict, findings as a list) so tools can read them? | open |
 | Q5 | What counts as "outside"? Strict: a tool only sees args, stdin and named files, so git and `gh` output is piped in by the orchestrator. Pragmatic: git and the filesystem are allowed, the network and the tracker are not. | open (asked first) |
 | Q4 | Where does the CLI live and how do adapters install it (`core/bin/`, copied by `install.sh`)? | open |
@@ -92,54 +92,29 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
 | 2026-11-15 | Tool 3 `state-bump` agreed: build. Cannot touch anything except counters; `state-set` cannot touch counters. Distinct exit code 2 at cap. |
-| 2026-11-15 | Tools are grouped by purpose (folder per group, e.g. `state/`), but each tool still does one job. Not merged. |
+| 2026-11-15 | Revised: related functions are merged into one tool per domain with subcommands (`state set/bump/check`). Replaces the grouped-folders idea and the first Q2 answer. Rules inside a tool stay strict: `set` refuses counters, `bump` touches only counters. |
 | 2026-11-15 | Tools are many and single-purpose, no `sketch` CLI with subcommands (Q2). Tools must not depend on anything outside; exact meaning is Q5. |
 
-## Tool list v2 (single-purpose, grouped by purpose, decided one by one)
+## Tool list v3 (one tool per domain, subcommands, decided one by one)
 
-Replaces the tier tables above once every item has a decision. Groups are folders; each tool does one job. Status: proposed / agreed / rejected.
+Replaces the tier tables above. Status: proposed / agreed / rejected.
 
-### journal/
-| # | Tool | One job | Status |
+| Tool | Subcommand | One job | Status |
 |---|---|---|---|
-| 1 | `journal-add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**: build tool, delete agent |
-
-### state/
-| # | Tool | One job | Status |
-|---|---|---|---|
-| 2 | `state-set` | Set one field in `state.md`, reject values outside the schema (not counters) | **agreed**: build |
-| 3 | `state-bump` | Increase one counter, refuse to pass the cap (exit code 2); touches nothing else | **agreed**: build |
-| 4 | `state-check` | Check `state.md` is valid | proposed |
-
-### git-checks/
-| # | Tool | One job | Status |
-|---|---|---|---|
-| 5 | `commit-prefix-check` | Flag commit subjects without `t-N:` or `story-N:` | proposed |
-| 6 | `tests-unchanged` | Fail if a test file changed since the red-test commit | proposed |
-| 7 | `changelog-check` | One new `CHANGELOG.md` line ending in `(#issue)` | proposed |
-| 8 | `tree-clean-check` | OK or list dirty files from `git status` output | proposed |
-
-### tests/
-| # | Tool | One job | Status |
-|---|---|---|---|
-| 9 | `run-logged` | Run the test command once, keep the full log, print exit code and log path | proposed |
-| 10 | `test-failures` | List failing test names from a raw log | proposed |
-
-### planning/
-| # | Tool | One job | Status |
-|---|---|---|---|
-| 11 | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | proposed |
-| 12 | `tasks-order` | Run order, skipping tasks blocked by a flagged one | proposed |
-| 13 | `config-check` | `config.md` has every key, every skill path exists | proposed |
-
-### pr-and-guards/
-| # | Tool | One job | Status |
-|---|---|---|---|
-| 14 | `pr-body-render` | Fill the PR template, enforce 20 lines and verbatim flags | proposed |
-| 15 | `pr-base-check` | PR base equals the feature branch, from `gh pr view` JSON | proposed |
-| 16 | `push-guard` | Deny push to feature/main, force-push, merge, issue close (hook) | proposed |
-
-### reports/
-| # | Tool | One job | Status |
-|---|---|---|---|
-| 17 | `report-check` | Agent report has its required parts | proposed |
+| `journal` | `add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**: build tool, delete agent |
+| `state` | `set` | Set one field in `state.md`, reject values outside the schema (not counters) | **agreed** |
+| `state` | `bump` | Increase one counter, refuse to pass the cap (exit code 2); touches nothing else | **agreed** |
+| `state` | `check` | Check `state.md` is valid, report every problem | proposed (asked next) |
+| `repo-check` | `commit-prefix` | Flag commit subjects without `t-N:` or `story-N:` | proposed |
+| `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit | proposed |
+| `repo-check` | `changelog` | One new `CHANGELOG.md` line ending in `(#issue)` | proposed |
+| `repo-check` | `tree-clean` | OK or list dirty files from `git status` output | proposed |
+| `tests` | `run` | Run the test command once, keep the full log, print exit code and log path | proposed |
+| `tests` | `failures` | List failing test names from a raw log | proposed |
+| `plan` | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | proposed |
+| `plan` | `tasks-order` | Run order, skipping tasks blocked by a flagged one | proposed |
+| `plan` | `config-check` | `config.md` has every key, every skill path exists | proposed |
+| `pr` | `render-body` | Fill the PR template, enforce 20 lines and verbatim flags | proposed |
+| `pr` | `check-base` | PR base equals the feature branch, from `gh pr view` JSON | proposed |
+| `guard` | (hook) | Deny push to feature/main, force-push, merge, issue close; runs as a Claude Code hook, so kept apart | proposed |
+| `report-check` | (none) | Agent report has its required parts | proposed |
