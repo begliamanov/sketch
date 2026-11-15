@@ -91,6 +91,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | `repo-check tree-clean` agreed: build. Untracked files count as dirty. |
 | 2026-11-15 | `repo-check changelog` agreed: build. Input is the piped diff of `CHANGELOG.md`. |
 | 2026-11-15 | `repo-check tests-unchanged` agreed: build. New config key for the test-file pattern; `/tune-skills` must ask for it. |
 | 2026-11-15 | `repo-check commit-prefix` agreed: build. Input is piped in (`git log --format=%s`), the tool never runs git. |
@@ -112,7 +113,7 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `repo-check` | `commit-prefix` | Flag commit subjects without `t-N:` or `story-N:` (`--task t-N` requires that prefix; `[wip]` passes); reads subjects from stdin, never runs git | **agreed**: build |
 | `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit; reads changed file names from stdin, test pattern via `--tests` | **agreed**: build; needs a new `config.md` key for the test-file pattern (`/tune-skills` must ask for it) |
 | `repo-check` | `changelog` | One new `CHANGELOG.md` line under Unreleased ending in `(#issue)`; reads the diff from stdin, issue via `--issue` | **agreed**: build; must handle this repo's CHANGELOG heading format |
-| `repo-check` | `tree-clean` | OK or list dirty files from `git status` output | proposed |
+| `repo-check` | `tree-clean` | OK or list dirty files (untracked included) from `git status --porcelain` on stdin | **agreed**: build; one definition of "clean" for `run-story`, `resume-story`, `pause`, `stop` and the post-agent check |
 | `tests` | `run` | Run the test command once, keep the full log, print exit code and log path | proposed |
 | `tests` | `failures` | List failing test names from a raw log | proposed |
 | `plan` | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | proposed |
