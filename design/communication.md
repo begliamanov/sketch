@@ -31,6 +31,10 @@ Last updated: 2026-11-15
 - If a choice is cheap to reverse, pick a default and list it as an assumption instead of asking.
 - After the developer answers, update the notes file (status, decision log), then bring up the next open item.
 
+## Decisions on a tool or option
+
+- Show the advantages up front, with the question: what the developer gains, and what it costs. Do not wait to be asked "what do I get from this". Show a concrete example of what it does.
+
 ## Discussion-only sessions
 
 - When the developer says "we just talk, don't implement anything", write nothing except the notes files they asked for. No code, no scaffolding.
