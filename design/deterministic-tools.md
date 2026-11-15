@@ -13,13 +13,20 @@ Last updated: 2026-11-15
 
 Use deterministic tools (scripts, hooks, CLI) wherever a step does not need judgment, so that Sketch is cheaper, repeatable, and fails loudly instead of drifting. Today an LLM does many mechanical jobs: editing the state table, formatting journal lines, checking commit prefixes, running `gh` commands. The LLM stays for judgment only: slicing stories into tasks, writing tests, implementing, reviewing against criteria, the retro.
 
+## Principles (from the developer)
+
+- **Tools, plural.** Many small tools, each does one thing and does it perfectly. No toolbox CLI with subcommands. (agreed)
+- **No dependencies on anything outside.** Definition below is still open (Q5). (agreed in spirit)
+- The tool list must be reworked so every entry is a single-purpose tool. The tier tables below are the first draft and several entries (`preflight`, `reconcile`, `pr`, `test`, `issues publish`) are too big and must be split. (agreed)
+
 ## Open questions
 
 | # | Question | Status |
 |---|---|---|
 | Q1 | Implementation language: bash, or one dependency-free Python script? (Install script is already bash; harness-neutral either way.) | open |
-| Q2 | One CLI `sketch <subcommand>`, or separate scripts? (Proposal: one CLI.) | open |
+| Q2 | One CLI or separate tools? | **decided: separate tools**, one job each |
 | Q3 | Do agent reports get a small structured footer (verdict, findings as a list) so tools can read them? | open |
+| Q5 | What counts as "outside"? Strict: a tool only sees args, stdin and named files, so git and `gh` output is piped in by the orchestrator. Pragmatic: git and the filesystem are allowed, the network and the tracker are not. | open (asked first) |
 | Q4 | Where does the CLI live and how do adapters install it (`core/bin/`, copied by `install.sh`)? | open |
 
 ## Tier 1: replace purely mechanical LLM work
@@ -82,3 +89,4 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | Date | Decision |
 |---|---|
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
+| 2026-11-15 | Tools are many and single-purpose, no `sketch` CLI with subcommands (Q2). Tools must not depend on anything outside; exact meaning is Q5. |
