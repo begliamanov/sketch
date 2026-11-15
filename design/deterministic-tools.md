@@ -91,6 +91,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | `state check` agreed: build. Shares the schema with `set` and `bump`. |
 | 2026-11-15 | Tool 3 `state-bump` agreed: build. Cannot touch anything except counters; `state-set` cannot touch counters. Distinct exit code 2 at cap. |
 | 2026-11-15 | Revised: related functions are merged into one tool per domain with subcommands (`state set/bump/check`). Replaces the grouped-folders idea and the first Q2 answer. Rules inside a tool stay strict: `set` refuses counters, `bump` touches only counters. |
 | 2026-11-15 | Tools are many and single-purpose, no `sketch` CLI with subcommands (Q2). Tools must not depend on anything outside; exact meaning is Q5. |
@@ -104,7 +105,7 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `journal` | `add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**: build tool, delete agent |
 | `state` | `set` | Set one field in `state.md`, reject values outside the schema (not counters) | **agreed** |
 | `state` | `bump` | Increase one counter, refuse to pass the cap (exit code 2); touches nothing else | **agreed** |
-| `state` | `check` | Check `state.md` is valid, report every problem | proposed (asked next) |
+| `state` | `check` | Check `state.md` is valid, report every problem | **agreed**: build |
 | `repo-check` | `commit-prefix` | Flag commit subjects without `t-N:` or `story-N:` | proposed |
 | `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit | proposed |
 | `repo-check` | `changelog` | One new `CHANGELOG.md` line ending in `(#issue)` | proposed |
