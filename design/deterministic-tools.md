@@ -21,7 +21,7 @@ Use deterministic tools (scripts, hooks, CLI) wherever a step does not need judg
 
 ## Engineering requirements
 
-From the developer (agreed): written in Python; well structured; easy to extend and change later; configurable; follows best practices.
+From the developer (agreed): written in Python; well structured; easy to extend and change later; configurable; follows best practices; **tests are written first, before the implementation** (red tests, then code that makes them pass, the same contract Sketch uses for its own tasks).
 
 My concrete proposals for these (proposed, not yet discussed):
 
@@ -32,7 +32,7 @@ My concrete proposals for these (proposed, not yet discussed):
 - **Configuration.** Everything configurable lives in `.sketch/config.md` and is passed in by path (`--config`), never found by walking up directories.
 - **Standard library only at runtime.** Dev tooling (tests, type checks, lint) may use packages; runtime may not.
 - **Typed and checked.** Full type hints, a type checker in strict mode, a linter and formatter.
-- **Tests.** Every subcommand has fixture tests: input text in, expected output and exit code out.
+- **Tests first.** For each subcommand, the fixture tests are written and seen failing for the right reason before any implementation. Input text in, expected output and exit code out. The tests are the spec, and the implementation never edits them. Assumption: pytest as a dev-only dependency (cheap to change).
 - **Exit-code contract.** 0 ok, 1 check failed, 2 cap reached or refused, 3 bad usage, same meaning in every tool; a `--json` flag for machine output.
 
 ## Open questions
@@ -116,6 +116,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | Tests are written first, before implementation (developer requirement). |
 | 2026-11-15 | Q1 decided: Python. Engineering requirements recorded (structure, extensibility, configurability, best practices); concrete proposals listed, not yet agreed. |
 | 2026-11-15 | Q3 decided: option D. Agents submit reports through `report submit` (validated when written, saved as JSON); replaces the standalone `report-check`. Cannot force an agent to submit or prove a rule was truly applied; `report check` catches a missing or invalid report every time. Every adapter must put the tool on each agent's path. |
 | 2026-11-15 | `guard` agreed: `check-command`, `check-edit`. Core holds the logic, each adapter wires the hook (Claude Code first). `check-edit` needs an "implementer active" marker, to settle at build time. Cannot see commands hidden inside scripts. |
