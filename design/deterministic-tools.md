@@ -91,28 +91,55 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | Tool 3 `state-bump` agreed: build. Cannot touch anything except counters; `state-set` cannot touch counters. Distinct exit code 2 at cap. |
+| 2026-11-15 | Tools are grouped by purpose (folder per group, e.g. `state/`), but each tool still does one job. Not merged. |
 | 2026-11-15 | Tools are many and single-purpose, no `sketch` CLI with subcommands (Q2). Tools must not depend on anything outside; exact meaning is Q5. |
 
-## Tool list v2 (single-purpose, decided one by one)
+## Tool list v2 (single-purpose, grouped by purpose, decided one by one)
 
-Replaces the tier tables above once every item has a decision. Status per tool: proposed / agreed / rejected.
+Replaces the tier tables above once every item has a decision. Groups are folders; each tool does one job. Status: proposed / agreed / rejected.
 
+### journal/
 | # | Tool | One job | Status |
 |---|---|---|---|
-| 1 | `journal-add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**: build the tool, delete the agent |
-| 2 | `state-set` | Set one field in `state.md`, reject values outside the schema | **agreed**: build |
-| 3 | `state-bump` | Increase one counter, refuse to pass the cap | proposed |
+| 1 | `journal-add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**: build tool, delete agent |
+
+### state/
+| # | Tool | One job | Status |
+|---|---|---|---|
+| 2 | `state-set` | Set one field in `state.md`, reject values outside the schema (not counters) | **agreed**: build |
+| 3 | `state-bump` | Increase one counter, refuse to pass the cap (exit code 2); touches nothing else | **agreed**: build |
 | 4 | `state-check` | Check `state.md` is valid | proposed |
+
+### git-checks/
+| # | Tool | One job | Status |
+|---|---|---|---|
 | 5 | `commit-prefix-check` | Flag commit subjects without `t-N:` or `story-N:` | proposed |
 | 6 | `tests-unchanged` | Fail if a test file changed since the red-test commit | proposed |
 | 7 | `changelog-check` | One new `CHANGELOG.md` line ending in `(#issue)` | proposed |
 | 8 | `tree-clean-check` | OK or list dirty files from `git status` output | proposed |
+
+### tests/
+| # | Tool | One job | Status |
+|---|---|---|---|
 | 9 | `run-logged` | Run the test command once, keep the full log, print exit code and log path | proposed |
 | 10 | `test-failures` | List failing test names from a raw log | proposed |
+
+### planning/
+| # | Tool | One job | Status |
+|---|---|---|---|
 | 11 | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | proposed |
 | 12 | `tasks-order` | Run order, skipping tasks blocked by a flagged one | proposed |
 | 13 | `config-check` | `config.md` has every key, every skill path exists | proposed |
+
+### pr-and-guards/
+| # | Tool | One job | Status |
+|---|---|---|---|
 | 14 | `pr-body-render` | Fill the PR template, enforce 20 lines and verbatim flags | proposed |
 | 15 | `pr-base-check` | PR base equals the feature branch, from `gh pr view` JSON | proposed |
 | 16 | `push-guard` | Deny push to feature/main, force-push, merge, issue close (hook) | proposed |
+
+### reports/
+| # | Tool | One job | Status |
+|---|---|---|---|
 | 17 | `report-check` | Agent report has its required parts | proposed |
