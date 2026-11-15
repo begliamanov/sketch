@@ -80,6 +80,10 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 3. `test`, `tasks lint`, `changelog check`
 4. `reconcile`, `pr`, `issues publish`
 
+## Tests tool notes
+
+- Parsing needs a `test_format` config key (for example `xcodebuild`, `pytest`). Unknown or missing format returns UNKNOWN, never a guess. Which runners to support is open.
+
 ## Not yet reviewed
 
 `/sketch`, `/tasks`, `/tune-skills`, `/retro` and `/how` were not read in full. Tools for them (for example config validation for `/tune-skills`, retro input collection) are unverified and may be missing from the lists above.
@@ -114,8 +118,14 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit; reads changed file names from stdin, test pattern via `--tests` | **agreed**: build; needs a new `config.md` key for the test-file pattern (`/tune-skills` must ask for it) |
 | `repo-check` | `changelog` | One new `CHANGELOG.md` line under Unreleased ending in `(#issue)`; reads the diff from stdin, issue via `--issue` | **agreed**: build; must handle this repo's CHANGELOG heading format |
 | `repo-check` | `tree-clean` | OK or list dirty files (untracked included) from `git status --porcelain` on stdin | **agreed**: build; one definition of "clean" for `run-story`, `resume-story`, `pause`, `stop` and the post-agent check |
-| `tests` | `run` | Run the test command once, keep the full log, print exit code and log path | proposed |
-| `tests` | `failures` | List failing test names from a raw log | proposed |
+| `tests` | `run` | Run the configured test command once, keep the full log, print exit code, log path, branch, SHA | proposed (asked) |
+| `tests` | `failures` | List failing test names and first lines of each message from a raw log | proposed |
+| `tests` | `classify` | PASS / FAIL / CANNOT RUN / UNKNOWN from exit code and log; UNKNOWN goes to an LLM | proposed |
+| `tests` | `summary` | Counts of passed, failed, skipped tests | proposed |
+| `tests` | `expect-red` | Given a task's test names: each ran and failed, none passed; assertion failure vs compile/import error | proposed |
+| `tests` | `skipped-diff` | Compare skipped/disabled counts between two logs | proposed |
+| `tests` | `failures-diff` | Same failing tests in two runs? ("same failure twice" rule) | proposed |
+| `tests` | `logs-old` | List logs older than N stories, deletes nothing | proposed (recommend later) |
 | `plan` | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | proposed |
 | `plan` | `tasks-order` | Run order, skipping tasks blocked by a flagged one | proposed |
 | `plan` | `config-check` | `config.md` has every key, every skill path exists | proposed |
