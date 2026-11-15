@@ -25,7 +25,7 @@ Use deterministic tools (scripts, hooks, CLI) wherever a step does not need judg
 |---|---|---|
 | Q1 | Implementation language: bash, or one dependency-free Python script? (Install script is already bash; harness-neutral either way.) | open |
 | Q2 | One CLI or separate tools? | **decided: one tool per domain**, with subcommands (revised 2026-11-15; first said separate single-job tools) |
-| Q3 | Do agent reports get a small structured footer (verdict, findings as a list) so tools can read them? | open |
+| Q3 | How do tools read agent reports? | **decided: D**, agents submit reports through a tool (`report submit`), validated at write time, saved as JSON |
 | Q5 | What counts as "outside"? Strict: a tool only sees args, stdin and named files, so git and `gh` output is piped in by the orchestrator. Pragmatic: git and the filesystem are allowed, the network and the tracker are not. | open (asked first) |
 | Q4 | Where does the CLI live and how do adapters install it (`core/bin/`, copied by `install.sh`)? | open |
 
@@ -66,7 +66,7 @@ Use deterministic tools (scripts, hooks, CLI) wherever a step does not need judg
 
 ## What stays with the LLM
 
-Splitting a story into tasks, writing tests, implementing, reviewing against criteria, deciding whether a test looks wrong, the retro analysis. `reviewer` and `story-reviewer` stay; their mechanical checks (frozen tests, changelog format, commit prefixes) move to tools.
+Splitting a story into tasks, writing tests, implementing, reviewing against criteria, deciding whether a test looks wrong, the retro analysis. `task-reviewer` and `story-reviewer` stay; their mechanical checks (frozen tests, changelog format, commit prefixes) move to tools.
 
 ## Consequences to decide
 
@@ -84,6 +84,11 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 
 - Parsing needs a `test_format` config key (for example `xcodebuild`, `pytest`). Unknown or missing format returns UNKNOWN, never a guess. Which runners to support is open.
 
+## Repo changes noticed 2026-11-15
+
+- The `reviewer` agent is now `task-reviewer`.
+- A Pi adapter exists (`adapters/pi/`, release 0.1.0) with a `sketch-sync.ts` extension. The `guard` hook design is Claude Code only so far; how Pi would block commands is unchecked.
+
 ## Not yet reviewed
 
 `/sketch`, `/tasks`, `/tune-skills`, `/retro` and `/how` were not read in full. Tools for them (for example config validation for `/tune-skills`, retro input collection) are unverified and may be missing from the lists above.
@@ -95,6 +100,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | Q3 decided: option D. Agents submit reports through `report submit` (validated when written, saved as JSON); replaces the standalone `report-check`. Cannot force an agent to submit or prove a rule was truly applied; `report check` catches a missing or invalid report every time. Every adapter must put the tool on each agent's path. |
 | 2026-11-15 | `guard` agreed: `check-command`, `check-edit`. Core holds the logic, each adapter wires the hook (Claude Code first). `check-edit` needs an "implementer active" marker, to settle at build time. Cannot see commands hidden inside scripts. |
 | 2026-11-15 | `pr` agreed: `render-body`, `check-base`, `check-flags`. `render-body` starts with what `state.md` holds; richer sections wait on Q3 (structured report footer). |
 | 2026-11-15 | `plan` agreed: `tasks-check`, `tasks-order`, `config-check`. `tasks-check` verifies structure only (quality stays with task-writer and reviewer). `config-check` becomes the single list of required `config.md` keys. |
@@ -138,4 +144,6 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `pr` | `check-flags` | Every flagged task and unresolved must-fix in `state.md` appears in the PR description | **agreed**: build |
 | `guard` | `check-command` | Deny push to feature/main, force-push, merge, issue close, merge into protected branches; runs as a Claude Code hook | **agreed**: build |
 | `guard` | `check-edit` | Deny edits to test files while the implementer runs; needs a marker saying who is active (open, settle at build time) | **agreed**: build |
-| `report-check` | (none) | Agent report has its required parts | proposed |
+| `report` | `submit` | Agent hands in its report (JSON on stdin); rejected with exact errors if malformed (skills need path + rule, must-fix needs file:line, assumptions block); saved to `.sketch/reports/<task>-<role>.json` | **agreed**: build |
+| `report` | `check` | Orchestrator checks a valid report exists for a task and role; fails if missing | **agreed**: build |
+| `report` | `get` | Read one field (verdict, must_fix, assumptions...) from a saved report | **agreed**: build |
