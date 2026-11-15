@@ -95,6 +95,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | `guard` agreed: `check-command`, `check-edit`. Core holds the logic, each adapter wires the hook (Claude Code first). `check-edit` needs an "implementer active" marker, to settle at build time. Cannot see commands hidden inside scripts. |
 | 2026-11-15 | `pr` agreed: `render-body`, `check-base`, `check-flags`. `render-body` starts with what `state.md` holds; richer sections wait on Q3 (structured report footer). |
 | 2026-11-15 | `plan` agreed: `tasks-check`, `tasks-order`, `config-check`. `tasks-check` verifies structure only (quality stays with task-writer and reviewer). `config-check` becomes the single list of required `config.md` keys. |
 | 2026-11-15 | `tests` agreed: `run`, `failures`, `classify`, `summary`, `expect-red`, `skipped-diff`, `failures-diff`. `logs-old` dropped for now. Needs `test_format` config key. |
@@ -135,5 +136,6 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `pr` | `render-body` | Fill the PR template, enforce 20 lines and verbatim flags | **agreed**: build |
 | `pr` | `check-base` | PR base equals the feature branch, from `gh pr view` JSON | **agreed**: build |
 | `pr` | `check-flags` | Every flagged task and unresolved must-fix in `state.md` appears in the PR description | **agreed**: build |
-| `guard` | (hook) | Deny push to feature/main, force-push, merge, issue close; runs as a Claude Code hook, so kept apart | proposed |
+| `guard` | `check-command` | Deny push to feature/main, force-push, merge, issue close, merge into protected branches; runs as a Claude Code hook | **agreed**: build |
+| `guard` | `check-edit` | Deny edits to test files while the implementer runs; needs a marker saying who is active (open, settle at build time) | **agreed**: build |
 | `report-check` | (none) | Agent report has its required parts | proposed |
