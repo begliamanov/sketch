@@ -90,6 +90,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 |---|---|
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
+| 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
 | 2026-11-15 | Tools are many and single-purpose, no `sketch` CLI with subcommands (Q2). Tools must not depend on anything outside; exact meaning is Q5. |
 
 ## Tool list v2 (single-purpose, decided one by one)
@@ -99,7 +100,7 @@ Replaces the tier tables above once every item has a decision. Status per tool: 
 | # | Tool | One job | Status |
 |---|---|---|---|
 | 1 | `journal-add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**: build the tool, delete the agent |
-| 2 | `state-set` | Set one field in `state.md`, reject values outside the schema | proposed |
+| 2 | `state-set` | Set one field in `state.md`, reject values outside the schema | **agreed**: build |
 | 3 | `state-bump` | Increase one counter, refuse to pass the cap | proposed |
 | 4 | `state-check` | Check `state.md` is valid | proposed |
 | 5 | `commit-prefix-check` | Flag commit subjects without `t-N:` or `story-N:` | proposed |
