@@ -19,11 +19,27 @@ Use deterministic tools (scripts, hooks, CLI) wherever a step does not need judg
 - **No dependencies on anything outside.** Definition below is still open (Q5). (agreed in spirit)
 - The tool list must be reworked so every entry is a single-purpose tool. The tier tables below are the first draft and several entries (`preflight`, `reconcile`, `pr`, `test`, `issues publish`) are too big and must be split. (agreed)
 
+## Engineering requirements
+
+From the developer (agreed): written in Python; well structured; easy to extend and change later; configurable; follows best practices.
+
+My concrete proposals for these (proposed, not yet discussed):
+
+- **Layers.** Pure logic (parse, validate, decide) separate from a thin CLI layer that does the I/O. Pure functions are testable with plain fixtures.
+- **One module per tool**, one function per subcommand, registered in one table, so adding a subcommand does not touch the others.
+- **One shared schema module** for allowed values (phases, statuses, journal types, counters), read by `state set/bump/check` and `journal add`, so they cannot disagree.
+- **Extension points.** Test-output parsers (`test_format`) and `guard` rules are plugins in a registry, so a new runner or rule is one new file.
+- **Configuration.** Everything configurable lives in `.sketch/config.md` and is passed in by path (`--config`), never found by walking up directories.
+- **Standard library only at runtime.** Dev tooling (tests, type checks, lint) may use packages; runtime may not.
+- **Typed and checked.** Full type hints, a type checker in strict mode, a linter and formatter.
+- **Tests.** Every subcommand has fixture tests: input text in, expected output and exit code out.
+- **Exit-code contract.** 0 ok, 1 check failed, 2 cap reached or refused, 3 bad usage, same meaning in every tool; a `--json` flag for machine output.
+
 ## Open questions
 
 | # | Question | Status |
 |---|---|---|
-| Q1 | Implementation language: bash, or one dependency-free Python script? (Install script is already bash; harness-neutral either way.) | open |
+| Q1 | Implementation language | **decided: Python** (2026-11-15) |
 | Q2 | One CLI or separate tools? | **decided: one tool per domain**, with subcommands (revised 2026-11-15; first said separate single-job tools) |
 | Q3 | How do tools read agent reports? | **decided: D**, agents submit reports through a tool (`report submit`), validated at write time, saved as JSON |
 | Q5 | What counts as "outside"? Strict: a tool only sees args, stdin and named files, so git and `gh` output is piped in by the orchestrator. Pragmatic: git and the filesystem are allowed, the network and the tracker are not. | open (asked first) |
@@ -100,6 +116,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | Q1 decided: Python. Engineering requirements recorded (structure, extensibility, configurability, best practices); concrete proposals listed, not yet agreed. |
 | 2026-11-15 | Q3 decided: option D. Agents submit reports through `report submit` (validated when written, saved as JSON); replaces the standalone `report-check`. Cannot force an agent to submit or prove a rule was truly applied; `report check` catches a missing or invalid report every time. Every adapter must put the tool on each agent's path. |
 | 2026-11-15 | `guard` agreed: `check-command`, `check-edit`. Core holds the logic, each adapter wires the hook (Claude Code first). `check-edit` needs an "implementer active" marker, to settle at build time. Cannot see commands hidden inside scripts. |
 | 2026-11-15 | `pr` agreed: `render-body`, `check-base`, `check-flags`. `render-body` starts with what `state.md` holds; richer sections wait on Q3 (structured report footer). |
