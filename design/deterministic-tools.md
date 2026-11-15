@@ -91,6 +91,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-15 | `repo-check tests-unchanged` agreed: build. New config key for the test-file pattern; `/tune-skills` must ask for it. |
 | 2026-11-15 | `repo-check commit-prefix` agreed: build. Input is piped in (`git log --format=%s`), the tool never runs git. |
 | 2026-11-15 | `state check` agreed: build. Shares the schema with `set` and `bump`. |
 | 2026-11-15 | Tool 3 `state-bump` agreed: build. Cannot touch anything except counters; `state-set` cannot touch counters. Distinct exit code 2 at cap. |
@@ -108,7 +109,7 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `state` | `bump` | Increase one counter, refuse to pass the cap (exit code 2); touches nothing else | **agreed** |
 | `state` | `check` | Check `state.md` is valid, report every problem | **agreed**: build |
 | `repo-check` | `commit-prefix` | Flag commit subjects without `t-N:` or `story-N:` (`--task t-N` requires that prefix; `[wip]` passes); reads subjects from stdin, never runs git | **agreed**: build |
-| `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit | proposed |
+| `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit; reads changed file names from stdin, test pattern via `--tests` | **agreed**: build; needs a new `config.md` key for the test-file pattern (`/tune-skills` must ask for it) |
 | `repo-check` | `changelog` | One new `CHANGELOG.md` line ending in `(#issue)` | proposed |
 | `repo-check` | `tree-clean` | OK or list dirty files from `git status` output | proposed |
 | `tests` | `run` | Run the test command once, keep the full log, print exit code and log path | proposed |
