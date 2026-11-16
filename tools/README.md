@@ -21,6 +21,7 @@ sketch_tools/
   core/        shared: exit codes, errors, the tool runner (cli.py), the only file writers (files.py)
   journal/     logic.py (pure) + cli.py (arguments and files)
   state/       schema.py (allowed values, one place) + logic.py (pure) + cli.py
+  repo_check/  globs.py (test-path patterns) + logic.py (pure checks on piped git text) + cli.py
 tests/         unittest, with fixtures in tests/fixtures/
 ```
 
@@ -35,6 +36,7 @@ cd tools
 python3 -m unittest discover -s tests -t .          # all tests
 python3 -m sketch_tools.journal add NOTE S2 - "text" --me --journal path/to/journal.md
 python3 -m sketch_tools.state check --state path/to/state.md
+git log --format=%s main..HEAD | python3 -m sketch_tools.repo_check commit-prefix --task t-3
 ```
 
 ## Built so far
@@ -43,5 +45,6 @@ python3 -m sketch_tools.state check --state path/to/state.md
 |---|---|
 | `journal` | `add` |
 | `state` | `set`, `bump`, `check`, `flag add` |
+| `repo-check` | `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean` |
 
 Launchers (`sketch-journal`, `sketch-state`) and the adapter install step are not built yet.
