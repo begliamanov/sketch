@@ -96,15 +96,15 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 3. `test`, `tasks lint`, `changelog check`
 4. `reconcile`, `pr`, `issues publish`
 
-## Tests tool notes
+## Tests tool notes (revised 2026-11-16)
 
-- Parsing needs a `test_format` config key. First supported formats (decided 2026-11-16): `gradle`, `xcodebuild`, `pytest`. Unknown or missing format returns UNKNOWN, never a guess.
-- Extensible by design: each format is one parser module behind a small shared interface and registered in one table, so adding Jest or `go test` later is one new file plus its fixture tests, with no change to `tests`, `classify` or the other tools. Fixtures per format are real captured logs (pass, assertion failure, compile error, nothing ran).
-
-## Repo changes noticed 2026-11-15
-
-- The `reviewer` agent is now `task-reviewer`.
-- A Pi adapter exists (`adapters/pi/`, release 0.1.0) with a `sketch-sync.ts` extension. The `guard` hook design is Claude Code only so far; how Pi would block commands is unchecked.
+- **Structured results, not console scraping.** `tests` reads a normalized result (test name, status, message, duration) from a result file the test command writes. The config says where: `test_format` and `test_results`, per test kind. If the file is missing the answer is CANNOT RUN or UNKNOWN, and it stops and asks. No fallback to scraping logs, and no LLM reading logs. (agreed in direction; developer confirmed the extension model below)
+- **Formats:** `junit-xml` (Gradle, pytest, Vitest, Playwright, Jest with `jest-junit`, most UI-test tools; flags for each runner are from memory and must be verified before we promise them) and `xcresult` (Xcode; the `xcresulttool` command is unverified). This replaces the earlier list of gradle, xcodebuild and pytest as separate formats.
+- **Extension (decided):** readers are plugins behind one interface (`read(path) -> list[TestResult]`) registered in one table. Built-in readers live in `tools/`. **A user adds a reader in their own project**, in a folder the config points at (for example `formats_dir: .sketch/formats`), without touching the Sketch repo. The new reader's fixture tests (real captured results: pass, failure, skipped, nothing ran) come first.
+- **LLM helps with setup, proactively.** During `/tune-skills`, the LLM detects the project's test runner and checks it against the supported formats before anything fails. If the runner can write JUnit XML, it proposes the exact flags and config. If not, it drafts a project-local reader plus its fixture tests, and the developer confirms. The LLM only helps set things up; at run time the tools are deterministic.
+- **Fail early:** an unsupported or misconfigured runner stops at `/tune-skills` or the baseline check, with a message saying what to do, never halfway through a story.
+- **Related gaps:** `test_task`'s `{class}` placeholder is Gradle-flavored and needs a neutral name such as `{target}`; UI tests (flaky, need a simulator or browser) get their own discussion when they are added; `/tune-skills` currently says "do not run the full suite now", which the setup-capture step below conflicts with.
+- Loading Python from the project folder must be reconciled with the Q5 rule ("reads only what it is pointed at"): the config points at the folder.
 
 ## Candidates from reading /sketch, /tasks, /tune-skills, /retro (2026-11-16)
 
@@ -136,7 +136,8 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
-| 2026-11-16 | Test runners for the first version: Gradle, Xcode (`xcodebuild`), pytest. Parsers are plugins behind one interface so more can be added later. |
+| 2026-11-16 | Test results: structured result files (`junit-xml`, `xcresult`), no console scraping. Readers are project-local plugins; the LLM helps proactively with setup in `/tune-skills`. Replaces the gradle/xcodebuild/pytest list. |
+| 2026-11-16 | (superseded) Test runners for the first version: Gradle, Xcode (`xcodebuild`), pytest. Parsers are plugins behind one interface so more can be added later. |
 | 2026-11-16 | All 12 candidates from the skills review agreed: `setup check`, `journal me-lines`, `journal signals`, `retro recommend`, `state gate/new-story/reconcile/wip-message`, `plan brief-skills/issues-todo/detect-tracker`, `skills list`. |
 | 2026-11-16 | Q5 decided: strict rule, one exception (`tests run`). All of Q1 to Q5 are now answered. |
 | 2026-11-16 | Q4 decided: Option 1 (`tools/` copied by each adapter's install, launchers on a stable path). |
