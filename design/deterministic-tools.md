@@ -105,9 +105,28 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 - The `reviewer` agent is now `task-reviewer`.
 - A Pi adapter exists (`adapters/pi/`, release 0.1.0) with a `sketch-sync.ts` extension. The `guard` hook design is Claude Code only so far; how Pi would block commands is unchecked.
 
+## Candidates from reading /sketch, /tasks, /tune-skills, /retro (2026-11-16)
+
+All proposed. Each follows the Q5 rule: facts come in as text or JSON, the orchestrator gathers them with git and `gh`.
+
+| Tool | Subcommand | One job | Where it comes from | Status |
+|---|---|---|---|---|
+| `setup` | `check` | Given facts (git repo, commit, remote, auth, `.sketch/`, exclude line, config, docs, feature branch, pushed), print every missing step in order with its exact command, marked safe or developer-only | "Setup gaps" in the orchestrator, `/sketch`, `/run-story`, `/tune-skills` | proposed |
+| `journal` | `me-lines` | List every `[me]` line for given stories, verbatim | `/retro` step 3.1 | proposed |
+| `journal` | `signals` | Count flags and cap hits per story from the journal | `/sketch` step 2 and `/retro` | proposed |
+| `retro` | `recommend` | Apply the rule (first 3 stories, any flag, any cap hit, over 20 lines changed, over 10 comments) to counts and say recommended or not | `/sketch` step 2 | proposed |
+| `state` | `gate` | From `phase` and PR state say: ok, ask about the PR, or stop with the right message | `/sketch` step 1 | proposed |
+| `state` | `new-story` | Write a fresh story record in the exact state format | `/sketch` step 8 | proposed |
+| `state` | `reconcile` | Compare state with piped facts (commits per task, branches, issues, PR) and classify each difference harmless or risky | `/resume-story` step 3 | proposed |
+| `state` | `wip-message` | Build the `[wip]` commit message from state; refuse if the branch is not the story branch | `/pause`, `/stop`, resume | proposed |
+| `plan` | `brief-skills` | Compute the skill paths for one agent brief (common + task picks inside the role list, full list for story-reviewer, pool names for reviewers) | orchestrator "Briefing an agent" item 5 | proposed |
+| `plan` | `issues-todo` | Given `tasks.md` and the existing issues as JSON, list which issues and blocking links are still to create | `/tasks` publish mode | proposed |
+| `skills` | `list` | List `SKILL.md` files with name, description and absolute path | `/tune-skills` scan | proposed |
+| `plan` | `detect-tracker` | Map a remote URL to github or gitlab and `gh` or `glab`, or "ask" | `/tune-skills` scan | proposed |
+
 ## Not yet reviewed
 
-`/sketch`, `/tasks`, `/tune-skills`, `/retro` and `/how` were not read in full. Tools for them (for example config validation for `/tune-skills`, retro input collection) are unverified and may be missing from the lists above.
+`/how` was not read. `/sketch`, `/tasks`, `/tune-skills` and `/retro` were read on 2026-11-16; their candidates are in the section above.
 
 ## Decision log
 
