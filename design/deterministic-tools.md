@@ -42,7 +42,7 @@ My concrete proposals for these (proposed, not yet discussed):
 | Q1 | Implementation language | **decided: Python** (2026-11-15) |
 | Q2 | One CLI or separate tools? | **decided: one tool per domain**, with subcommands (revised 2026-11-15; first said separate single-job tools) |
 | Q3 | How do tools read agent reports? | **decided: D**, agents submit reports through a tool (`report submit`), validated at write time, saved as JSON |
-| Q5 | What counts as "outside"? Strict: a tool only sees args, stdin and named files, so git and `gh` output is piped in by the orchestrator. Pragmatic: git and the filesystem are allowed, the network and the tracker are not. | open (asked first) |
+| Q5 | What counts as "outside"? | **decided**: a tool reads only its arguments, stdin and files it is pointed at; writes only to files it is pointed at; never calls git, `gh`, the network or an LLM. Only exception: `tests run` runs the command from `config.md`. The orchestrator runs git/`gh` and pipes output in. |
 | Q4 | Where the tools live and how adapters install them | **decided: Option 1**, source in `tools/`, each adapter's install copies it to a fixed path (e.g. `~/.claude/sketch/tools/`) and creates launchers (`sketch-state`, `sketch-journal`, ...). No pip. Python package layout inside, so pip packaging stays possible later. |
 
 ## Tier 1: replace purely mechanical LLM work
@@ -116,6 +116,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-16 | Q5 decided: strict rule, one exception (`tests run`). All of Q1 to Q5 are now answered. |
 | 2026-11-16 | Q4 decided: Option 1 (`tools/` copied by each adapter's install, launchers on a stable path). |
 | 2026-11-15 | Tests are written first, before implementation (developer requirement). |
 | 2026-11-15 | Q1 decided: Python. Engineering requirements recorded (structure, extensibility, configurability, best practices); concrete proposals listed, not yet agreed. |
