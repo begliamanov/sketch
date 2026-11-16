@@ -1,6 +1,6 @@
 # Deterministic tools for Sketch
 
-Working notes. Discussion only, nothing is implemented. Each item has a status:
+Working notes. Implementation started 2026-11-16 in `tools/` (see its README for what is built). Each item has a status:
 
 - **proposed**: suggested, not yet discussed
 - **agreed**: the developer said yes
@@ -125,6 +125,12 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | `skills` | `list` | List `SKILL.md` files with name, description and absolute path | `/tune-skills` scan | **agreed**: build |
 | `plan` | `detect-tracker` | Map a remote URL to github or gitlab and `gh` or `glab`, or "ask" | `/tune-skills` scan | **agreed**: build |
 
+## Gaps found while building (need a decision)
+
+- **`stop_after_task`**: `/stop` adds `stop_after_task: yes` to `state.md` and removes it when the run stops. `state set` cannot add or remove a line, and no agreed subcommand does. `state check` already accepts the line.
+- **Flags section**: the orchestrator adds flags (`- t-4: <reason>`) to `state.md`. No agreed subcommand edits that section.
+- **Wiring**: nothing calls the tools yet. `orchestrator.md`, `pause`, `stop`, `run-story` and `/note` still describe the old manual way and the `drift-notetaker` agent still exists. Launchers and the install step (Q4 option 1) are not built.
+
 ## Not yet reviewed
 
 `/how` was not read. `/sketch`, `/tasks`, `/tune-skills` and `/retro` were read on 2026-11-16; their candidates are in the section above.
@@ -136,6 +142,8 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-16 | Implementation started. Built tests first and green: core (runner, exit codes, atomic file writes), `journal add`, `state set/bump/check` (103 tests). Choices made while building: Python 3.9 minimum (system Python is 3.9.6, no pytest installed), tests use stdlib `unittest` instead of pytest (no install needed; replaces the earlier pytest assumption); the journal column rule (the spec examples in `state-format.md` contradict each other on spacing for task-less lines; chose one aligned rule: task padded to 3 characters then 2 spaces, type padded to 7 then 1 space). |
+| 2026-11-16 | Pi support dropped (developer decision). This branch is based on `add-versioning`, which has no Pi adapter, so there is nothing to delete here; when this work lands it overrides what `origin/main` has. Claude Code is the only adapter, so `guard check-command` is a Claude Code `PreToolUse` hook only. |
 | 2026-11-16 | `guard check-edit` dropped. `guard` is now just `check-command`; test protection is `repo-check tests-unchanged` (detect, not prevent). |
 | 2026-11-16 | `/tune-skills` may run one small test once at setup (after a yes) to capture a real fixture (option A). Assumptions taken as cheap defaults: `{class}` becomes `{target}`; untracked files count as dirty. |
 | 2026-11-16 | Test results: structured result files (`junit-xml`, `xcresult`), no console scraping. Readers are project-local plugins; the LLM helps proactively with setup in `/tune-skills`. Replaces the gradle/xcodebuild/pytest list. |
@@ -165,9 +173,9 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 
 | Tool | Subcommand | One job | Status |
 |---|---|---|---|
-| `journal` | `add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**: build tool, delete agent |
-| `state` | `set` | Set one field in `state.md`, reject values outside the schema (not counters) | **agreed** |
-| `state` | `bump` | Increase one counter, refuse to pass the cap (exit code 2); touches nothing else | **agreed** |
+| `journal` | `add` | Append one validated line to `.sketch/journal.md`; replaces the `drift-notetaker` agent | **agreed**; **built** (tool only: the agent is not deleted yet and nothing calls the tool yet) |
+| `state` | `set` | Set one field in `state.md`, reject values outside the schema (not counters) | **agreed**; **built** |
+| `state` | `bump` | Increase one counter, refuse to pass the cap (exit code 2); touches nothing else | **agreed**; **built** |
 | `state` | `check` | Check `state.md` is valid, report every problem | **agreed**: build |
 | `repo-check` | `commit-prefix` | Flag commit subjects without `t-N:` or `story-N:` (`--task t-N` requires that prefix; `[wip]` passes); reads subjects from stdin, never runs git | **agreed**: build |
 | `repo-check` | `tests-unchanged` | Fail if a test file changed since the red-test commit; reads changed file names from stdin, test pattern via `--tests` | **agreed**: build; needs a new `config.md` key for the test-file pattern (`/tune-skills` must ask for it) |
