@@ -98,7 +98,8 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 
 ## Tests tool notes
 
-- Parsing needs a `test_format` config key (for example `xcodebuild`, `pytest`). Unknown or missing format returns UNKNOWN, never a guess. Which runners to support is open.
+- Parsing needs a `test_format` config key. First supported formats (decided 2026-11-16): `gradle`, `xcodebuild`, `pytest`. Unknown or missing format returns UNKNOWN, never a guess.
+- Extensible by design: each format is one parser module behind a small shared interface and registered in one table, so adding Jest or `go test` later is one new file plus its fixture tests, with no change to `tests`, `classify` or the other tools. Fixtures per format are real captured logs (pass, assertion failure, compile error, nothing ran).
 
 ## Repo changes noticed 2026-11-15
 
@@ -135,6 +136,7 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-16 | Test runners for the first version: Gradle, Xcode (`xcodebuild`), pytest. Parsers are plugins behind one interface so more can be added later. |
 | 2026-11-16 | All 12 candidates from the skills review agreed: `setup check`, `journal me-lines`, `journal signals`, `retro recommend`, `state gate/new-story/reconcile/wip-message`, `plan brief-skills/issues-todo/detect-tracker`, `skills list`. |
 | 2026-11-16 | Q5 decided: strict rule, one exception (`tests run`). All of Q1 to Q5 are now answered. |
 | 2026-11-16 | Q4 decided: Option 1 (`tools/` copied by each adapter's install, launchers on a stable path). |
