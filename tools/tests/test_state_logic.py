@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List
 
 from sketch_tools.core.errors import DataError, RefusedError, UsageError
-from sketch_tools.state.logic import bump, check, set_header, set_task
+from sketch_tools.state.logic import add_flag, bump, check, set_header, set_task
 
 VALID = (Path(__file__).parent / "fixtures" / "state_valid.md").read_text()
 
@@ -72,6 +72,15 @@ class SetHeaderTest(unittest.TestCase):
                 for bad in ("", "  ", "two\nlines"):
                     with self.assertRaises(UsageError):
                         set_header(VALID, key, bad)
+
+    def test_stop_after_task_is_set_to_yes_or_no(self) -> None:
+        for value in ("yes", "no"):
+            with self.subTest(value=value):
+                self.assertIn("stop_after_task: " + value + "\n", set_header(VALID, "stop_after_task", value))
+        for bad in ("maybe", "", "Yes"):
+            with self.subTest(value=bad):
+                with self.assertRaises(UsageError):
+                    set_header(VALID, "stop_after_task", bad)
 
     def test_unknown_key_is_rejected(self) -> None:
         with self.assertRaises(UsageError) as ctx:
@@ -198,6 +207,58 @@ class BumpTest(unittest.TestCase):
             bump(VALID, "attempts", task_id="t-9")
 
 
+class AddFlagTest(unittest.TestCase):
+    def test_appends_one_line_after_the_last_flag(self) -> None:
+        after = add_flag(VALID, "t-2", "review cap hit (2/2)")
+        self.assertEqual(
+            after,
+            VALID.replace(
+                "- t-4: tests keep failing, MissingBanner not found\n",
+                "- t-4: tests keep failing, MissingBanner not found\n- t-2: review cap hit (2/2)\n",
+            ),
+        )
+
+    def test_into_an_empty_flags_section(self) -> None:
+        text = VALID.replace("- t-4: tests keep failing, MissingBanner not found\n", "")
+        self.assertTrue(add_flag(text, "t-4", "why").endswith("## Flags\n- t-4: why\n"))
+
+    def test_keeps_blank_lines_that_follow_the_last_flag(self) -> None:
+        text = VALID + "\n\n"
+        after = add_flag(text, "t-2", "why")
+        self.assertTrue(after.endswith("- t-2: why\n\n\n"))
+
+    def test_the_reason_is_kept_exactly(self) -> None:
+        reason = "  odd   spacing, \"quotes\" and é  "
+        self.assertIn("- t-2: " + reason + "\n", add_flag(VALID, "t-2", reason))
+
+    def test_does_not_touch_the_task_table(self) -> None:
+        before = VALID.split("\n")
+        after = add_flag(VALID, "t-2", "why").split("\n")
+        self.assertEqual(len(after), len(before) + 1)
+        table_end = before.index("## Flags")
+        self.assertEqual(after[:table_end], before[:table_end])
+
+    def test_an_unknown_task_is_rejected(self) -> None:
+        with self.assertRaises(UsageError) as ctx:
+            add_flag(VALID, "t-9", "why")
+        self.assertIn("t-9", str(ctx.exception))
+
+    def test_an_empty_or_multi_line_reason_is_rejected(self) -> None:
+        for bad in ("", "   ", "one\ntwo"):
+            with self.subTest(reason=bad):
+                with self.assertRaises(UsageError):
+                    add_flag(VALID, "t-2", bad)
+
+    def test_a_task_that_already_has_a_flag_is_refused(self) -> None:
+        with self.assertRaises(RefusedError) as ctx:
+            add_flag(VALID, "t-4", "again")
+        self.assertIn("already flagged", str(ctx.exception))
+
+    def test_a_file_without_a_flags_section_is_a_data_error(self) -> None:
+        with self.assertRaises(DataError):
+            add_flag(VALID.replace("## Flags", "## Other"), "t-2", "why")
+
+
 class CheckTest(unittest.TestCase):
     def problems(self, text: str) -> List[str]:
         return check(text)
@@ -217,11 +278,27 @@ class CheckTest(unittest.TestCase):
         text = head + "## Tasks\n| id  | issue | title | blocked_by | status | attempts | review_rounds |\n|-----|-------|-------|------------|--------|----------|---------------|\n"
         self.assertEqual(self.problems(text), [])
 
-    def test_stop_after_task_yes_is_allowed_and_other_values_are_not(self) -> None:
-        with_flag = VALID.replace("extra_skills: none\n", "extra_skills: none\nstop_after_task: yes\n")
-        self.assertEqual(self.problems(with_flag), [])
-        self.assert_problem(with_flag.replace("stop_after_task: yes", "stop_after_task: no"),
-                            "stop_after_task")
+    def test_stop_after_task_is_a_required_yes_or_no(self) -> None:
+        for value in ("yes", "no"):
+            with self.subTest(value=value):
+                self.assertEqual(self.problems(VALID.replace("stop_after_task: no", "stop_after_task: " + value)), [])
+        self.assert_problem(VALID.replace("stop_after_task: no\n", ""), "missing key", "stop_after_task")
+        self.assert_problem(VALID.replace("stop_after_task: no", "stop_after_task: maybe"),
+                            "stop_after_task", '"maybe"')
+
+    def test_every_flagged_task_needs_a_flag_line(self) -> None:
+        self.assert_problem(VALID.replace("- t-4: tests keep failing, MissingBanner not found\n", ""),
+                            "t-4", "flagged", "no flag")
+
+    def test_a_flag_line_needs_a_flagged_task(self) -> None:
+        self.assert_problem(VALID + "- t-2: surprise\n", "t-2", "not flagged")
+        self.assert_problem(VALID + "- t-9: ghost\n", "t-9", "does not exist")
+
+    def test_a_task_may_have_only_one_flag_line(self) -> None:
+        self.assert_problem(VALID + "- t-4: again\n", "t-4", "twice")
+
+    def test_a_flag_line_must_look_like_dash_task_colon_reason(self) -> None:
+        self.assert_problem(VALID + "- <reason, quoted>\n", "flag line", "<reason, quoted>")
 
     def test_missing_key(self) -> None:
         self.assert_problem(VALID.replace("phase: task-loop\n", ""), "missing key", "phase")

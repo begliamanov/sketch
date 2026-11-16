@@ -34,6 +34,20 @@ def build_demo() -> Tool:
     tool.add_command("bad", "always bad input", lambda p: None, run_bad)
     tool.add_command("refuse", "always refuses", lambda p: None, run_refuse)
     tool.add_command("fail", "a failing check", lambda p: None, run_check_failed)
+
+    def configure_hello(parser: argparse.ArgumentParser) -> None:
+        parser.add_argument("--name", required=True)
+
+    def run_hello(args: argparse.Namespace, env: Env) -> int:
+        env.stdout.write("hello " + args.name + "\n")
+        return exitcodes.OK
+
+    def run_bye(args: argparse.Namespace, env: Env) -> int:
+        env.stdout.write("bye\n")
+        return exitcodes.OK
+
+    tool.add_command("group hello", "say hello", configure_hello, run_hello)
+    tool.add_command("group bye", "say bye", lambda p: None, run_bye)
     return tool
 
 
@@ -87,6 +101,27 @@ class ToolDispatchTest(unittest.TestCase):
         code, out, err = run_tool(self.tool.main, ["echo"])
         self.assertEqual((code, out), (3, ""))
         self.assertIn("error:", err)
+
+    def test_a_command_group_dispatches_to_its_subcommand(self) -> None:
+        code, out, err = run_tool(self.tool.main, ["group", "hello", "--name", "ann"])
+        self.assertEqual((code, out, err), (0, "hello ann\n", ""))
+        code, out, _ = run_tool(self.tool.main, ["group", "bye"])
+        self.assertEqual((code, out), (0, "bye\n"))
+
+    def test_a_group_without_a_subcommand_exits_3_and_lists_them(self) -> None:
+        code, out, err = run_tool(self.tool.main, ["group"])
+        self.assertEqual((code, out), (3, ""))
+        self.assertIn("hello", err)
+        self.assertIn("bye", err)
+
+    def test_an_unknown_group_subcommand_exits_3(self) -> None:
+        code, _, err = run_tool(self.tool.main, ["group", "nope"])
+        self.assertEqual(code, 3)
+        self.assertIn("nope", err)
+
+    def test_the_top_help_shows_the_group(self) -> None:
+        _, out, _ = run_tool(self.tool.main, ["--help"])
+        self.assertIn("group", out)
 
     def test_help_exits_0_and_describes_the_tool(self) -> None:
         code, out, _ = run_tool(self.tool.main, ["--help"])

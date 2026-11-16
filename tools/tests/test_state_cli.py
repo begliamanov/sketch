@@ -69,6 +69,48 @@ class StateSetTest(StateCliCase):
         self.assertIn("--state", err)
 
 
+class StateStopAfterTaskTest(StateCliCase):
+    def test_is_set_like_any_other_field(self) -> None:
+        code, out, _ = self.run_state("set", "stop_after_task", "yes")
+        self.assertEqual((code, out), (0, "ok: stop_after_task = yes\n"))
+        self.assertIn("stop_after_task: yes\n", self.state.read_text())
+        code, _, _ = self.run_state("set", "stop_after_task", "no")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.state.read_text(), VALID)
+
+
+class StateFlagAddTest(StateCliCase):
+    def test_appends_the_flag_and_says_so(self) -> None:
+        code, out, err = self.run_state("flag", "add", "--task", "t-2", "review cap hit (2/2)")
+        self.assertEqual((code, out, err), (0, "ok: flagged t-2\n", ""))
+        self.assertIn("- t-2: review cap hit (2/2)\n", self.state.read_text())
+
+    def test_the_task_is_required(self) -> None:
+        code, _, err = self.run_state("flag", "add", "why")
+        self.assertEqual(code, 3)
+        self.assertIn("--task", err)
+
+    def test_a_task_that_is_already_flagged_exits_2_and_changes_nothing(self) -> None:
+        code, out, err = self.run_state("flag", "add", "--task", "t-4", "again")
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("already flagged", err)
+        self.assertEqual(self.state.read_text(), VALID)
+
+    def test_an_unknown_task_exits_3(self) -> None:
+        code, _, err = self.run_state("flag", "add", "--task", "t-9", "why")
+        self.assertEqual(code, 3)
+        self.assertIn("t-9", err)
+
+    def test_flagging_a_task_is_two_steps_and_check_sees_the_half_done_state(self) -> None:
+        self.run_state("flag", "add", "--task", "t-2", "why")
+        code, out, _ = self.run_state("check")
+        self.assertEqual(code, 1)
+        self.assertIn("t-2", out)
+        self.run_state("set", "--task", "t-2", "status", "flagged")
+        code, out, _ = self.run_state("check")
+        self.assertEqual((code, out), (0, "ok\n"))
+
+
 class StateBumpTest(StateCliCase):
     def test_bumps_a_header_counter(self) -> None:
         code, out, err = self.run_state("bump", "story_rounds")

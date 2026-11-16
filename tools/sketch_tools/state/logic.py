@@ -119,6 +119,12 @@ def set_header(text: str, key: str, value: str) -> str:
     return _join(lines)
 
 
+def add_flag(text: str, task_id: str, reason: str) -> str:
+    """Append `- <task>: <reason>` to the Flags section. Raises UsageError for an unknown task or a
+    bad reason, RefusedError when the task is already flagged, DataError without a Flags section."""
+    raise NotImplementedError
+
+
 def set_task(text: str, task_id: str, field: str, value: str) -> str:
     """Set one cell in a task row. Same errors as set_header."""
     if field in schema.TASK_COUNTER_FIELDS:
