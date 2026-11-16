@@ -7,7 +7,7 @@ Working notes. Discussion only, nothing is implemented. Each item has a status:
 - **rejected**: the developer said no (kept with the reason, so it is not re-proposed)
 - **open**: a question that needs a decision
 
-Last updated: 2026-11-15
+Last updated: 2026-11-16
 
 ## Goal
 
@@ -43,7 +43,7 @@ My concrete proposals for these (proposed, not yet discussed):
 | Q2 | One CLI or separate tools? | **decided: one tool per domain**, with subcommands (revised 2026-11-15; first said separate single-job tools) |
 | Q3 | How do tools read agent reports? | **decided: D**, agents submit reports through a tool (`report submit`), validated at write time, saved as JSON |
 | Q5 | What counts as "outside"? Strict: a tool only sees args, stdin and named files, so git and `gh` output is piped in by the orchestrator. Pragmatic: git and the filesystem are allowed, the network and the tracker are not. | open (asked first) |
-| Q4 | Where does the CLI live and how do adapters install it (`core/bin/`, copied by `install.sh`)? | open |
+| Q4 | Where the tools live and how adapters install them | **decided: Option 1**, source in `tools/`, each adapter's install copies it to a fixed path (e.g. `~/.claude/sketch/tools/`) and creates launchers (`sketch-state`, `sketch-journal`, ...). No pip. Python package layout inside, so pip packaging stays possible later. |
 
 ## Tier 1: replace purely mechanical LLM work
 
@@ -116,6 +116,7 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-16 | Q4 decided: Option 1 (`tools/` copied by each adapter's install, launchers on a stable path). |
 | 2026-11-15 | Tests are written first, before implementation (developer requirement). |
 | 2026-11-15 | Q1 decided: Python. Engineering requirements recorded (structure, extensibility, configurability, best practices); concrete proposals listed, not yet agreed. |
 | 2026-11-15 | Q3 decided: option D. Agents submit reports through `report submit` (validated when written, saved as JSON); replaces the standalone `report-check`. Cannot force an agent to submit or prove a rule was truly applied; `report check` catches a missing or invalid report every time. Every adapter must put the tool on each agent's path. |
