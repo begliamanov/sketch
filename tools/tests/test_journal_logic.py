@@ -22,17 +22,17 @@ class FormatEntryTest(unittest.TestCase):
 
     def test_story_level_entry_uses_a_dash_for_the_task(self) -> None:
         line = format_entry("REVIEW", "S2", "-", "story-end: 1 must-fix", WHEN)
-        self.assertEqual(line, "2026-11-12 10:41  S2 -     REVIEW  story-end: 1 must-fix")
+        self.assertEqual(line, "2026-11-12 10:41  S2 -    REVIEW  story-end: 1 must-fix")
 
     def test_me_flag_puts_the_marker_before_the_text(self) -> None:
         line = format_entry("NOTE", "S2", "-", "PR description was hard to scan", WHEN, me=True)
         self.assertEqual(
-            line, "2026-11-12 10:41  S2 -     NOTE    [me] PR description was hard to scan"
+            line, "2026-11-12 10:41  S2 -    NOTE    [me] PR description was hard to scan"
         )
 
     def test_longest_type_has_one_space_before_the_text(self) -> None:
         line = format_entry("CONTEXT", "S2", "-", "say hi", WHEN, me=True)
-        self.assertEqual(line, "2026-11-12 10:41  S2 -     CONTEXT [me] say hi")
+        self.assertEqual(line, "2026-11-12 10:41  S2 -    CONTEXT [me] say hi")
 
     def test_the_text_is_kept_exactly(self) -> None:
         text = "  keep   spacing, quotes \"and\" 'these' and unicode é  "

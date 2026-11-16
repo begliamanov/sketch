@@ -36,7 +36,7 @@ class JournalAddTest(unittest.TestCase):
         self.add("NOTE", "S2", "-", "later")
         after = self.journal.read_text()
         self.assertTrue(after.startswith(before))
-        self.assertEqual(after[len(before):], "2026-11-12 10:41  S2 -     NOTE    later\n")
+        self.assertEqual(after[len(before):], "2026-11-12 10:41  S2 -    NOTE    later\n")
 
     def test_does_not_add_a_second_header_to_an_existing_journal(self) -> None:
         self.journal.write_text(HEADER)
@@ -48,7 +48,7 @@ class JournalAddTest(unittest.TestCase):
         self.add("NOTE", "S2", "-", "x")
         self.assertEqual(
             self.journal.read_text(),
-            HEADER + "unterminated\n2026-11-12 10:41  S2 -     NOTE    x\n",
+            HEADER + "unterminated\n2026-11-12 10:41  S2 -    NOTE    x\n",
         )
 
     def test_me_flag_marks_the_developers_own_words(self) -> None:
@@ -64,7 +64,7 @@ class JournalAddTest(unittest.TestCase):
             now=datetime(2027, 1, 5, 9, 3),
         )
         self.assertEqual(code, 0)
-        self.assertIn("2027-01-05 09:03  S2 -     NOTE    x\n", self.journal.read_text())
+        self.assertIn("2027-01-05 09:03  S2 -    NOTE    x\n", self.journal.read_text())
 
     def test_two_entries_end_up_in_call_order(self) -> None:
         self.add("NOTE", "S2", "-", "first")
