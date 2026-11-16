@@ -15,14 +15,16 @@ TASK_STATUSES = ("pending", "tests-red", "green", "in-review", "done", "flagged"
 # Header keys, in file order. All are required.
 HEADER_KEYS = (
     "story", "title", "story_issue", "feature_branch", "story_branch", "phase", "last_step",
-    "stopped", "pr", "pr_head_sha", "story_rounds", "extra_skills",
+    "stopped", "pr", "pr_head_sha", "story_rounds", "extra_skills", "stop_after_task",
 )
-OPTIONAL_KEYS = ("stop_after_task",)  # allowed by `check`; `set` cannot add it (see the notes)
 COUNTER_KEYS = ("story_rounds",)
 
 TASK_COLUMNS = ("id", "issue", "title", "blocked_by", "status", "attempts", "review_rounds")
 TASK_COUNTER_FIELDS = ("attempts", "review_rounds")
 SETTABLE_TASK_FIELDS = ("issue", "title", "blocked_by", "status")
+
+FLAGS_HEADING = "## Flags"
+FLAG_LINE = re.compile(r"- (t-\d+): (\S.*)")
 
 TASK_ID = re.compile(r"t-\d+")
 COUNTER = re.compile(r"(\d+)/(\d+)")
@@ -69,10 +71,11 @@ HEADER_RULES: Dict[str, Callable[[str], Optional[str]]] = {
         "pr_head_sha", r"none|[0-9a-f]{7,40}", "none or a git sha (7 to 40 hex characters)"
     ),
     "extra_skills": _one_line("extra_skills"),
-    "stop_after_task": _matching("stop_after_task", r"yes", "yes"),
+    "stop_after_task": _matching("stop_after_task", r"yes|no", "yes or no"),
 }
 
 _TITLE_RULE = _one_line("title")
+FLAG_REASON_RULE = _one_line("reason")
 
 
 def _title_rule(value: str) -> Optional[str]:

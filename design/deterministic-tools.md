@@ -125,11 +125,11 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | `skills` | `list` | List `SKILL.md` files with name, description and absolute path | `/tune-skills` scan | **agreed**: build |
 | `plan` | `detect-tracker` | Map a remote URL to github or gitlab and `gh` or `glab`, or "ask" | `/tune-skills` scan | **agreed**: build |
 
-## Gaps found while building (need a decision)
+## Gaps found while building (decided 2026-11-16)
 
-- **`stop_after_task`**: `/stop` adds `stop_after_task: yes` to `state.md` and removes it when the run stops. `state set` cannot add or remove a line, and no agreed subcommand does. `state check` already accepts the line.
-- **Flags section**: the orchestrator adds flags (`- t-4: <reason>`) to `state.md`. No agreed subcommand edits that section.
-- **Wiring**: nothing calls the tools yet. `orchestrator.md`, `pause`, `stop`, `run-story` and `/note` still describe the old manual way and the `drift-notetaker` agent still exists. Launchers and the install step (Q4 option 1) are not built.
+- **`stop_after_task`**: decided: it is a normal header line that is always present (`no` or `yes`), set with `state set stop_after_task yes|no`. No add or remove of lines. `core/state-format.md`, `/stop` and `/sketch` were updated; `state new-story` must write `stop_after_task: no`.
+- **Flags section**: decided: `state flag add --task ID REASON` appends `- ID: REASON`. Setting the task status to `flagged` stays a separate `state set`; `state check` reports a flagged task without a flag line and a flag line without a flagged task. There is no remove: flags stay until the next story. Open for later: where story-level flags (an unresolved story-end must-fix) live, to settle with `pr render-body`.
+- **Wiring** (still open): nothing calls the tools yet. `orchestrator.md`, `pause`, `stop`, `run-story` and `/note` still describe the old manual way and the `drift-notetaker` agent still exists. Launchers and the install step (Q4 option 1) are not built.
 
 ## Not yet reviewed
 
@@ -142,6 +142,7 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-16 | Gaps decided: `stop_after_task` is a required `yes`/`no` header line (no add/remove); `state flag add` added, `check` enforces flag consistency. The runner now supports command groups (`flag add`). 127 tests green. |
 | 2026-11-16 | Implementation started. Built tests first and green: core (runner, exit codes, atomic file writes), `journal add`, `state set/bump/check` (103 tests). Choices made while building: Python 3.9 minimum (system Python is 3.9.6, no pytest installed), tests use stdlib `unittest` instead of pytest (no install needed; replaces the earlier pytest assumption); the journal column rule (the spec examples in `state-format.md` contradict each other on spacing for task-less lines; chose one aligned rule: task padded to 3 characters then 2 spaces, type padded to 7 then 1 space). |
 | 2026-11-16 | Pi support dropped (developer decision). This branch is based on `add-versioning`, which has no Pi adapter, so there is nothing to delete here; when this work lands it overrides what `origin/main` has. Claude Code is the only adapter, so `guard check-command` is a Claude Code `PreToolUse` hook only. |
 | 2026-11-16 | `guard check-edit` dropped. `guard` is now just `check-command`; test protection is `repo-check tests-unchanged` (detect, not prevent). |

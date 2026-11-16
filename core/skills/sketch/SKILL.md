@@ -87,7 +87,7 @@ When the draft has settled, restate your understanding **in the developer's word
 - `.sketch/initial-sketch.md`: written **only for the first story of a feature**, and never changed afterwards. It holds the feature-level picture as discussed and the first story. It is the baseline the retro compares against.
 - `.sketch/story-brief.md`: the approved story, replacing the previous one.
 - `.sketch/glossary-proposal.md`: new or changed terms, proposed ADRs. Replace the previous file's content, since earlier proposals were applied.
-- `.sketch/state.md`: a new record for this story (`{{CORE}}/state-format.md`): the story number, the title, `feature_branch` = the current branch, `phase: tasks`, `stopped: no`, `extra_skills` from this command, everything else empty or `none`. Keep the previous story's tasks out of the new table.
+- `.sketch/state.md`: a new record for this story (`{{CORE}}/state-format.md`): the story number, the title, `feature_branch` = the current branch, `phase: tasks`, `stopped: no`, `stop_after_task: no`, `extra_skills` from this command, everything else empty or `none`. Keep the previous story's tasks out of the new table.
 - Remove `.sketch/tasks.md`, `.sketch/tasks-approved.md` and `.sketch/story-context.md` left over from the previous story, after confirming that story is done.
 
 ## 9. Next

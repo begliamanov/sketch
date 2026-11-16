@@ -119,10 +119,44 @@ def set_header(text: str, key: str, value: str) -> str:
     return _join(lines)
 
 
+def _flags(lines: List[str]) -> Tuple[Optional[int], int, List[Tuple[int, str]]]:
+    """The Flags section: (heading index or None, index just past the section, its `- ` lines)."""
+    start = None
+    for index, line in enumerate(lines):
+        if line == schema.FLAGS_HEADING:
+            start = index
+            break
+    if start is None:
+        return None, len(lines), []
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        if lines[index].startswith("## "):
+            end = index
+            break
+    found = [(i, lines[i]) for i in range(start + 1, end) if lines[i].startswith("- ")]
+    return start, end, found
+
+
 def add_flag(text: str, task_id: str, reason: str) -> str:
     """Append `- <task>: <reason>` to the Flags section. Raises UsageError for an unknown task or a
     bad reason, RefusedError when the task is already flagged, DataError without a Flags section."""
-    raise NotImplementedError
+    problem = schema.FLAG_REASON_RULE(reason)
+    if problem:
+        raise UsageError(problem)
+    lines = _split(text)
+    _find_row(_require_table(lines), task_id)
+    start, end, existing = _flags(lines)
+    if start is None:
+        raise DataError("the file has no " + schema.FLAGS_HEADING + " section")
+    for _index, line in existing:
+        match = schema.FLAG_LINE.fullmatch(line)
+        if match and match.group(1) == task_id:
+            raise RefusedError(task_id + " is already flagged")
+    position = end
+    while position - 1 > start and not lines[position - 1].strip():
+        position -= 1
+    lines.insert(position, "- " + task_id + ": " + reason)
+    return _join(lines)
 
 
 def set_task(text: str, task_id: str, field: str, value: str) -> str:
@@ -205,7 +239,7 @@ def check(text: str) -> List[str]:
         problems.append('first line must be "' + schema.TITLE_LINE + '"')
 
     found = _header_lines(lines)
-    allowed = schema.HEADER_KEYS + schema.OPTIONAL_KEYS
+    allowed = schema.HEADER_KEYS
     for key in schema.HEADER_KEYS:
         if key not in found:
             problems.append("missing key: " + key)
@@ -232,6 +266,37 @@ def check(text: str) -> List[str]:
     if tuple(header) != schema.TASK_COLUMNS:
         problems.append("task table header must be: | " + " | ".join(schema.TASK_COLUMNS) + " |")
     problems.extend(_check_rows(rows))
+    problems.extend(_check_flags(lines, rows))
+    return problems
+
+
+def _check_flags(lines: List[str], rows: List[_Row]) -> List[str]:
+    """Every flag line belongs to one flagged task, and every flagged task has one flag line."""
+    problems: List[str] = []
+    status = {
+        row.cells[0].strip(): row.cells[schema.TASK_COLUMNS.index("status")].strip()
+        for row in rows
+        if len(row.cells) == len(schema.TASK_COLUMNS)
+    }
+    flagged_in_text: List[str] = []
+    _start, _end, existing = _flags(lines)
+    for _index, line in existing:
+        match = schema.FLAG_LINE.fullmatch(line)
+        if not match:
+            problems.append('flag line "' + line + '" is not valid: expected - t-N: reason')
+            continue
+        task_id = match.group(1)
+        if task_id in flagged_in_text:
+            problems.append("flag for " + task_id + " appears twice")
+            continue
+        flagged_in_text.append(task_id)
+        if task_id not in status:
+            problems.append("flag for " + task_id + ": task does not exist")
+        elif status[task_id] != "flagged":
+            problems.append("flag for " + task_id + ": task is not flagged")
+    for task_id, value in status.items():
+        if value == "flagged" and task_id not in flagged_in_text:
+            problems.append(task_id + " is flagged but has no flag line")
     return problems
 
 

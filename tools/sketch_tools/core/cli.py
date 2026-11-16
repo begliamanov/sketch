@@ -53,11 +53,32 @@ class Tool:
             raise ValueError("command already registered: " + name)
         self._commands[name] = (help_text, configure, handler)
 
+    def _groups(self) -> Dict[str, List[str]]:
+        """Command groups: names given as "group leaf", mapped to their leaf names in order."""
+        groups: Dict[str, List[str]] = {}
+        for name in self._commands:
+            if " " in name:
+                group, leaf = name.split(" ", 1)
+                groups.setdefault(group, []).append(leaf)
+        return groups
+
     def _build_parser(self) -> argparse.ArgumentParser:
         parser = _Parser(prog=self.name, description=self.description)
         sub = parser.add_subparsers(dest="command", parser_class=_Parser, metavar="<command>")
+        group_actions: Dict[str, Any] = {}
         for name, (help_text, configure, _handler) in self._commands.items():
-            configure(sub.add_parser(name, help=help_text, description=help_text))
+            if " " not in name:
+                configure(sub.add_parser(name, help=help_text, description=help_text))
+                continue
+            group, leaf = name.split(" ", 1)
+            if group not in group_actions:
+                group_parser = sub.add_parser(
+                    group, help=group + " commands", description=group + " commands"
+                )
+                group_actions[group] = group_parser.add_subparsers(
+                    dest="subcommand", parser_class=_Parser, metavar="<command>"
+                )
+            configure(group_actions[group].add_parser(leaf, help=help_text, description=help_text))
         return parser
 
     def main(self, argv: Optional[List[str]] = None, env: Optional[Env] = None) -> int:
@@ -77,7 +98,24 @@ class Tool:
         except SystemExit as stop:  # --help
             return int(stop.code or exitcodes.OK)
         if args.command is None:
-            raise UsageError("missing command. Commands: " + ", ".join(self._commands))
-        handler: Handler = self._commands[args.command][2]
+            raise UsageError("missing command. Commands: " + ", ".join(self._top_level_names()))
+        name: str = args.command
+        groups = self._groups()
+        if name in groups:
+            leaf = getattr(args, "subcommand", None)
+            if leaf is None:
+                raise UsageError(
+                    "missing command for " + name + ". Commands: " + ", ".join(groups[name])
+                )
+            name = name + " " + leaf
+        handler: Handler = self._commands[name][2]
         result: Any = handler(args, env)
         return int(result)
+
+    def _top_level_names(self) -> List[str]:
+        names: List[str] = []
+        for name in self._commands:
+            top = name.split(" ", 1)[0]
+            if top not in names:
+                names.append(top)
+        return names

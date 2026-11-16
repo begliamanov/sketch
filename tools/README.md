@@ -42,6 +42,6 @@ python3 -m sketch_tools.state check --state path/to/state.md
 | Tool | Subcommands |
 |---|---|
 | `journal` | `add` |
-| `state` | `set`, `bump`, `check` |
+| `state` | `set`, `bump`, `check`, `flag add` |
 
 Launchers (`sketch-journal`, `sketch-state`) and the adapter install step are not built yet.

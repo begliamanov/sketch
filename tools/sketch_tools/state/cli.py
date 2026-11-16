@@ -65,6 +65,18 @@ def _run_bump(args: argparse.Namespace, env: Env) -> int:
     return exitcodes.OK
 
 
+def _configure_flag_add(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("reason", metavar="REASON", help="why, one line, kept exactly")
+    parser.add_argument("--task", required=True, metavar="ID", help="the task to flag, like t-4")
+    _add_state_option(parser)
+
+
+def _run_flag_add(args: argparse.Namespace, env: Env) -> int:
+    _write(args, logic.add_flag(_read(args), args.task, args.reason))
+    env.stdout.write("ok: flagged " + args.task + "\n")
+    return exitcodes.OK
+
+
 def _run_check(args: argparse.Namespace, env: Env) -> int:
     problems = logic.check(_read(args))
     if not problems:
@@ -79,6 +91,10 @@ def build_tool() -> Tool:
     tool = Tool("state", "The story state file: set a field, bump a counter, check the file.")
     tool.add_command("set", "set one field, rejecting values outside the schema", _configure_set, _run_set)
     tool.add_command("bump", "increase one counter, refusing to pass its cap", _configure_bump, _run_bump)
+    tool.add_command(
+        "flag add", "append a flag line for a task (set its status separately)",
+        _configure_flag_add, _run_flag_add,
+    )
     tool.add_command("check", "report every problem in the file", _add_state_option, _run_check)
     return tool
 
