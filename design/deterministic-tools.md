@@ -136,6 +136,7 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-16 | `guard check-edit` dropped. `guard` is now just `check-command`; test protection is `repo-check tests-unchanged` (detect, not prevent). |
 | 2026-11-16 | `/tune-skills` may run one small test once at setup (after a yes) to capture a real fixture (option A). Assumptions taken as cheap defaults: `{class}` becomes `{target}`; untracked files count as dirty. |
 | 2026-11-16 | Test results: structured result files (`junit-xml`, `xcresult`), no console scraping. Readers are project-local plugins; the LLM helps proactively with setup in `/tune-skills`. Replaces the gradle/xcodebuild/pytest list. |
 | 2026-11-16 | (superseded) Test runners for the first version: Gradle, Xcode (`xcodebuild`), pytest. Parsers are plugins behind one interface so more can be added later. |
@@ -187,7 +188,7 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `pr` | `check-base` | PR base equals the feature branch, from `gh pr view` JSON | **agreed**: build |
 | `pr` | `check-flags` | Every flagged task and unresolved must-fix in `state.md` appears in the PR description | **agreed**: build |
 | `guard` | `check-command` | Deny push to feature/main, force-push, merge, issue close, merge into protected branches; runs as a Claude Code hook | **agreed**: build |
-| `guard` | `check-edit` | Deny edits to test files while the implementer runs; needs a marker saying who is active (open, settle at build time) | **agreed**: build |
+| `guard` | `check-edit` | Deny edits to test files while the implementer runs | **rejected** (2026-11-16): needs an "active role" marker that can go stale, and `repo-check tests-unchanged` already detects the change right after, with the original safe in the `t-N: tests` commit |
 | `report` | `submit` | Agent hands in its report (JSON on stdin); rejected with exact errors if malformed (skills need path + rule, must-fix needs file:line, assumptions block); saved to `.sketch/reports/<task>-<role>.json` | **agreed**: build |
 | `report` | `check` | Orchestrator checks a valid report exists for a task and role; fails if missing | **agreed**: build |
 | `report` | `get` | Read one field (verdict, must_fix, assumptions...) from a saved report | **agreed**: build |
