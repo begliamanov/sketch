@@ -5,7 +5,7 @@ import unittest
 
 from sketch_tools.core import exitcodes
 from sketch_tools.core.cli import Env, Tool
-from sketch_tools.core.errors import RefusedError, UsageError
+from sketch_tools.core.errors import DataError, RefusedError, UsageError
 
 from tests.helpers import run_tool
 
@@ -47,6 +47,7 @@ class ExitCodeContractTest(unittest.TestCase):
     def test_error_classes_carry_their_exit_code(self) -> None:
         self.assertEqual(UsageError("x").exit_code, 3)
         self.assertEqual(RefusedError("x").exit_code, 2)
+        self.assertEqual(DataError("x").exit_code, 1)
 
 
 class ToolDispatchTest(unittest.TestCase):

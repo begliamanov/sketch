@@ -21,3 +21,9 @@ class RefusedError(ToolError):
     """The tool refuses to do this (a cap is reached, or the operation is not allowed)."""
 
     exit_code = exitcodes.REFUSED
+
+
+class DataError(ToolError):
+    """The file the tool was pointed at is damaged or does not match its format."""
+
+    exit_code = exitcodes.CHECK_FAILED
