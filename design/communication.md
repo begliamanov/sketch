@@ -35,6 +35,11 @@ Last updated: 2026-11-15
 
 - Show the advantages up front, with the question: what the developer gains, and what it costs. Do not wait to be asked "what do I get from this". Show a concrete example of what it does.
 
+## When I cannot decide
+
+- Stop and ask. Do not invent a workaround, pick a quiet default for something that matters, or route around the problem. Say what I could not decide and what the options are.
+- This is the same fail-hard rule Sketch itself follows (`conventions.md`).
+
 ## Discussion-only sessions
 
 - When the developer says "we just talk, don't implement anything", write nothing except the notes files they asked for. No code, no scaffolding.

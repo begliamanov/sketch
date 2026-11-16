@@ -107,22 +107,22 @@ Splitting a story into tasks, writing tests, implementing, reviewing against cri
 
 ## Candidates from reading /sketch, /tasks, /tune-skills, /retro (2026-11-16)
 
-All proposed. Each follows the Q5 rule: facts come in as text or JSON, the orchestrator gathers them with git and `gh`.
+All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come in as text or JSON, the orchestrator gathers them with git and `gh`.
 
 | Tool | Subcommand | One job | Where it comes from | Status |
 |---|---|---|---|---|
-| `setup` | `check` | Given facts (git repo, commit, remote, auth, `.sketch/`, exclude line, config, docs, feature branch, pushed), print every missing step in order with its exact command, marked safe or developer-only | "Setup gaps" in the orchestrator, `/sketch`, `/run-story`, `/tune-skills` | proposed |
-| `journal` | `me-lines` | List every `[me]` line for given stories, verbatim | `/retro` step 3.1 | proposed |
-| `journal` | `signals` | Count flags and cap hits per story from the journal | `/sketch` step 2 and `/retro` | proposed |
-| `retro` | `recommend` | Apply the rule (first 3 stories, any flag, any cap hit, over 20 lines changed, over 10 comments) to counts and say recommended or not | `/sketch` step 2 | proposed |
-| `state` | `gate` | From `phase` and PR state say: ok, ask about the PR, or stop with the right message | `/sketch` step 1 | proposed |
-| `state` | `new-story` | Write a fresh story record in the exact state format | `/sketch` step 8 | proposed |
-| `state` | `reconcile` | Compare state with piped facts (commits per task, branches, issues, PR) and classify each difference harmless or risky | `/resume-story` step 3 | proposed |
-| `state` | `wip-message` | Build the `[wip]` commit message from state; refuse if the branch is not the story branch | `/pause`, `/stop`, resume | proposed |
-| `plan` | `brief-skills` | Compute the skill paths for one agent brief (common + task picks inside the role list, full list for story-reviewer, pool names for reviewers) | orchestrator "Briefing an agent" item 5 | proposed |
-| `plan` | `issues-todo` | Given `tasks.md` and the existing issues as JSON, list which issues and blocking links are still to create | `/tasks` publish mode | proposed |
-| `skills` | `list` | List `SKILL.md` files with name, description and absolute path | `/tune-skills` scan | proposed |
-| `plan` | `detect-tracker` | Map a remote URL to github or gitlab and `gh` or `glab`, or "ask" | `/tune-skills` scan | proposed |
+| `setup` | `check` | Given facts (git repo, commit, remote, auth, `.sketch/`, exclude line, config, docs, feature branch, pushed), print every missing step in order with its exact command, marked safe or developer-only | "Setup gaps" in the orchestrator, `/sketch`, `/run-story`, `/tune-skills` | **agreed**: build |
+| `journal` | `me-lines` | List every `[me]` line for given stories, verbatim | `/retro` step 3.1 | **agreed**: build |
+| `journal` | `signals` | Count flags and cap hits per story from the journal | `/sketch` step 2 and `/retro` | **agreed**: build |
+| `retro` | `recommend` | Apply the rule (first 3 stories, any flag, any cap hit, over 20 lines changed, over 10 comments) to counts and say recommended or not | `/sketch` step 2 | **agreed**: build |
+| `state` | `gate` | From `phase` and PR state say: ok, ask about the PR, or stop with the right message | `/sketch` step 1 | **agreed**: build |
+| `state` | `new-story` | Write a fresh story record in the exact state format | `/sketch` step 8 | **agreed**: build |
+| `state` | `reconcile` | Compare state with piped facts (commits per task, branches, issues, PR) and classify each difference harmless or risky | `/resume-story` step 3 | **agreed**: build |
+| `state` | `wip-message` | Build the `[wip]` commit message from state; refuse if the branch is not the story branch | `/pause`, `/stop`, resume | **agreed**: build |
+| `plan` | `brief-skills` | Compute the skill paths for one agent brief (common + task picks inside the role list, full list for story-reviewer, pool names for reviewers) | orchestrator "Briefing an agent" item 5 | **agreed**: build |
+| `plan` | `issues-todo` | Given `tasks.md` and the existing issues as JSON, list which issues and blocking links are still to create | `/tasks` publish mode | **agreed**: build |
+| `skills` | `list` | List `SKILL.md` files with name, description and absolute path | `/tune-skills` scan | **agreed**: build |
+| `plan` | `detect-tracker` | Map a remote URL to github or gitlab and `gh` or `glab`, or "ask" | `/tune-skills` scan | **agreed**: build |
 
 ## Not yet reviewed
 
@@ -135,6 +135,7 @@ All proposed. Each follows the Q5 rule: facts come in as text or JSON, the orche
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-16 | All 12 candidates from the skills review agreed: `setup check`, `journal me-lines`, `journal signals`, `retro recommend`, `state gate/new-story/reconcile/wip-message`, `plan brief-skills/issues-todo/detect-tracker`, `skills list`. |
 | 2026-11-16 | Q5 decided: strict rule, one exception (`tests run`). All of Q1 to Q5 are now answered. |
 | 2026-11-16 | Q4 decided: Option 1 (`tools/` copied by each adapter's install, launchers on a stable path). |
 | 2026-11-15 | Tests are written first, before implementation (developer requirement). |
