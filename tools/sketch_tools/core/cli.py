@@ -53,6 +53,10 @@ class Tool:
             raise ValueError("command already registered: " + name)
         self._commands[name] = (help_text, configure, handler)
 
+    def command_names(self) -> List[str]:
+        """Every registered command, as typed: `set`, `flag add`, ..."""
+        raise NotImplementedError
+
     def _groups(self) -> Dict[str, List[str]]:
         """Command groups: names given as "group leaf", mapped to their leaf names in order."""
         groups: Dict[str, List[str]] = {}
