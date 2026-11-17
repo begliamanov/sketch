@@ -33,9 +33,15 @@ Your brief lists findings, quoted verbatim, from the reviewer or from the story-
 
 ## Hand back
 
-- what you changed (commit subjects)
-- if the last commit before yours was a `[wip]` commit (interrupted work): whether you built on it or redid it, and why. Read its diff first; it may be incomplete or inconsistent
-- assumptions you made, especially anything that differs from the story brief
-- doubts you have
-- for each finding in fix mode: fixed, or not fixed and why
-- the skills you applied
+Hand back a report with the report tool, never as free text. Your brief gives your run number. The JSON has these fields:
+
+- `mode`: `implement` or `fix`
+- `outcome`: `done`, or why you stopped: `test-looks-wrong`, `conflicts-with-earlier-test`, `same-failure-twice`, `outside-code-failure`. Anything but `done` needs a `detail`: the test and your evidence, or the failing command and its error
+- `commits`: the subjects of your commits (at least one when `done`)
+- `wip`: only when the last commit before yours was a `[wip]` commit (interrupted work). Read its diff first, it may be incomplete. `{"built_on": "build" or "redo", "why": "..."}`
+- `findings`: in fix mode, one entry per finding: `{"finding": "<verbatim>", "status": "fixed" or "not-fixed", "why": "<needed when not fixed>"}`
+- `assumptions`: everything you assumed, especially anything that differs from the story brief (`[]` if none)
+- `doubts`: what you doubt (`[]` if none)
+- `skills_applied`: one entry per skill in your brief: `{"path": "<its SKILL.md>", "rule": "<one concrete rule you applied>"}`, or `{"path": "<its SKILL.md>", "none_applies": "<why>"}`
+
+Write the JSON to `.sketch/report-draft.json`, then submit it: `{{TOOLS}}/sketch-report submit --role implementer --scope t-<n> --run <the run number in your brief> --reports .sketch/reports < .sketch/report-draft.json`. It saves the report only when it is complete and consistent. If it lists problems, fix them and submit again. Your final message is only the path it printed.

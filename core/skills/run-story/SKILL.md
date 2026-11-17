@@ -34,23 +34,26 @@ Work the tasks **sequentially**, in the order the tool gives. Ask for the order 
 
 For each task, update the state after every step, check for `/pause` and `/stop` between agents, and write events to the journal the moment they happen. Note `git rev-parse HEAD` as the task's start when the task begins. After every task run `{{TOOLS}}/sketch-state check --state .sketch/state.md`; a problem means the state was damaged, so stop with the STOPPED report.
 
-**a. Tests.** Run `test-writer` (mode write). Check its commits and the tree with the tools (orchestrator rules, "Checking what comes back"), and that `git log` has the `t-<n>: tests` commit. Set the status: `{{TOOLS}}/sketch-state set --task t-<n> status tests-red --state .sketch/state.md`. If the agent could not get a clean red in 2 attempts, flag the task.
+Every agent you start gets a run number for its report, and you check its report when it returns: `{{TOOLS}}/sketch-report check --role <role> --scope t-<n> --run <k> --reports .sketch/reports` must print `ok` (add a `--skills <path>` for each skill in the brief; orchestrator rules, "Checking what comes back"). The report's `outcome` is how you read the result: `{{TOOLS}}/sketch-report get --role <role> --scope t-<n> --run <k> --reports .sketch/reports outcome`. An `outside-code-failure` outcome stops everything with the STOPPED report, quoting its `detail`.
 
-**b. Implement.** Count the attempt first: `{{TOOLS}}/sketch-state bump --task t-<n> attempts --state .sketch/state.md`. Exit code 2 means the cap is reached: flag the task. Otherwise run `implementer` (mode implement), check its commits and the tree with the tools, and set `status: green`.
-- If it reports that a test looks wrong: run `test-writer` in mode `recheck` with the implementer's evidence. If the test-writer fixes the test, run the implementer again (this counts as an attempt). If the test-writer disagrees, give its reasoning to the implementer and run it again. If the implementer still insists, flag the task.
-- If it reports a conflict with an **earlier task's** test, flag the task: "conflicts with <id>'s test". That is a decision for the developer.
-- At the attempt cap (the `bump` above exits 2), or the same failure twice in a row, flag the task.
+**a. Tests.** Run `test-writer` (mode write). Check its report, its commits and the tree with the tools, and that `git log` has the `t-<n>: tests` commit. `outcome` `no-clean-red` means it could not get a clean red in 2 attempts: flag the task. Otherwise set the status: `{{TOOLS}}/sketch-state set --task t-<n> status tests-red --state .sketch/state.md`.
+
+**b. Implement.** Count the attempt first: `{{TOOLS}}/sketch-state bump --task t-<n> attempts --state .sketch/state.md`. Exit code 2 means the cap is reached: flag the task. Otherwise run `implementer` (mode implement), check its report, commits and the tree with the tools, and read its `outcome`:
+- `done`: set `status: green`.
+- `test-looks-wrong`: run `test-writer` in mode `recheck` with the implementer's `detail` (its evidence). Its outcome `test-fixed`: run the implementer again (this counts as an attempt). `test-right`: give its `detail` (the reasoning) to the implementer and run it again. If the implementer still insists, flag the task.
+- `conflicts-with-earlier-test`: flag the task: "conflicts with <id>'s test". That is a decision for the developer.
+- `same-failure-twice`, or the attempt cap (the `bump` above exits 2): flag the task.
 
 **c. Review.** First run the mechanical checks and put their output in the `reviewer`'s brief. A failing check is not for you to judge: the reviewer files it as a must-fix.
 - Tests untouched. `<tests-sha>` is the newest commit whose subject is `t-<n>: fix test (rechecked)`, or else `t-<n>: tests`. Pass each glob of `test_paths` from the config as `--tests`: `git diff --name-only <tests-sha>..HEAD | {{TOOLS}}/sketch-repo-check tests-unchanged --tests <glob>`
 - Changelog: `git diff -U99999 <tests-sha>..HEAD -- CHANGELOG.md | {{TOOLS}}/sketch-repo-check changelog --issue <issue number of the task>`
 - Commits: `git log --format=%s <task start>..HEAD | {{TOOLS}}/sketch-repo-check commit-prefix --task t-<n>`
 
-Then set `status: in-review` and run `reviewer`.
-- `SATISFIED`: set `status: done`. Journal a REVIEW line if there were nice-to-have items.
-- `CHANGES NEEDED`: count the round: `{{TOOLS}}/sketch-state bump --task t-<n> review_rounds --state .sketch/state.md`. If it succeeds, run a **fresh** `implementer` in mode `fix` with the must-fix findings quoted verbatim, then the mechanical checks again and a **fresh** `reviewer`. If it exits 2 (the cap), or the same finding comes back unchanged, flag the task with the unresolved must-fix findings, and journal a CAP line.
+Then set `status: in-review` and run `reviewer`, and read its `verdict` with `get` (`outside-code-failure` as its `outcome` stops everything).
+- `SATISFIED`: set `status: done`. Journal a REVIEW line if its `nice_to_have` is not empty.
+- `CHANGES NEEDED`: its `must_fix` (read it with `--json`) is what the fix round gets. Count the round: `{{TOOLS}}/sketch-state bump --task t-<n> review_rounds --state .sketch/state.md`. If it succeeds, run a **fresh** `implementer` in mode `fix` with the `must_fix` findings quoted verbatim, then the mechanical checks again and a **fresh** `reviewer`. If it exits 2 (the cap), or the same finding comes back unchanged, flag the task with the unresolved must-fix findings, and journal a CAP line.
 
-**d. Assumptions.** Read the implementer's report. Any assumption that differs from the story brief goes to the journal as ASSUME: `{{TOOLS}}/sketch-journal add ASSUME S<n> t-<n> "<the assumption>" --journal .sketch/journal.md`.
+**d. Assumptions.** Read the implementer's `assumptions` (`get`, one per line). Any assumption that differs from the story brief goes to the journal as ASSUME: `{{TOOLS}}/sketch-journal add ASSUME S<n> t-<n> "<the assumption>" --journal .sketch/journal.md`.
 
 **e. Flags.** To flag a task, do both, in this order: add the flag line with `{{TOOLS}}/sketch-state flag add --task t-<n> "<reason>" --state .sketch/state.md`, then set the status with `{{TOOLS}}/sketch-state set --task t-<n> status flagged --state .sketch/state.md`, and journal a FLAG line. `check` reports a flagged task without a flag line. It does not stop tasks that do not depend on it.
 
@@ -62,17 +65,17 @@ If an agent reports a failure that is outside the code (credentials, VPN, networ
 
 When no task can progress, set `phase: story-end` (`{{TOOLS}}/sketch-state set phase story-end --state .sketch/state.md`) and run the loop below, at most 3 rounds. Count each round: `{{TOOLS}}/sketch-state bump story_rounds --state .sketch/state.md`; exit code 2 means the cap is reached.
 
-1. Run `tester` in mode `full`. `CANNOT RUN` stops everything (STOPPED report). Otherwise continue even if the result is FAIL.
-2. Run `story-reviewer` with the diff scope (the story branch against the feature branch), the tester's report and log path, and the flags and assumptions so far. It reviews even when the suite is red.
-3. If the verdict is `SATISFIED` and the tester result is PASS: leave the loop.
-4. Otherwise, if rounds remain: run a **fresh** `implementer` in mode `fix` with the must-fix findings (including failing tests, verbatim), then go back to step 1 and count the round.
+1. Run `tester` in mode `full`. Its `result` (`get` it) `CANNOT RUN` stops everything (STOPPED report, quoting `cannot_run_because`). Otherwise continue even if the result is `FAIL`.
+2. Run `story-reviewer` with the diff scope (the story branch against the feature branch), the tester's report (give it the run number to read) and its `log` path, and the flags and assumptions so far. It reviews even when the suite is red.
+3. If its `verdict` is `SATISFIED` and the tester `result` is `PASS`: leave the loop.
+4. Otherwise, if rounds remain: run a **fresh** `implementer` in mode `fix` with the story-reviewer's `must_fix` findings (including failing tests, verbatim), then go back to step 1 and count the round.
 5. At the cap: leave the loop. The unresolved items go on top of the PR.
 
 Journal a REVIEW line with the outcome and the rounds used (`{{TOOLS}}/sketch-journal add REVIEW S<n> - "<outcome, rounds used>" --journal .sketch/journal.md`).
 
 ## 6. Open the PR
 
-Set `phase: pr` (`{{TOOLS}}/sketch-state set phase pr --state .sketch/state.md`). Write `.sketch/pr-extras.json` from the reports, quoting items verbatim: `summary` (two or three plain lines on what the user gets, from the brief), `tests_passed` (the count from the tester's full-suite report), `reviewer_model` (the story-reviewer's model), `unresolved` (must-fix items still open, only if the story-end loop hit its cap), `nice_to_have` (the story-reviewer's, most important first), `manual_checks` (from the brief and the reviewers), `differs` (implementer assumptions that differ from the brief, each starting with its task id), `wip_commits` (`[wip]` commits never followed by a completed step). Only the first three keys are required; leave out a list that would be empty. Then run the `pr-agent` with: the story branch, the feature branch, the paths of the state, brief and tasks files, and `.sketch/pr-extras.json`. It builds the description with the pr tool.
+Set `phase: pr` (`{{TOOLS}}/sketch-state set phase pr --state .sketch/state.md`). Write `.sketch/pr-extras.json` from the reports, quoting items verbatim: `summary` (two or three plain lines on what the user gets, from the brief), `tests_passed` (the tester's `counts.passed` from its last full-suite report), `reviewer_model` (the story-reviewer's `model`), `unresolved` (the story-reviewer's `must_fix` still open, each as one line, only if the story-end loop hit its cap), `nice_to_have` (the story-reviewer's, most important first), `manual_checks` (from the brief and the reviewers), `differs` (implementer assumptions that differ from the brief, each starting with its task id), `wip_commits` (`[wip]` commits never followed by a completed step). Only the first three keys are required; leave out a list that would be empty. Then run the `pr-agent` (give it a run number) with: the story branch, the feature branch, the paths of the state, brief and tasks files, and `.sketch/pr-extras.json`. It builds the description with the pr tool.
 
 Then verify, yourself:
 - the PR/MR exists and its **base is the feature branch**: `gh pr view <number> --json baseRefName,headRefName,state | {{TOOLS}}/sketch-pr check-base --base <feature-branch> --head <story-branch>` prints `ok` (for GitLab, `glab mr view <number> --output json` instead)

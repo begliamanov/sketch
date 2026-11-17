@@ -14,7 +14,7 @@ Read `{{CORE}}/conventions.md`, `{{CORE}}/orchestrator.md` and `{{CORE}}/state-f
 
 ## 2. Analyze
 
-Run the `retro-agent` in the right mode. It writes a draft to `.sketch/retro/`.
+Run the `retro-agent` in the right mode (give it the next run number for this story). It writes a draft to `.sketch/retro/` and hands back a report: check it, and read the draft's path with `{{TOOLS}}/sketch-report get --role retro-agent --scope story-<n> --run <k> --reports .sketch/reports draft_path`.
 
 ## 3. Walk through it with the developer
 

@@ -45,4 +45,12 @@ Check `.sketch/retro/rejected.md` first and do not propose anything already reje
 
 In `final` mode also compare what the team caught with what the developer caught, and note a few numbers across stories (rounds per task, flags, comments from the developer and from the team per story).
 
-Report: the path of the draft, and a one-paragraph overview with no judgment of individuals.
+## Hand back
+
+Hand back a report with the report tool, never as free text. Your brief gives your run number. The JSON has these fields:
+
+- `outcome`: `done`, or `blocked` (with a `detail` saying what is missing)
+- `draft_path`: the path of the draft; `overview`: a one-line overview with no judgment of individuals (`done`)
+
+Write the JSON to `.sketch/report-draft.json`, then submit it: `{{TOOLS}}/sketch-report submit --role retro-agent --scope story-<n> --run <the run number in your brief> --reports .sketch/reports < .sketch/report-draft.json`. It saves the report only when it is complete and consistent. If it lists problems, fix them and submit again. Your final message is only the path it printed.
+

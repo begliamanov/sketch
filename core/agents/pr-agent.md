@@ -28,6 +28,11 @@ The tool fixes its shape, so do not rewrite it: a first line `Story <n>: <title>
 
 The content other than the state file comes from `.sketch/pr-extras.json`, which the orchestrator writes from the agents' reports. Your brief names it.
 
-## Report
+## Hand back
 
-Hand back the PR number and URL, the head SHA you recorded, and anything that was already there. If any command fails, stop and report the error. Do not try another route.
+Hand back a report with the report tool, never as free text. Your brief gives your run number. The JSON has these fields:
+
+- `outcome`: `done`, `already-exists` (a PR for the branch was there: update nothing), or `outside-code-failure` (a command failed: stop, do not try another route; needs a `detail` with the error)
+- `pr`: the PR number or URL; `head_sha`: the SHA you recorded (`done`)
+
+Write the JSON to `.sketch/report-draft.json`, then submit it: `{{TOOLS}}/sketch-report submit --role pr-agent --scope story-<n> --run <the run number in your brief> --reports .sketch/reports < .sketch/report-draft.json`. It saves the report only when it is complete and consistent. If it lists problems, fix them and submit again. Your final message is only the path it printed.

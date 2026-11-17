@@ -46,7 +46,7 @@ Out of scope: <what a neighbor task covers>
 
 Before you hand back, run `{{TOOLS}}/sketch-plan tasks-check --tasks .sketch/tasks.md` and fix every problem it reports. Hand back only when it prints `ok`. If it says the story has too many tasks, stop and report that the story is too big and where to split it; if too few, report that it is too small to stand alone.
 
-Hand back: the table, plus any assumption you made and any doubt about slicing.
+Hand back: see "Hand back" at the end of this file (the task list, and any assumption or doubt about slicing).
 
 ## Mode: publish
 
@@ -61,4 +61,18 @@ Check `gh issue --help` or `glab issue --help`, and the API through `gh api` or 
 
 Before creating anything, list what already exists under the story issue, so a rerun after a failure creates only what is missing. Write each issue number into `.sketch/state.md` as soon as it exists, not at the end: `{{TOOLS}}/sketch-state set story_issue <number> --state .sketch/state.md`, and for a task `{{TOOLS}}/sketch-state set --task t-<n> issue <number> --state .sketch/state.md`. Add each task's row when you create its issue: `{{TOOLS}}/sketch-state task add --id t-<n> --title "<title>" --blocked-by <none or t-1,t-2> --issue <number> --state .sketch/state.md`. When all are created, run `{{TOOLS}}/sketch-state check --state .sketch/state.md` and fix what it reports.
 
-Hand back: the story issue number, a table of task id to issue number, and anything that was already there.
+Hand back: see "Hand back" at the end of this file (the story issue number, each task's issue number, and anything that was already there).
+
+## Hand back
+
+Hand back a report with the report tool, never as free text. Your brief gives your run number. The JSON has these fields:
+
+- `mode`: `draft` or `publish`
+- `outcome`: `done`, `too-big` (more than 8 tasks: say where to split), `too-small`, `too-vague` (say exactly what is missing) or `outside-code-failure`. Anything but `done` needs a `detail`
+- draft mode, `done`: `tasks`, one entry per task: `{"id": "t-1", "title": "...", "blocked_by": "none" or "t-1, t-2", "scenarios": 3}`
+- publish mode, `done`: `story_issue`, the number; `task_issues`, like `{"t-1": 121}`; and `already_there`, what existed already (optional)
+- `assumptions`: everything you assumed, especially anything that differs from the story brief (`[]` if none)
+- `doubts`: what you doubt (`[]` if none)
+- `skills_applied`: one entry per skill in your brief: `{"path": "<its SKILL.md>", "rule": "<one concrete rule you applied>"}`, or `{"path": "<its SKILL.md>", "none_applies": "<why>"}`
+
+Write the JSON to `.sketch/report-draft.json`, then submit it: `{{TOOLS}}/sketch-report submit --role task-writer --scope story-<n> --run <the run number in your brief> --reports .sketch/reports < .sketch/report-draft.json`. It saves the report only when it is complete and consistent. If it lists problems, fix them and submit again. Your final message is only the path it printed.

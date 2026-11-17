@@ -174,7 +174,7 @@ STOP. Wait for you.
 | The orchestrator never runs tests | It gets verdicts, not logs. Its context stays small. |
 | One commit prefix per task (`t-3: ...`), no squashing | You can read the PR task by task. |
 | Every task adds a CHANGELOG line ending `(#issue)` | Missing = must fix. |
-| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`. The PR description is rendered by `sketch-pr`, and a hook (`sketch-guard`) blocks merges, force pushes, pushes to main or the feature branch, and issue closing before they run. Same input, same answer, every time. |
+| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`, and every agent hands in its report through `sketch-report`, which refuses an incomplete or self-contradicting one (a reviewer cannot say SATISFIED with a must-fix open). The PR description is rendered by `sketch-pr`, and a hook (`sketch-guard`) blocks merges, force pushes, pushes to main or the feature branch, and issue closing before they run. Same input, same answer, every time. |
 
 Caps and rules: [`core/conventions.md`](core/conventions.md).
 
@@ -301,7 +301,7 @@ your project/
     config.md                   from /tune-skills
     initial-sketch.md           frozen feature picture; deleted after the final retro, if you say so
     story-brief.md  tasks.md  state.md  journal.md  stop-note.md
-    logs/  retro/
+    logs/  retro/  reports/
 
 sketch/                         this repo
   core/                         the system, plain Markdown, harness-neutral

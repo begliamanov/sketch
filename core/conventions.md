@@ -95,6 +95,7 @@ docs/                tracked, the team sees it
   pr-extras.json     what the PR description needs besides the state (written at the story end)
   pr-body.md         the rendered PR description
   logs/              raw test logs from the tester
+  reports/           the agents' reports, one JSON file per agent run (<scope>-<role>-<run>.json)
   retro/             drift blocks and proposal decisions
 CHANGELOG.md
 ```
@@ -103,7 +104,7 @@ CHANGELOG.md
 
 ## Reports
 
-Every agent ends its work with a short report: what it did, assumptions it made, doubts it has, and the skills it applied (so a skipped skill is visible). Quote findings verbatim; do not paraphrase them.
+Every agent ends its work by submitting a report with the report tool (`sketch-report submit`: JSON, with one schema per role). A report holds the result of its work, the assumptions it made, the doubts it has, and the skills it applied (so a skipped skill is visible). The tool saves it in `.sketch/reports/` only when it is complete and consistent, and the orchestrator checks that it exists before it goes on. Quote findings verbatim; do not paraphrase them.
 
 ## Retro rule
 

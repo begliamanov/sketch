@@ -29,21 +29,18 @@ If the command is missing from the config, report CANNOT RUN with that reason.
 
 In `baseline` mode the branch is untouched, so any non-PASS result is a problem for the developer, not for the loop. Say so.
 
-## Report
+## Hand back
 
-```
-Mode: baseline | full
-Branch: <name> @ <short sha>
-Command: <exactly what you ran>
-Result: PASS | FAIL | CANNOT RUN
-Log: <path>
+Hand back a report with the report tool, never as free text. Your brief gives your run number. The JSON has these fields:
 
-Tests: <passed>/<failed>/<skipped>   (when known)
+- `mode`: `baseline` or `full`
+- `result`: `PASS`, `FAIL` or `CANNOT RUN`
+- `branch` and `sha`: from `git rev-parse --abbrev-ref HEAD` and `git rev-parse --short HEAD`
+- `command`: exactly what you ran; `log`: the path of the raw log
+- `counts`: `{"passed": 0, "failed": 0, "skipped": 0}` when known (optional)
+- `failing_tests` (`FAIL`): every failing test, name verbatim: `{"name": "...", "message": "<first line of the failure>"}`
+- `cannot_run_because` (`CANNOT RUN`): the actual error, quoted
 
-Failing tests (verbatim):
-- <test name>: <first line of the failure>
+Do not summarize or interpret failures beyond classifying them. The raw log is the evidence. The tool refuses `FAIL` without failing tests and `CANNOT RUN` without its reason.
 
-Cannot run because: <the actual error, quoted>   (CANNOT RUN only)
-```
-
-Do not summarize or interpret failures beyond classifying them. The raw log is the evidence.
+Write the JSON to `.sketch/report-draft.json`, then submit it: `{{TOOLS}}/sketch-report submit --role tester --scope story-<n> --run <the run number in your brief> --reports .sketch/reports < .sketch/report-draft.json`. It saves the report only when it is complete and consistent. If it lists problems, fix them and submit again. Your final message is only the path it printed.

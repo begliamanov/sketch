@@ -36,21 +36,22 @@ Every brief contains:
 4. The task id and issue number, when there is one.
 5. The skills the agent must read first: the role's list from `.sketch/config.md`, plus any extra skills the developer gave for this story. Agents may have no Skill tool, so give each skill as the absolute path of its `SKILL.md` and tell the agent to read the whole file. Resolve a plugin-style name to a path before briefing; if it cannot be resolved, fail hard.
 6. Findings to address, quoted verbatim, on a fix round.
-7. What to hand back: the report described in the agent's own file.
+7. What to hand back: its report, submitted with the report tool (the agent's own file says how). Give the agent its **run number**: 1 the first time you start that role for this task (or this story), 2 the next time, and so on. Reports live in `.sketch/reports`.
 
 Restate the goal in every brief. Agents start with no memory of this conversation.
 
 ## Tools
 
-Five deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
+Six deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
 
 - `sketch-state` is the only way to change `.sketch/state.md`: `new-story` (a fresh file; it refuses to replace an unfinished story), `task add` (a row of the task table), `set` (a field, or a task's field with `--task`), `bump` (a counter), `flag add`, `check`. Never edit the state file by hand.
 - `sketch-journal` is the only way to add a line to `.sketch/journal.md`.
 - `sketch-repo-check` answers yes or no on text you pipe in from git: `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`.
 - `sketch-plan` checks the planning files and gives the order tasks run in: `tasks-check`, `tasks-order`, `config-check`.
 - `sketch-pr` builds the PR description and checks the PR afterwards: `render-body`, `check-base`, `check-flags`.
+- `sketch-report` holds the agents' reports: `check` (a complete, consistent report exists), `get` (read one field). The agents use `submit`; you never write a report yourself.
 
-A sixth, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing issues. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
+A seventh, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing issues. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
 
 Exit codes mean the same everywhere: `0` ok, `1` a check found problems or a file is damaged, `2` refused (a counter is at its cap), `3` the call itself was wrong. A `3` is your mistake: fix the call and run it again once, then fail hard. Never work around a tool or do its job by hand.
 
@@ -61,6 +62,8 @@ Examples:
 - `git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean`
 - `{{TOOLS}}/sketch-plan config-check --config .sketch/config.md`
 - `{{TOOLS}}/sketch-pr render-body --state .sketch/state.md --extras .sketch/pr-extras.json`
+- `{{TOOLS}}/sketch-report check --role implementer --scope t-3 --run 1 --reports .sketch/reports`
+- `{{TOOLS}}/sketch-report get --role reviewer --scope t-3 --run 1 --reports .sketch/reports verdict`
 
 ## State discipline
 
@@ -70,7 +73,7 @@ Examples:
 ## Checking what comes back
 
 - Do not trust a report. After an agent that commits, check it with the tools: its commits carry the right prefix (`git log --format=%s <sha before the agent>..HEAD | {{TOOLS}}/sketch-repo-check commit-prefix --task t-3`) and the tree is clean (`git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean`). Note `git rev-parse HEAD` before you start an agent so you know where its commits begin.
-- A report that lacks its required parts (skills applied, assumptions, verdict format) is incomplete: send it back once, then fail hard.
+- Every agent hands in its report with the report tool. After it returns, run `{{TOOLS}}/sketch-report check --role <role> --scope <t-n or story-n> --run <k> --reports .sketch/reports`, with one `--skills <path of its SKILL.md>` for each skill in the brief. It must print `ok`: that proves a complete, consistent report exists, with the skills named. If it does not, send the agent back once with the printed problems, then fail hard. Read what you need from the report with `get` (the run number is the one you gave), not from the agent's message. `get` prints a list of texts one per line; add `--json` for anything structured, like `must_fix`.
 
 ## Pause and stop
 

@@ -28,25 +28,20 @@ List **all** must-fix findings in one pass; do not stop at the first problem.
 - **Must fix**: needs evidence: a command and its output, or the exact criterion it breaks. Without evidence it is a nice-to-have. A defect you can show by reading the code (cite file:line and the brief assumption or criterion it breaks) is must-fix, even when only a manual check could confirm how it looks. Never file it as a "check by hand" nice-to-have.
 - **Nice to have**: naming, small clarity, style that tooling does not enforce. These never trigger another round.
 
-## Output format
+## Hand back
 
-Write findings in short, casual dev language, one line each: what, where, why. No essays. Put the ones that matter first.
+Hand back a report with the report tool, never as free text. Your brief gives your run number. The JSON has these fields:
 
-```
-Verdict: SATISFIED | CHANGES NEEDED
+- `outcome`: `done`, or `outside-code-failure` when a command fails for a reason outside the code (credentials, network, tool missing): stop and report that instead of reviewing, with a `detail`
+- `verdict`: `SATISFIED` or `CHANGES NEEDED`
+- `must_fix`: one entry per finding, most important first: `{"what": "...", "where": "<file:line or test name>", "evidence": "<command and output, or the criterion>"}`. `[]` only when `SATISFIED`
+- `nice_to_have`: short notes, one line each (`[]` if none)
+- `criteria_coverage`: one entry per acceptance criterion: `{"criterion": "...", "test": "<test name>", "status": "OK" or "MISSING" or "HOLLOW"}`
+- `missing_checks`: names of mechanical checks that were not in your brief (optional)
+- `assumptions`: everything you assumed, especially anything that differs from the story brief (`[]` if none)
+- `doubts`: what you doubt (`[]` if none)
+- `skills_applied`: one entry per skill in your brief: `{"path": "<its SKILL.md>", "rule": "<one concrete rule you applied>"}`, or `{"path": "<its SKILL.md>", "none_applies": "<why>"}`
 
-Must fix:
-1. <what> | <file:line> | <evidence: command and output, or the criterion>
+Write findings in short, casual dev language, one line each. You may say `SATISFIED` only when every criterion maps to a real test, the test files are unchanged since the red commit, no must-fix remains, and the changelog line is correct. The tool refuses `SATISFIED` with a must-fix item or a coverage entry that is not `OK`, and `CHANGES NEEDED` without a must-fix item.
 
-Nice to have:
-- <note>
-
-Criteria coverage:
-1. <criterion> -> <test name> OK | MISSING | HOLLOW
-
-Skills applied: <list>
-```
-
-You may answer SATISFIED only when every criterion maps to a real test, test files are unchanged since the red commit, no must-fix remains, and the changelog line is correct. A SATISFIED verdict without the filled-in coverage list is invalid.
-
-If a command fails for a reason outside the code (credentials, network, tool missing), stop and report that instead of reviewing.
+Write the JSON to `.sketch/report-draft.json`, then submit it: `{{TOOLS}}/sketch-report submit --role reviewer --scope t-<n> --run <the run number in your brief> --reports .sketch/reports < .sketch/report-draft.json`. It saves the report only when it is complete and consistent. If it lists problems, fix them and submit again. Your final message is only the path it printed.

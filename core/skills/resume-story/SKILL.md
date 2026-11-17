@@ -50,6 +50,6 @@ Harmless differences were already adopted; list them so the developer can see th
 ## 5. On go
 
 - Set `stopped: no` (`{{TOOLS}}/sketch-state set stopped no --state .sketch/state.md`). Journal a `NOTE` line saying the story was resumed and why it had stopped (`{{TOOLS}}/sketch-journal add NOTE S<n> - "<resumed, and why it had stopped>" --journal .sketch/journal.md`).
-- Continue `/run-story` from the recorded phase, restarting the interrupted step with a **fresh** agent. If the last commit is a `[wip]` commit, tell the agent it is interrupted work and may be incomplete: it reads the diff, decides whether to build on it or redo it, and states which in its report.
+- Continue `/run-story` from the recorded phase, restarting the interrupted step with a **fresh** agent (it gets the next run number for its report; count the files in `.sketch/reports` for that role and scope). If the last commit is a `[wip]` commit, tell the agent it is interrupted work and may be incomplete: it reads the diff, decides whether to build on it or redo it, and states which in its report.
 - Counters are kept: a resume never resets a round or attempt cap.
 - Include `.sketch/story-context.md` in the briefs, if it exists.

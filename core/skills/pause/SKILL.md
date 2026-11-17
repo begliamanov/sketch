@@ -30,4 +30,4 @@ Ask: "Welcome back. Anything I should know? New context, changes, decisions." Ta
 
 ## 4. Carry on
 
-Set `stopped: no` (`{{TOOLS}}/sketch-state set stopped no --state .sketch/state.md`). Continue the loop of `/run-story` from the recorded phase, restarting the interrupted step with a **fresh** agent. Tell the agent that the last commit, if it is a `[wip]` commit, is interrupted work and may be incomplete: it reads the diff, decides whether to build on it or redo it, and states which in its report. Its own commits fix it up. Counters are not reset.
+Set `stopped: no` (`{{TOOLS}}/sketch-state set stopped no --state .sketch/state.md`). Continue the loop of `/run-story` from the recorded phase, restarting the interrupted step with a **fresh** agent (it gets the next run number for its report). Tell the agent that the last commit, if it is a `[wip]` commit, is interrupted work and may be incomplete: it reads the diff, decides whether to build on it or redo it, and states which in its report. Its own commits fix it up. Counters are not reset.
