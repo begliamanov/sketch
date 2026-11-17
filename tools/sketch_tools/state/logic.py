@@ -6,6 +6,7 @@ Edits are minimal: only the one line or table cell that changes is touched, so e
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
@@ -244,30 +245,182 @@ def add_task(
     return _join(lines)
 
 
+def _phase_and_story(text: str) -> Tuple[str, str]:
+    phase, story = header_value(text, "phase"), header_value(text, "story")
+    if not phase:
+        raise DataError("the state file has no phase: line")
+    if not story:
+        raise DataError("the state file has no story: line")
+    return phase, story
+
+
 def gate(text: Optional[str], pr_state: Optional[str] = None) -> Tuple[str, str]:
     """Can a new story start? Returns (decision, message): `go`, `mark-done` (the story's PR was
     merged: set the phase to done, then go) or `stop` with the reason. `text` is None when there is
     no state file. Raises UsageError for a PR state that is missing when it is needed or unknown,
     DataError for a state file without a phase."""
-    raise NotImplementedError
+    if text is None:
+        return "go", ""
+    phase, story = _phase_and_story(text)
+    if phase == "done":
+        return "go", ""
+    if phase != "waiting-review":
+        return "stop", "Story " + story + " is unfinished. Run /resume-story."
+    if pr_state is None:
+        raise UsageError("the story is waiting for review: give --pr-state (open, merged or closed)")
+    value = pr_state.lower()
+    if value == "merged":
+        return "mark-done", ""
+    if value in ("open", "opened"):
+        return "stop", "Story " + story + " is still waiting for your review. Merge it first."
+    if value == "closed":
+        return "stop", "Story " + story + "'s PR was closed without being merged. Look at it first."
+    raise UsageError("--pr-state must be open, merged or closed (got " + repr(pr_state) + ")")
 
 
 def wip_message(text: str, branch: str, task: Optional[str] = None) -> str:
     """The commit message for interrupted work: `t-3: [wip] interrupted, not reviewed`, or
     `story-2: ...` when no task was in progress. Raises RefusedError when `branch` is not the story
     branch or no story is running, UsageError for a task that is not in the table."""
-    raise NotImplementedError
+    phase, story = _phase_and_story(text)
+    story_branch = header_value(text, "story_branch")
+    if not story_branch:
+        raise DataError("the state file has no story_branch: line")
+    if phase == "done":
+        raise RefusedError("there is no story in progress (phase is done)")
+    if story_branch == "none":
+        raise RefusedError("the story branch is not created yet: there is nothing to commit to")
+    if branch != story_branch:
+        raise RefusedError(
+            "you are on " + branch + ", not on the story branch " + story_branch
+            + ": do not commit anywhere else"
+        )
+    prefix = "story-" + story
+    if task is not None:
+        if not schema.TASK_ID.fullmatch(task):
+            raise UsageError("task must look like t-3 (got " + repr(task) + ")")
+        if task not in [row["id"] for row in read_tasks(text)]:
+            raise UsageError("unknown task: " + task)
+        prefix = task
+    return prefix + ": [wip] interrupted, not reviewed"
+
+
+_FACT_BOOLS = ("feature_branch_exists", "story_branch_exists", "feature_moved", "cli_logged_in")
+_FACT_LISTS = ("unknown_commits", "tree_dirty", "config_problems", "state_problems")
+_FACT_KEYS = _FACT_BOOLS + _FACT_LISTS + ("current_branch", "task_commits", "issues", "pr")
+_ISSUE_STATES = ("open", "closed", "missing")
+_PR_FACTS = ("open", "merged", "closed", "missing")
+_COMMITTED = ("tests-red", "green", "in-review", "done")
 
 
 def parse_facts(text: str) -> Dict[str, Any]:
     """Read and validate the facts JSON for `reconcile`. Raises UsageError for anything wrong."""
-    raise NotImplementedError
+    try:
+        facts = json.loads(text)
+    except ValueError as err:
+        raise UsageError("the facts are not valid JSON: " + str(err)) from None
+    if not isinstance(facts, dict):
+        raise UsageError("the facts must be a JSON object")
+    for key, value in facts.items():
+        if key not in _FACT_KEYS:
+            raise UsageError("unknown fact: " + key)
+        if key in _FACT_BOOLS and not isinstance(value, bool):
+            raise UsageError(key + " must be true or false")
+        if key == "current_branch" and not isinstance(value, str):
+            raise UsageError(key + " must be text")
+        if key in _FACT_LISTS:
+            if not isinstance(value, list):
+                raise UsageError(key + " must be a list")
+            if not all(isinstance(item, str) for item in value):
+                raise UsageError(key + " must hold text")
+        if key == "pr" and value not in _PR_FACTS:
+            raise UsageError("pr must be open, merged, closed or missing")
+        if key == "task_commits":
+            if not isinstance(value, dict):
+                raise UsageError("task_commits must be an object")
+            for task_id, has in value.items():
+                if not schema.TASK_ID.fullmatch(task_id):
+                    raise UsageError("task_commits: " + repr(task_id) + " is not a task id like t-3")
+                if not isinstance(has, bool):
+                    raise UsageError("task_commits." + task_id + " must be true or false")
+        if key == "issues":
+            if not isinstance(value, dict):
+                raise UsageError("issues must be an object")
+            for name, state in value.items():
+                if name != "story" and not schema.TASK_ID.fullmatch(name):
+                    raise UsageError("issues: " + repr(name) + " must be story or a task id like t-3")
+                if state not in _ISSUE_STATES:
+                    raise UsageError("issues." + name + " must be open, closed or missing")
+    return facts
 
 
 def reconcile(text: str, facts: Dict[str, Any]) -> List[Tuple[str, str]]:
     """Compare the state file with the facts gathered from git, the tracker and the PR. Returns
     (kind, message) pairs: `risky` ones first, then `harmless` ones that can be adopted."""
-    raise NotImplementedError
+    keys = ("phase", "feature_branch", "story_branch", "pr", "story_issue")
+    values = {key: header_value(text, key) for key in keys}
+    for key, value in values.items():
+        if value is None:
+            raise DataError("the state file has no " + key + ": line")
+    phase, feature = str(values["phase"]), str(values["feature_branch"])
+    story_branch, pr, story_issue = str(values["story_branch"]), str(values["pr"]), str(values["story_issue"])
+    tasks = read_tasks(text)
+    risky: List[str] = []
+    harmless: List[str] = []
+
+    if facts.get("feature_branch_exists") is False:
+        risky.append("the feature branch " + feature + " does not exist")
+    has_story_branch = story_branch != "none"
+    if has_story_branch and facts.get("story_branch_exists") is False:
+        risky.append("the story branch " + story_branch + " does not exist")
+    if facts.get("feature_moved") is True:
+        risky.append("the feature branch moved since the story branch was created")
+
+    status = {row["id"]: row["status"] for row in tasks}
+    for task_id, has_commits in facts.get("task_commits", {}).items():
+        if has_commits is False and status.get(task_id) in _COMMITTED:
+            risky.append(task_id + " is " + status[task_id] + " in the state but has no commits on the story branch")
+
+    unknown = facts.get("unknown_commits", [])
+    if unknown:
+        harmless.append(
+            str(len(unknown)) + (" commit" if len(unknown) == 1 else " commits")
+            + " on the story branch that the state does not know about (" + "; ".join(unknown)
+            + "): the developer's own work, adopt it and journal an EDIT line"
+        )
+
+    current = facts.get("current_branch")
+    dirty = [line.strip() for line in facts.get("tree_dirty", [])]
+    off_branch = has_story_branch and current is not None and current != story_branch
+    if dirty and off_branch:
+        risky.append(
+            "the working tree has uncommitted changes (" + ", ".join(dirty) + ") and you are on " + str(current)
+            + ", not on the story branch " + story_branch + ": do not commit them"
+        )
+    elif dirty:
+        harmless.append("uncommitted changes (" + ", ".join(dirty) + "): commit them as a WIP commit")
+    elif off_branch:
+        harmless.append("you are on " + str(current) + ", not on the story branch " + story_branch)
+
+    issues = facts.get("issues", {})
+    if story_issue != "none" and issues.get("story") in ("closed", "missing"):
+        risky.append("the story issue (#" + story_issue + ") is " + issues["story"])
+    for row in tasks:
+        if row["issue"] != "none" and issues.get(row["id"]) in ("closed", "missing"):
+            risky.append(row["id"] + "'s issue (#" + row["issue"] + ") is " + issues[row["id"]])
+
+    pr_fact = facts.get("pr")
+    if pr != "none" and pr_fact is not None:
+        if pr_fact == "merged" and phase == "waiting-review":
+            harmless.append("PR " + pr + " is merged: the story is finished, set the phase to done")
+        elif pr_fact in ("merged", "closed", "missing"):
+            risky.append("PR " + pr + " is " + pr_fact)
+
+    if facts.get("cli_logged_in") is False:
+        risky.append("the tracker CLI is not logged in")
+    risky += ["config: " + problem for problem in facts.get("config_problems", [])]
+    risky += ["state: " + problem for problem in facts.get("state_problems", [])]
+    return [("risky", message) for message in risky] + [("harmless", message) for message in harmless]
 
 
 def read_tasks(text: str) -> List[Dict[str, str]]:

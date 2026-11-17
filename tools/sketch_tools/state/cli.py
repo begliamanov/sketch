@@ -125,6 +125,44 @@ def _run_task_add(args: argparse.Namespace, env: Env) -> int:
     return exitcodes.OK
 
 
+def _configure_gate(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--pr-state", metavar="STATE",
+                        help="open, merged or closed: the story's PR, needed when the story waits for review")
+    _add_state_option(parser)
+
+
+def _run_gate(args: argparse.Namespace, env: Env) -> int:
+    text = _read(args) if Path(args.state).exists() else None
+    decision, message = logic.gate(text, args.pr_state)
+    if decision == "stop":
+        env.stdout.write("stop: " + message + "\n")
+        return exitcodes.CHECK_FAILED
+    env.stdout.write(decision + "\n")
+    return exitcodes.OK
+
+
+def _configure_wip_message(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--branch", required=True, metavar="NAME", help="the branch you are on")
+    parser.add_argument("--task", metavar="ID",
+                        help="the task that was in progress; leave out for a story-level commit")
+    _add_state_option(parser)
+
+
+def _run_wip_message(args: argparse.Namespace, env: Env) -> int:
+    env.stdout.write(logic.wip_message(_read(args), args.branch, args.task) + "\n")
+    return exitcodes.OK
+
+
+def _run_reconcile(args: argparse.Namespace, env: Env) -> int:
+    found = logic.reconcile(_read(args), logic.parse_facts(env.stdin.read()))
+    if not found:
+        env.stdout.write("ok\n")
+        return exitcodes.OK
+    for kind, message in found:
+        env.stdout.write(kind + ": " + message + "\n")
+    return exitcodes.CHECK_FAILED if any(kind == "risky" for kind, _ in found) else exitcodes.OK
+
+
 def _run_check(args: argparse.Namespace, env: Env) -> int:
     problems = logic.check(_read(args))
     if not problems:
@@ -150,6 +188,17 @@ def build_tool() -> Tool:
     tool.add_command(
         "new-story", "write the state file of a new story (refuses to replace an unfinished one)",
         _configure_new_story, _run_new_story,
+    )
+    tool.add_command(
+        "gate", "can a new story start? prints go, mark-done or stop: <why>", _configure_gate, _run_gate
+    )
+    tool.add_command(
+        "wip-message", "print the commit message for interrupted work; refuses off the story branch",
+        _configure_wip_message, _run_wip_message,
+    )
+    tool.add_command(
+        "reconcile", "stdin: facts as JSON from git, the tracker and the PR. Prints risky and harmless differences.",
+        _add_state_option, _run_reconcile,
     )
     tool.add_command("check", "report every problem in the file", _add_state_option, _run_check)
     return tool

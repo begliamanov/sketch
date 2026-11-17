@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence
 
 from sketch_tools.core.errors import UsageError
 
@@ -17,16 +17,47 @@ _STORY = re.compile(r"S\d+")
 _TASK = re.compile(r"t-\d+|-")
 
 
+# a journal line, whatever the spacing: `2026-11-12 10:41  S2 t-2  FLAG    text`
+_ENTRY = re.compile(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s+S(\d+)\s+(t-\d+|-)\s+([A-Z]+)(?:\s+(.*))?")
+
+
+def _wanted(stories: Sequence[str], after: Optional[int]) -> Callable[[int], bool]:
+    for story in stories:
+        if not _STORY.fullmatch(story):
+            raise UsageError("story must look like S2 (got " + repr(story) + ")")
+    numbers = {int(story[1:]) for story in stories}
+
+    def wanted(number: int) -> bool:
+        if numbers and number not in numbers:
+            return False
+        return after is None or number > after
+
+    return wanted
+
+
 def me_lines(text: str, stories: Sequence[str] = (), after: Optional[int] = None) -> List[str]:
     """Every line the developer wrote (`[me]`), exactly as in the journal. `stories` (like `S2`)
     and `after` (a story number: only later stories) narrow it down. Raises UsageError for a story
     that does not look like S2."""
-    raise NotImplementedError
+    wanted = _wanted(stories, after)
+    found: List[str] = []
+    for line in text.split("\n"):
+        line = line.rstrip("\r")
+        match = _ENTRY.fullmatch(line)
+        if match and (match.group(5) or "").startswith(ME_MARKER) and wanted(int(match.group(2))):
+            found.append(line)
+    return found
 
 
 def signals(text: str, stories: Sequence[str] = (), after: Optional[int] = None) -> Dict[str, int]:
     """How many entries of each type, in the order of ENTRY_TYPES, zeros included. Same filters."""
-    raise NotImplementedError
+    wanted = _wanted(stories, after)
+    counts = {entry_type: 0 for entry_type in ENTRY_TYPES}
+    for line in text.split("\n"):
+        match = _ENTRY.fullmatch(line.rstrip("\r"))
+        if match and match.group(4) in counts and wanted(int(match.group(2))):
+            counts[match.group(4)] += 1
+    return counts
 
 
 def format_entry(
