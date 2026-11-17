@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<testsuites>
+<testsuite name="TestResults" errors="0" tests="3" failures="1" time="0.132863959">
+<testcase classname="DemoTests.DemoTests" name="testSkippedOnPurpose" time="0.044287917">
+</testcase>
+<testcase classname="DemoTests.DemoTests" name="testDoublesAPositiveNumber" time="0.044289792">
+</testcase>
+<testcase classname="DemoTests.DemoTests" name="testDoublesZeroWrongly" time="0.04428625">
+<failure message="failure"></failure>
+</testcase>
+</testsuite>
+</testsuites>

@@ -154,6 +154,14 @@ class TestWriterTest(RoleCase):
                             with_changes("test-writer", verification={"command": "x", "failing": []}),
                             "verification.failing")
 
+    def test_the_verification_names_the_target_and_where_the_results_are_kept(self) -> None:
+        for key in ("command", "target", "results"):
+            with self.subTest(key=key):
+                verification = dict(example("test-writer")["verification"])
+                del verification[key]
+                self.assert_problem("test-writer", with_changes("test-writer", verification=verification),
+                                    "verification." + key, "required")
+
     def test_counts_are_keyed_by_criterion_number(self) -> None:
         self.assert_problem("test-writer", with_changes("test-writer", tests_per_criterion={"one": 2}), "tests_per_criterion", "key")
         self.assert_problem("test-writer", with_changes("test-writer", tests_per_criterion={"1": 0}), "tests_per_criterion.1")
@@ -299,6 +307,10 @@ class TesterTest(RoleCase):
         self.assert_problem("tester", with_changes("tester", sha="xyz"), "sha")
         self.assert_problem("tester", with_changes("tester", mode="task"), "mode", "one of")
         self.assert_problem("tester", with_changes("tester", result="OK"), "result", "one of")
+
+    def test_the_results_folder_is_an_optional_field(self) -> None:
+        self.assert_valid("tester", with_changes("tester", results=".sketch/logs/20261112-104100-full.results"))
+        self.assert_problem("tester", with_changes("tester", results=""), "results")
 
     def test_counts_are_optional_but_whole(self) -> None:
         self.assert_valid("tester", with_changes("tester", counts=...))

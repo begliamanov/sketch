@@ -10,8 +10,10 @@ tracker: github
 tracker_cli: gh
 default_branch: main
 test_full: ./gradlew testDebugUnitTest
-test_task: ./gradlew :app:testDebugUnitTest --tests "{class}"
+test_task: ./gradlew :app:testDebugUnitTest --tests "{target}"
 test_paths: [**/src/test/**, Tests/**]
+test_format: junit-xml
+test_results: app/build/test-results/**/*.xml
 
 skills:
   common: [/skills/common/SKILL.md]
@@ -52,7 +54,8 @@ class CheckConfigTest(unittest.TestCase):
         self.assert_problem(VALID.replace("# sketch config", "# config"), "first line")
 
     def test_every_key_is_required(self) -> None:
-        for key in ("tracker", "tracker_cli", "default_branch", "test_full", "test_task", "test_paths"):
+        for key in ("tracker", "tracker_cli", "default_branch", "test_full", "test_task", "test_paths",
+                    "test_format", "test_results"):
             with self.subTest(key=key):
                 text = "\n".join(l for l in VALID.split("\n") if not l.startswith(key + ":"))
                 self.assert_problem(text, "missing key", key)
@@ -72,12 +75,33 @@ class CheckConfigTest(unittest.TestCase):
 
     def test_test_commands(self) -> None:
         self.assert_problem(VALID.replace("test_full: ./gradlew testDebugUnitTest", "test_full: "), "test_full")
-        self.assert_problem(VALID.replace('--tests "{class}"', '--tests "Foo"'), "test_task", "{class}")
+        self.assert_problem(VALID.replace('--tests "{target}"', '--tests "Foo"'), "test_task", "{target}")
 
     def test_test_paths_must_be_a_list_of_globs(self) -> None:
         self.assert_problem(VALID.replace("test_paths: [**/src/test/**, Tests/**]", "test_paths: Tests/**"), "test_paths", "list")
         self.assert_problem(VALID.replace("test_paths: [**/src/test/**, Tests/**]", "test_paths: []"), "test_paths", "at least one")
         self.assert_problem(VALID.replace("test_paths: [**/src/test/**, Tests/**]", "test_paths: [Tests/**, ]"), "test_paths", "empty")
+
+    def test_the_test_format_must_be_one_that_can_be_read(self) -> None:
+        self.assert_problem(VALID.replace("test_format: junit-xml", "test_format: vitest"),
+                            "test_format", '"vitest"', "junit-xml", "xcresult-json")
+        self.assert_problem(VALID.replace("test_format: junit-xml", "test_format: "), "test_format")
+        self.assertEqual(self.problems(VALID.replace("test_format: junit-xml", "test_format: xcresult-json")), [])
+
+    def test_a_format_the_project_defines_is_known_when_it_is_listed(self) -> None:
+        text = VALID.replace("test_format: junit-xml", "test_format: plain")
+        self.assertNotEqual(check_config(text, everything_exists), [])
+        self.assertEqual(check_config(text, everything_exists, formats=["junit-xml", "plain"]), [])
+
+    def test_test_results_must_be_a_safe_pattern(self) -> None:
+        for pattern in ("/abs/*.xml", "../x/*.xml", "build/*", "**", ""):
+            with self.subTest(pattern=pattern):
+                self.assert_problem(VALID.replace("test_results: app/build/test-results/**/*.xml",
+                                                  "test_results: " + pattern), "test_results")
+
+    def test_formats_dir_is_optional_but_not_empty_when_given(self) -> None:
+        self.assertEqual(self.problems(VALID.replace("test_format: junit-xml\n", "test_format: junit-xml\nformats_dir: .sketch/formats\n")), [])
+        self.assert_problem(VALID.replace("test_format: junit-xml\n", "test_format: junit-xml\nformats_dir: \n"), "formats_dir")
 
     def test_the_skills_section_and_its_roles(self) -> None:
         self.assert_problem(VALID.split("\nskills:")[0] + "\n", "missing section", "skills:")
@@ -105,7 +129,7 @@ class CheckConfigTest(unittest.TestCase):
 
     def test_every_problem_is_reported_in_one_pass(self) -> None:
         broken = (VALID.replace("tracker: github", "tracker: bitbucket")
-                  .replace('--tests "{class}"', "")
+                  .replace('--tests "{target}"', "")
                   .replace("test_paths: [**/src/test/**, Tests/**]", "test_paths: []")
                   .replace("  story-reviewer: []\n", ""))
         self.assertGreaterEqual(len(self.problems(broken)), 4)

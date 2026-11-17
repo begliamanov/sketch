@@ -40,7 +40,7 @@ class CoreCallsRealToolsTest(unittest.TestCase):
                 self.assertTrue(one in names or two in names, "no command %r in %r" % (words, names))
 
     def test_a_call_always_points_the_tool_at_its_file(self) -> None:
-        needs = {"state": "--state", "journal": "--journal", "report": "--reports"}
+        needs = {"state": "--state", "journal": "--journal", "report": "--reports", "tests": "--config"}
         for path, tool_name, words, rest in calls():
             if tool_name in needs:
                 with self.subTest(file=path.name, call=tool_name + " " + " ".join(words)):
@@ -82,6 +82,33 @@ class SkillsUseTheReadingToolsTest(unittest.TestCase):
             for needle in needles:
                 with self.subTest(skill=skill, tool=needle):
                     self.assertIn(needle, text)
+
+
+class TheTestsToolIsUsedWhereTestsAreRunTest(unittest.TestCase):
+    """The agents that run tests use the tool, not their own reading of console output."""
+
+    WIRED = {
+        ("agents", "tester.md"): ("sketch-tests run", "sketch-tests classify", "sketch-tests failures", "sketch-tests summary"),
+        ("agents", "test-writer.md"): ("sketch-tests run", "sketch-tests expect-red"),
+        ("agents", "implementer.md"): ("sketch-tests run", "sketch-tests failures-diff"),
+        ("agents", "reviewer.md"): ("sketch-tests run", "sketch-tests classify", "sketch-tests skipped-diff"),
+        ("skills", "tune-skills", "SKILL.md"): ("test_format", "test_results", "{target}"),
+    }
+
+    def test_each_file_uses_its_commands(self) -> None:
+        for parts, needles in self.WIRED.items():
+            text = ROOT.joinpath("core", *parts).read_text()
+            for needle in needles:
+                with self.subTest(file="/".join(parts), needle=needle):
+                    self.assertIn(needle, text)
+
+    def test_the_placeholder_is_target_everywhere(self) -> None:
+        for path in core_files():
+            with self.subTest(file=path.name):
+                self.assertNotIn("{class}", path.read_text())
+
+    def test_the_orchestrator_knows_the_tool(self) -> None:
+        self.assertIn("sketch-tests", (ROOT / "core" / "orchestrator.md").read_text())
 
 
 class DriftNotetakerIsGoneTest(unittest.TestCase):

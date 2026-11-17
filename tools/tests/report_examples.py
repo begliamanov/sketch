@@ -25,6 +25,8 @@ EXAMPLES: Dict[str, Any] = {
         "tests_per_criterion": {"1": 3, "2": 2},
         "verification": {
             "command": "./gradlew test --tests BannerTests",
+            "target": "BannerTests",
+            "results": ".sketch/logs/20261112-104100-task.results",
             "failing": ["BannerTests.hides the banner when online"],
         },
         "assumptions": [],

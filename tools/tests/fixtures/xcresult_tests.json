@@ -1,0 +1,83 @@
+{
+  "devices" : [
+    {
+      "architecture" : "arm64",
+      "deviceId" : "00006040-000130291E86801C",
+      "deviceName" : "My Mac",
+      "modelName" : "MacBook Pro",
+      "osBuildNumber" : "25G83",
+      "osVersion" : "26.6.2",
+      "platform" : "macOS"
+    }
+  ],
+  "testNodes" : [
+    {
+      "children" : [
+        {
+          "children" : [
+            {
+              "children" : [
+                {
+                  "duration" : "0,00082s",
+                  "durationInSeconds" : 0.0008159875869750977,
+                  "name" : "testDoublesAPositiveNumber()",
+                  "nodeIdentifier" : "DemoTests/testDoublesAPositiveNumber()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Demo/DemoTests/DemoTests/testDoublesAPositiveNumber",
+                  "nodeType" : "Test Case",
+                  "result" : "Passed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "DemoTests.swift:10: XCTAssertEqual failed: (\"0\") is not equal to (\"1\") - zero doubled should be 1 (wrong on purpose)",
+                      "nodeType" : "Failure Message"
+                    }
+                  ],
+                  "duration" : "0,31s",
+                  "durationInSeconds" : 0.3146519660949707,
+                  "name" : "testDoublesZeroWrongly()",
+                  "nodeIdentifier" : "DemoTests/testDoublesZeroWrongly()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Demo/DemoTests/DemoTests/testDoublesZeroWrongly",
+                  "nodeType" : "Test Case",
+                  "result" : "Failed"
+                },
+                {
+                  "children" : [
+                    {
+                      "name" : "Test skipped - skipped on purpose",
+                      "nodeType" : "Failure Message"
+                    }
+                  ],
+                  "duration" : "0,0013s",
+                  "durationInSeconds" : 0.001255035400390625,
+                  "name" : "testSkippedOnPurpose()",
+                  "nodeIdentifier" : "DemoTests/testSkippedOnPurpose()",
+                  "nodeIdentifierURL" : "test://com.apple.xcode/Demo/DemoTests/DemoTests/testSkippedOnPurpose",
+                  "nodeType" : "Test Case",
+                  "result" : "Skipped"
+                }
+              ],
+              "name" : "DemoTests",
+              "nodeIdentifierURL" : "test://com.apple.xcode/Demo/DemoTests/DemoTests",
+              "nodeType" : "Test Suite",
+              "result" : "Failed"
+            }
+          ],
+          "name" : "DemoTests",
+          "nodeIdentifierURL" : "test://com.apple.xcode/Demo/DemoTests",
+          "nodeType" : "Unit test bundle",
+          "result" : "Failed"
+        }
+      ],
+      "name" : "Demo",
+      "nodeType" : "Test Plan",
+      "result" : "Failed"
+    }
+  ],
+  "testPlanConfigurations" : [
+    {
+      "configurationId" : "1",
+      "configurationName" : "Test Scheme Action"
+    }
+  ]
+}

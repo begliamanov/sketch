@@ -107,6 +107,44 @@ class ConfigCheckCliTest(PlanCliCase):
         self.assertIn("does not exist", out)
         self.assertIn(str(self.skills / "kotlin" / "SKILL.md"), out)
 
+    def plugin_folder(self, source: str) -> Path:
+        folder = self.dir / "formats"
+        folder.mkdir()
+        (folder / "plain.py").write_text(source)
+        return folder
+
+    def use_plugin_format(self, folder: Path) -> None:
+        text = self.config.read_text().replace(
+            "test_format: junit-xml", "test_format: plain\nformats_dir: " + str(folder))
+        self.config.write_text(text)
+
+    def test_a_format_from_the_projects_formats_dir_is_accepted(self) -> None:
+        folder = self.plugin_folder('FORMAT = "plain"\ndef read(text):\n    return []\n')
+        self.use_plugin_format(folder)
+        code, out, _ = run_tool(main, ["config-check", "--config", str(self.config)])
+        self.assertEqual((code, out), (0, "ok\n"))
+
+    def test_a_format_that_is_in_no_folder_is_reported_with_the_known_ones(self) -> None:
+        self.config.write_text(self.config.read_text().replace("test_format: junit-xml", "test_format: plain"))
+        code, out, _ = run_tool(main, ["config-check", "--config", str(self.config)])
+        self.assertEqual(code, 1)
+        self.assertIn('test_format "plain"', out)
+        self.assertIn("junit-xml", out)
+
+    def test_a_broken_reader_in_formats_dir_is_a_problem_naming_the_file(self) -> None:
+        folder = self.plugin_folder("def (:\n")
+        self.use_plugin_format(folder)
+        code, out, _ = run_tool(main, ["config-check", "--config", str(self.config)])
+        self.assertEqual(code, 1)
+        self.assertIn("formats_dir", out)
+        self.assertIn("plain.py", out)
+
+    def test_a_formats_dir_that_does_not_exist_is_a_problem(self) -> None:
+        self.use_plugin_format(self.dir / "no-such-folder")
+        code, out, _ = run_tool(main, ["config-check", "--config", str(self.config)])
+        self.assertEqual(code, 1)
+        self.assertIn("formats_dir", out)
+
     def test_a_missing_config_exits_3(self) -> None:
         code, out, err = run_tool(main, ["config-check", "--config", str(self.dir / "nope.md")])
         self.assertEqual((code, out), (3, ""))
