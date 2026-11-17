@@ -23,6 +23,14 @@ TASK_COLUMNS = ("id", "issue", "title", "blocked_by", "status", "attempts", "rev
 TASK_COUNTER_FIELDS = ("attempts", "review_rounds")
 SETTABLE_TASK_FIELDS = ("issue", "title", "blocked_by", "status")
 
+# the task table of a new record; the columns are as wide as the example in core/state-format.md
+TASK_TABLE_HEADER = (
+    "| id  | issue | title                  | blocked_by | status      | attempts | review_rounds |"
+)
+TASK_TABLE_SEPARATOR = (
+    "|-----|-------|------------------------|------------|-------------|----------|---------------|"
+)
+
 # starting values of the round caps (core/conventions.md); the commands take them as options
 DEFAULT_STORY_ROUNDS_CAP = 3
 DEFAULT_ATTEMPTS_CAP = 3

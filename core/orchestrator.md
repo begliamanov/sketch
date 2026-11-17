@@ -44,7 +44,7 @@ Restate the goal in every brief. Agents start with no memory of this conversatio
 
 Three deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
 
-- `sketch-state` is the only way to change `.sketch/state.md`: `set` (a field, or a task's field with `--task`), `bump` (a counter), `flag add`, `check`. Never edit the state file by hand. The one exception is adding the rows of the task table (see `{{CORE}}/state-format.md`); run `check` right after.
+- `sketch-state` is the only way to change `.sketch/state.md`: `new-story` (a fresh file; it refuses to replace an unfinished story), `task add` (a row of the task table), `set` (a field, or a task's field with `--task`), `bump` (a counter), `flag add`, `check`. Never edit the state file by hand.
 - `sketch-journal` is the only way to add a line to `.sketch/journal.md`.
 - `sketch-repo-check` answers yes or no on text you pipe in from git: `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`.
 

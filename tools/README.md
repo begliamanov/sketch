@@ -44,7 +44,7 @@ git log --format=%s main..HEAD | python3 -m sketch_tools.repo_check commit-prefi
 | Tool | Subcommands |
 |---|---|
 | `journal` | `add` |
-| `state` | `set`, `bump`, `check`, `flag add` |
+| `state` | `new-story`, `task add`, `set`, `bump`, `check`, `flag add` |
 | `repo-check` | `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean` |
 
 The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.

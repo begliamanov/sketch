@@ -139,7 +139,15 @@ def _flags(lines: List[str]) -> Tuple[Optional[int], int, List[Tuple[int, str]]]
 
 def header_value(text: str, key: str) -> Optional[str]:
     """The value of a header line, or None when the file has no such line."""
-    raise NotImplementedError
+    lines = _split(text)
+    where = _header_lines(lines).get(key)
+    return _header_value(lines, where[0]) if where else None
+
+
+def _positive(name: str, value: int) -> int:
+    if value < 1:
+        raise UsageError(name + " must be a number of at least 1")
+    return value
 
 
 def new_story(
@@ -147,7 +155,56 @@ def new_story(
     story_rounds_cap: int = schema.DEFAULT_STORY_ROUNDS_CAP,
 ) -> str:
     """The text of a fresh state file for a story. Raises UsageError for a bad value."""
-    raise NotImplementedError
+    for key, value in (("story", story), ("title", title), ("feature_branch", feature_branch),
+                       ("extra_skills", extra_skills)):
+        problem = schema.HEADER_RULES[key](value)
+        if problem:
+            raise UsageError(problem)
+    cap = _positive("story_rounds cap", story_rounds_cap)
+    lines = [
+        schema.TITLE_LINE,
+        "story: " + story,
+        "title: " + title,
+        "story_issue: none",
+        "feature_branch: " + feature_branch,
+        "story_branch: none",
+        "phase: tasks",
+        "last_step: story brief approved",
+        "stopped: no",
+        "pr: none",
+        "pr_head_sha: none",
+        "story_rounds: 0/" + str(cap),
+        "extra_skills: " + extra_skills,
+        "stop_after_task: no",
+        "",
+        schema.TASKS_HEADING,
+        schema.TASK_TABLE_HEADER,
+        schema.TASK_TABLE_SEPARATOR,
+        "",
+        schema.FLAGS_HEADING,
+        "",
+    ]
+    return _join(lines)
+
+
+def _table_lines(lines: List[str]) -> List[int]:
+    """Indexes of the `|` lines of the task table: header, separator, then the rows."""
+    start = None
+    for index, line in enumerate(lines):
+        if line == schema.TASKS_HEADING:
+            start = index
+            break
+    if start is None:
+        raise DataError("the file has no " + schema.TASKS_HEADING + " section")
+    found: List[int] = []
+    for index in range(start + 1, len(lines)):
+        if lines[index].startswith("## "):
+            break
+        if lines[index].startswith("|"):
+            found.append(index)
+    if len(found) < 2:
+        raise DataError("the task table has no header and separator lines")
+    return found
 
 
 def add_task(
@@ -157,7 +214,34 @@ def add_task(
 ) -> str:
     """Append a `pending` row to the task table. Raises UsageError for a bad value, RefusedError
     when the task already exists, DataError when the file has no task table."""
-    raise NotImplementedError
+    if not schema.TASK_ID.fullmatch(task_id):
+        raise UsageError("task id must look like t-5 (got " + repr(task_id) + ")")
+    for field, value in (("title", title), ("blocked_by", blocked_by), ("issue", issue)):
+        problem = schema.TASK_RULES[field](value)
+        if problem:
+            raise UsageError(problem)
+    if task_id in blocked_by.split(","):
+        raise UsageError(task_id + " cannot block itself")
+    attempts = _positive("attempts cap", attempts_cap)
+    reviews = _positive("review_rounds cap", review_rounds_cap)
+
+    lines = _split(text)
+    table = _table_lines(lines)
+    header_cells = lines[table[0]].split("|")[1:-1]
+    if len(header_cells) != len(schema.TASK_COLUMNS):
+        raise DataError("the task table header does not have the expected columns")
+    for index in table[2:]:
+        first = lines[index].split("|")[1:2]
+        if first and first[0].strip() == task_id:
+            raise RefusedError(task_id + " already exists")
+
+    values = [task_id, issue, title, blocked_by, "pending", "0/" + str(attempts), "0/" + str(reviews)]
+    cells = [
+        " " + value + " " * max(1, len(raw) - 1 - len(value))
+        for raw, value in zip(header_cells, values)
+    ]
+    lines.insert(table[-1] + 1, "|" + "|".join(cells) + "|")
+    return _join(lines)
 
 
 def add_flag(text: str, task_id: str, reason: str) -> str:

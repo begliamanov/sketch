@@ -39,7 +39,7 @@ stop_after_task: no
 - `stop_after_task` is always present: `no`, or `yes` when `/stop` was told to finish the current task first. It goes back to `no` when the run stops.
 - `pr_head_sha` is the story branch head when the PR was opened. The retro diffs it against the merged result to see what the developer changed by hand.
 - Attempts and rounds are `used/cap`.
-- Every change goes through `sketch-state` (`set`, `bump`, `flag add`), which rejects values outside this schema and never passes a cap. `check` reports every problem in the file. The one thing no tool does yet is adding the rows of the task table: write them by hand in the format above, then run `check`.
+- Every change goes through `sketch-state` (`set`, `bump`, `flag add`), which rejects values outside this schema and never passes a cap. `check` reports every problem in the file. A new file is written with `new-story`, and each row of the task table with `task add`.
 
 ## `.sketch/journal.md`
 
