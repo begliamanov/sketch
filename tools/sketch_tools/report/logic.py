@@ -13,6 +13,7 @@ from sketch_tools.report.roles import ROLES, Role
 _SCOPES = {
     "task": (re.compile(r"t-\d+"), "t-3", "task"),
     "story": (re.compile(r"story-\d+"), "story-2", "story"),
+    "either": (re.compile(r"t-\d+|story-\d+"), "t-3 or story-2", "task or a story"),
 }
 _WRAPPER_FIELDS = ("role", "scope", "run", "submitted")
 
@@ -43,6 +44,8 @@ def validate(role: str, scope: str, data: Any) -> List[str]:
     problems = spec.spec.check(data, "")
     if isinstance(data, dict):
         problems += [p for p in spec.rules(data) if p not in problems]
+        if spec.scope_rules is not None:
+            problems += [p for p in spec.scope_rules(scope, data) if p not in problems]
     return problems
 
 

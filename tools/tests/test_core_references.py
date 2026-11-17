@@ -91,9 +91,14 @@ class TheTestsToolIsUsedWhereTestsAreRunTest(unittest.TestCase):
         ("agents", "tester.md"): ("sketch-tests run", "sketch-tests classify", "sketch-tests failures", "sketch-tests summary"),
         ("agents", "test-writer.md"): ("sketch-tests run", "sketch-tests expect-red"),
         ("agents", "implementer.md"): ("sketch-tests run", "sketch-tests failures-diff"),
-        ("agents", "reviewer.md"): ("sketch-tests run", "sketch-tests classify", "sketch-tests skipped-diff"),
+        ("agents", "reviewer.md"): ("sketch-tests skipped-diff",),  # reads the tester's report, never runs tests
         ("skills", "tune-skills", "SKILL.md"): ("test_format", "test_results", "{target}"),
     }
+
+    def test_the_reviewer_never_runs_tests(self) -> None:
+        text = ROOT.joinpath("core", "agents", "reviewer.md").read_text()
+        for forbidden in ("sketch-tests run", "sketch-tests classify"):
+            self.assertNotIn(forbidden, text)
 
     def test_each_file_uses_its_commands(self) -> None:
         for parts, needles in self.WIRED.items():

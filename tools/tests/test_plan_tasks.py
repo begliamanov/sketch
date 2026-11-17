@@ -6,6 +6,7 @@ from typing import Dict, List
 
 from sketch_tools.core.errors import DataError, UsageError
 from sketch_tools.plan.logic import check_tasks, order_tasks
+from sketch_tools.plan.tasks_file import task_skill_picks
 
 VALID = (Path(__file__).parent / "fixtures" / "tasks_valid.md").read_text()
 
@@ -27,6 +28,30 @@ def build_deps(deps: Dict[int, List[int]]) -> str:
 
 def chain(count: int) -> str:
     return build_deps({i: ([i - 1] if i > 1 else []) for i in range(1, count + 1)})
+
+
+class SkillsLineTest(unittest.TestCase):
+    """`Skills:` is optional: the skills this task needs, each with a short reason."""
+
+    def with_skills(self, line: str) -> str:
+        return VALID.replace("Delivers:", line + "\nDelivers:", 1)
+
+    def test_a_skills_line_is_allowed_and_parsed_into_names(self) -> None:
+        text = self.with_skills("Skills: kotlin: pure logic, glossary: names a term")
+        self.assertEqual(check_tasks(text), [])
+        self.assertEqual(task_skill_picks(text, "t-1"), ["kotlin", "glossary"])
+
+    def test_a_task_without_the_line_has_no_picks(self) -> None:
+        self.assertIsNone(task_skill_picks(VALID, "t-1"))
+
+    def test_the_line_twice_or_empty_is_a_problem(self) -> None:
+        twice = VALID.replace("Delivers:", "Skills: a: x\nSkills: b: y\nDelivers:", 1)
+        self.assertTrue(any('"Skills:" twice' in p for p in check_tasks(twice)))
+        self.assertTrue(any('empty "Skills:"' in p for p in check_tasks(self.with_skills("Skills:"))))
+
+    def test_an_unknown_task_is_an_error(self) -> None:
+        with self.assertRaises(DataError):
+            task_skill_picks(VALID, "t-99")
 
 
 class CheckTasksValidTest(unittest.TestCase):

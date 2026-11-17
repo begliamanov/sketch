@@ -92,7 +92,9 @@ def _check_block(block: tasks_file.Block, by_id: Dict[str, _Task]) -> List[str]:
             problems.append(task_id + ' is missing "' + label + ':"')
         elif count > 1:
             problems.append(task_id + ' has "' + label + ':" twice')
-    for label in _NOT_EMPTY_LABELS:
+    if block.label_counts.get("Skills", 0) > 1:
+        problems.append(task_id + ' has "Skills:" twice')
+    for label in _NOT_EMPTY_LABELS + tasks_file.OPTIONAL_LABELS:
         if block.label_counts.get(label) and not block.labels.get(label):
             problems.append(task_id + ' has an empty "' + label + ':"')
 

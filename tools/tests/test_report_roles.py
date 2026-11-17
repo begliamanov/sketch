@@ -50,7 +50,8 @@ class GeneralTest(RoleCase):
         for role in STORY_ROLES:
             with self.subTest(role=role):
                 self.assertEqual(self.problems(role, example(role), "story-12"), [])
-                for bad in ("t-3", "story", "story-", "2"):
+                # the tester also reports on a task (mode task): see TesterTaskModeTest
+                for bad in (("story", "story-", "2") if role == "tester" else ("t-3", "story", "story-", "2")):
                     with self.assertRaises(UsageError):
                         validate(role, bad, example(role))
 
@@ -283,6 +284,42 @@ class StoryReviewerTest(RoleCase):
         self.assert_valid("story-reviewer", report)
 
 
+class TesterTaskModeTest(RoleCase):
+    """The tester also runs one task's tests before its review: mode task, scope t-<n>."""
+
+    def test_task_mode_is_reported_on_a_task_scope(self) -> None:
+        report = with_changes("tester", mode="task")
+        self.assertEqual(self.problems("tester", report, scope="t-3"), [])
+
+    def test_task_mode_on_a_story_scope_is_a_problem(self) -> None:
+        report = with_changes("tester", mode="task")
+        self.assertTrue(any("task" in p and "t-" in p for p in self.problems("tester", report, scope="story-2")))
+
+    def test_baseline_and_full_on_a_task_scope_are_a_problem(self) -> None:
+        for mode in ("baseline", "full"):
+            with self.subTest(mode=mode):
+                report = with_changes("tester", mode=mode)
+                self.assertTrue(any(mode in p and "story-" in p for p in self.problems("tester", report, scope="t-3")))
+
+    def test_other_scopes_are_still_refused(self) -> None:
+        with self.assertRaises(UsageError):
+            self.problems("tester", with_changes("tester", mode="task"), scope="nope")
+
+
+class MissingSkillTest(RoleCase):
+    """A reviewer may say that a pool skill it needed was not in its brief."""
+
+    def test_the_field_is_optional_and_a_line(self) -> None:
+        for role in ("reviewer", "story-reviewer"):
+            with self.subTest(role=role):
+                self.assert_valid(role, with_changes(role, missing_skill="swiftui-layout: the banner is a layout bug"))
+                self.assert_valid(role, with_changes(role, missing_skill="none"))
+                self.assert_problem(role, with_changes(role, missing_skill=""), "missing_skill")
+
+    def test_other_roles_do_not_have_it(self) -> None:
+        self.assert_problem("implementer", with_changes("implementer", missing_skill="x: y"), "missing_skill")
+
+
 class TesterTest(RoleCase):
     def test_a_failing_run_lists_the_failing_tests(self) -> None:
         report = with_changes("tester", result="FAIL", counts={"passed": 40, "failed": 2, "skipped": 0})
@@ -305,7 +342,7 @@ class TesterTest(RoleCase):
             with self.subTest(key=key):
                 self.assert_problem("tester", with_changes("tester", **{key: ...}), key, "required")
         self.assert_problem("tester", with_changes("tester", sha="xyz"), "sha")
-        self.assert_problem("tester", with_changes("tester", mode="task"), "mode", "one of")
+        self.assert_problem("tester", with_changes("tester", mode="smoke"), "mode", "one of")
         self.assert_problem("tester", with_changes("tester", result="OK"), "result", "one of")
 
     def test_the_results_folder_is_an_optional_field(self) -> None:

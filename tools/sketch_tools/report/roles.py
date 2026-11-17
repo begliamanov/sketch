@@ -20,10 +20,11 @@ Rules = Callable[[Dict[str, Any]], List[str]]
 @dataclass
 class Role:
     name: str
-    scope_kind: str  # "task" (scope like t-3) or "story" (scope like story-2)
+    scope_kind: str  # "task" (scope like t-3), "story" (scope like story-2) or "either"
     spec: Fields
     rules: Rules
     has_skills: bool
+    scope_rules: Optional[Callable[[str, Dict[str, Any]], List[str]]] = None  # checks the scope against the report
 
 
 # ---- building blocks
@@ -191,6 +192,7 @@ def _test_writer_rules(report: Dict[str, Any]) -> List[str]:
 
 _REVIEWER = Fields(
     {
+        "missing_skill": _LINE,  # `none`, or `<skill name>: <why this review needed it>`
         "outcome": Text(choices=["done", "outside-code-failure"]),
         "detail": _LINE,
         "verdict": _VERDICT,
@@ -227,6 +229,7 @@ def _reviewer_rules(report: Dict[str, Any]) -> List[str]:
 
 _STORY_REVIEWER = Fields(
     {
+        "missing_skill": _LINE,  # `none`, or `<skill name>: <why this review needed it>`
         "model": _LINE,
         "outcome": Text(choices=["done", "outside-code-failure"]),
         "detail": _LINE,
@@ -264,7 +267,7 @@ def _story_reviewer_rules(report: Dict[str, Any]) -> List[str]:
 
 _TESTER = Fields(
     {
-        "mode": Text(choices=["baseline", "full"]),
+        "mode": Text(choices=["baseline", "full", "task"]),
         "result": Text(choices=["PASS", "FAIL", "CANNOT RUN"]),
         "branch": _LINE,
         "sha": _SHA,
@@ -280,6 +283,16 @@ _TESTER = Fields(
     },
     required=["mode", "result", "branch", "sha", "command", "log"],
 )
+
+
+def _tester_scope_rules(scope: str, report: Dict[str, Any]) -> List[str]:
+    """Task mode reports on a task (t-3); baseline and full report on a story (story-2)."""
+    mode = _text(report, "mode")
+    if mode == "task" and not scope.startswith("t-"):
+        return ["mode task reports on a task: the scope must look like t-3 (got " + repr(scope) + ")"]
+    if mode in ("baseline", "full") and not scope.startswith("story-"):
+        return ["mode " + mode + " reports on a story: the scope must look like story-2 (got " + repr(scope) + ")"]
+    return []
 
 
 def _tester_rules(report: Dict[str, Any]) -> List[str]:
@@ -393,7 +406,7 @@ ROLES: Dict[str, Role] = {
         Role("test-writer", "task", _TEST_WRITER, _test_writer_rules, True),
         Role("reviewer", "task", _REVIEWER, _reviewer_rules, True),
         Role("story-reviewer", "story", _STORY_REVIEWER, _story_reviewer_rules, True),
-        Role("tester", "story", _TESTER, _tester_rules, False),
+        Role("tester", "either", _TESTER, _tester_rules, False, _tester_scope_rules),
         Role("task-writer", "story", _TASK_WRITER, _task_writer_rules, True),
         Role("pr-agent", "story", _PR_AGENT, _pr_agent_rules, False),
         Role("retro-agent", "story", _RETRO_AGENT, _retro_agent_rules, False),

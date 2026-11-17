@@ -54,6 +54,7 @@ Senior-developer moves, all scoped to **this story**:
 - Offer a concrete scenario to react to. If you are stuck, ask for two concrete examples, or offer a quick sketch of the flow to react to.
 - Ask one question at a time, in plain language, with options and a recommendation.
 - If a choice is cheap to reverse, pick a default and list it as an assumption. Ask only about forks that are expensive to undo.
+- A choice that would become an ADR, or that narrows one of the developer's calls, is never cheap: ask it as a fork.
 - Never ask what the code, glossary, ADRs or earlier decisions answer.
 
 **First story of a feature only**: ask the few architectural questions that are costly to change later (stack choices, boundaries, the seams where tests will be written), each with a recommendation. This is not optional. If you did not ask the architecture questions, the draft is not ready.

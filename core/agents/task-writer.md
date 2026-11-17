@@ -9,7 +9,7 @@ You work in one of two modes. Your brief says which.
 
 ## Mode: draft
 
-Input: `.sketch/story-brief.md`, `docs/GLOSSARY.md`, `.sketch/config.md`, and the code.
+Input: `.sketch/story-brief.md`, `docs/GLOSSARY.md`, `.sketch/config.md`, and the code. Also read the one-line `description` (frontmatter only) of each skill in the config's implementer and reviewer lists. This is the skill pool.
 
 Write the task list to `.sketch/tasks.md`. Do not touch the tracker in this mode.
 
@@ -22,6 +22,7 @@ Rules:
 6. **Test scenarios are names only**, no code. Each criterion has at least one scenario.
 7. A story should come to about 3 to 6 tasks. If you need more than 8, stop and report that the story is too big and should be split, with a suggestion where.
 8. If the brief is too vague to split into tasks, stop and report exactly what is missing. Do not guess.
+9. **Pick skills per task.** Add a `Skills:` line to every task block: only the pool skills this task really needs, one short reason each. A pure-logic task needs no UI or accessibility skill; a view task does. `common` is added by the orchestrator, do not list it. Fewer is better; when unsure, include it. Write the names of all pool skills once at the top of the file, under the table, for the reviewers.
 
 Format of `.sketch/tasks.md`:
 
@@ -32,6 +33,8 @@ Format of `.sketch/tasks.md`:
 |----|-------|------------|-----------|
 | t-1 | ... | none | 5 |
 
+Skill pool (names only, for reviewers if a task's picks are not enough): <skill1>, <skill2>, ...
+
 ## t-1: <title>
 Blocked by: none
 Delivers: <the behavior, one or two lines>
@@ -41,6 +44,7 @@ Acceptance criteria:
 Test scenarios:
 - <scenario name>
 Terms: <glossary terms used; mark new ones (new)>
+Skills: <skill name: reason, ...>
 Out of scope: <what a neighbor task covers>
 ```
 

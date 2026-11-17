@@ -12,7 +12,7 @@ from sketch_tools.core.cli import Env, Tool
 from sketch_tools.core import config_file
 from sketch_tools.state.logic import header_value
 from sketch_tools.core.errors import DataError, UsageError
-from sketch_tools.plan import briefing, issues, logic, tracker
+from sketch_tools.plan import briefing, issues, logic, tasks_file, tracker
 from sketch_tools.tests.readers import BUILTIN_NAMES, load_plugins
 
 
@@ -82,13 +82,19 @@ def _configure_brief_skills(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--config", required=True, metavar="PATH", help="the config file")
     parser.add_argument("--role", required=True, metavar="ROLE", help="the agent role, like implementer")
     parser.add_argument("--state", metavar="PATH", help="the state file: its extra_skills are added")
+    parser.add_argument("--tasks", metavar="PATH", help="the tasks file; with --task, the role's skills are narrowed "
+                                                        "to the ones on that task's Skills line (if it has one)")
+    parser.add_argument("--task", metavar="ID", help="the task id, like t-3 (needs --tasks)")
 
 
 def _run_brief_skills(args: argparse.Namespace, env: Env) -> int:
     extra: List[str] = []
     if args.state:
         extra = briefing.parse_extra_skills(header_value(_read(args.state), "extra_skills") or "none")
-    paths, problems = briefing.brief_skills(_read(args.config), args.role, extra, os.path.isfile)
+    if bool(args.tasks) != bool(args.task):
+        raise UsageError("--tasks and --task go together")
+    picks = tasks_file.task_skill_picks(_read(args.tasks), args.task) if args.tasks else None
+    paths, problems = briefing.brief_skills(_read(args.config), args.role, extra, os.path.isfile, picks)
     if problems:
         for problem in problems:
             env.stdout.write("error: " + problem + "\n")

@@ -26,6 +26,7 @@ Run the `tester` agent in mode `baseline` (the untouched feature branch). If the
 
 - Create `story-<n>-<slug>` from the feature branch and switch to it. Record it: `{{TOOLS}}/sketch-state set story_branch story-<n>-<slug> --state .sketch/state.md`.
 - Apply `.sketch/glossary-proposal.md` to `docs/GLOSSARY.md` and `docs/adr/` (create them if needed) and commit as `story-<n>: glossary`. If the proposal is empty, skip.
+- Push the story branch and open a **draft** PR/MR into the feature branch, titled with the story, body "Work in progress" (`gh pr create --draft --base <feature-branch> ...` or `glab mr create --draft --target-branch <feature-branch> ...`). Record it: `{{TOOLS}}/sketch-state set pr <number or url> --state .sketch/state.md`. If the branch has no commit yet, do this right after t-1's tests commit.
 - Set the phase: `{{TOOLS}}/sketch-state set phase task-loop --state .sketch/state.md`.
 
 ## 4. Task loop, one task at a time
@@ -44,14 +45,15 @@ Every agent you start gets a run number for its report, and you check its report
 - `conflicts-with-earlier-test`: flag the task: "conflicts with <id>'s test". That is a decision for the developer.
 - `same-failure-twice`, or the attempt cap (the `bump` above exits 2): flag the task.
 
-**c. Review.** First run the mechanical checks and put their output in the `reviewer`'s brief. A failing check is not for you to judge: the reviewer files it as a must-fix.
+**c. Review.** First run the `tester` in mode `task` (`--scope t-<n>`) with the task's test target and a log path. `CANNOT RUN` stops everything (STOPPED report); a `FAIL` is not for you to judge: it goes to the reviewer, which files it as a must-fix. Then run the mechanical checks. Put the tester's report and the checks' output in the `reviewer`'s brief (the reviewer does not run tests). A failing check is not for you to judge: the reviewer files it as a must-fix.
 - Tests untouched. `<tests-sha>` is the newest commit whose subject is `t-<n>: fix test (rechecked)`, or else `t-<n>: tests`. Pass each glob of `test_paths` from the config as `--tests`: `git diff --name-only <tests-sha>..HEAD | {{TOOLS}}/sketch-repo-check tests-unchanged --tests <glob>`
 - Changelog: `git diff -U99999 <tests-sha>..HEAD -- CHANGELOG.md | {{TOOLS}}/sketch-repo-check changelog --issue <issue number of the task>`
 - Commits: `git log --format=%s <task start>..HEAD | {{TOOLS}}/sketch-repo-check commit-prefix --task t-<n>`
 
-Then set `status: in-review` and run `reviewer` (its brief gets the test target and the red run's results folder too), and read its `verdict` with `get` (`outside-code-failure` as its `outcome` stops everything).
+Then set `status: in-review` and run `reviewer` (its brief gets the red run's results folder too), and read its `verdict` with `get` (`outside-code-failure` as its `outcome` stops everything).
+- A `missing_skill` in its report: resume that reviewer with the skill's path first (orchestrator rules, "Checking what comes back"). This does not count as a review round.
 - `SATISFIED`: set `status: done`. Journal a REVIEW line if its `nice_to_have` is not empty.
-- `CHANGES NEEDED`: its `must_fix` (read it with `--json`) is what the fix round gets. Count the round: `{{TOOLS}}/sketch-state bump --task t-<n> review_rounds --state .sketch/state.md`. If it succeeds, run a **fresh** `implementer` in mode `fix` with the `must_fix` findings quoted verbatim, then the mechanical checks again and a **fresh** `reviewer`. If it exits 2 (the cap), or the same finding comes back unchanged, flag the task with the unresolved must-fix findings, and journal a CAP line.
+- `CHANGES NEEDED`: its `must_fix` (read it with `--json`) is what the fix round gets. Count the round: `{{TOOLS}}/sketch-state bump --task t-<n> review_rounds --state .sketch/state.md`. If it succeeds, run a **fresh** `implementer` in mode `fix` with the `must_fix` findings quoted verbatim, then the `tester` (task mode) and the mechanical checks again, and a **fresh** `reviewer`. If it exits 2 (the cap), or the same finding comes back unchanged, flag the task with the unresolved must-fix findings, and journal a CAP line.
 
 **d. Assumptions.** Read the implementer's `assumptions` (`get`, one per line). Any assumption that differs from the story brief goes to the journal as ASSUME: `{{TOOLS}}/sketch-journal add ASSUME S<n> t-<n> "<the assumption>" --journal .sketch/journal.md`.
 
@@ -75,7 +77,7 @@ Journal a REVIEW line with the outcome and the rounds used (`{{TOOLS}}/sketch-jo
 
 ## 6. Open the PR
 
-Set `phase: pr` (`{{TOOLS}}/sketch-state set phase pr --state .sketch/state.md`). Write `.sketch/pr-extras.json` from the reports, quoting items verbatim: `summary` (two or three plain lines on what the user gets, from the brief), `tests_passed` (the tester's `counts.passed` from its last full-suite report), `reviewer_model` (the story-reviewer's `model`), `unresolved` (the story-reviewer's `must_fix` still open, each as one line, only if the story-end loop hit its cap), `nice_to_have` (the story-reviewer's, most important first), `manual_checks` (from the brief and the reviewers), `differs` (implementer assumptions that differ from the brief, each starting with its task id), `wip_commits` (`[wip]` commits never followed by a completed step). Only the first three keys are required; leave out a list that would be empty. Then run the `pr-agent` (give it a run number) with: the story branch, the feature branch, the paths of the state, brief and tasks files, and `.sketch/pr-extras.json`. It builds the description with the pr tool.
+Set `phase: pr` (`{{TOOLS}}/sketch-state set phase pr --state .sketch/state.md`). Write `.sketch/pr-extras.json` from the reports, quoting items verbatim: `summary` (two or three plain lines on what the user gets, from the brief), `tests_passed` (the tester's `counts.passed` from its last full-suite report), `reviewer_model` (the story-reviewer's `model`), `unresolved` (the story-reviewer's `must_fix` still open, each as one line, only if the story-end loop hit its cap), `nice_to_have` (the story-reviewer's, most important first), `manual_checks` (from the brief and the reviewers), `differs` (implementer assumptions that differ from the brief, each starting with its task id), `wip_commits` (`[wip]` commits never followed by a completed step). Only the first three keys are required; leave out a list that would be empty. Then run the `pr-agent` (give it a run number) with: the story branch, the feature branch, the paths of the state, brief and tasks files, and `.sketch/pr-extras.json`. It builds the description with the pr tool, fills the draft PR/MR from step 3 with it and marks it ready.
 
 Then verify, yourself:
 - the PR/MR exists and its **base is the feature branch**: `gh pr view <number> --json baseRefName,headRefName,state | {{TOOLS}}/sketch-pr check-base --base <feature-branch> --head <story-branch>` prints `ok` (for GitLab, `glab mr view <number> --output json` instead)

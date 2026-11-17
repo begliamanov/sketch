@@ -7,10 +7,14 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+from sketch_tools.core.errors import DataError
+
 FIRST_LINE = re.compile(r"# Tasks for story (\d+): \S.*")
 TABLE_COLUMNS = ("id", "title", "blocked_by", "scenarios")
 LABELS = ("Blocked by", "Delivers", "Acceptance criteria", "Test scenarios", "Terms", "Out of scope")
-_LABEL = re.compile(r"(" + "|".join(LABELS) + r"):[ ]*(.*)")
+OPTIONAL_LABELS = ("Skills",)
+_LABEL = re.compile(r"(" + "|".join(LABELS + OPTIONAL_LABELS) + r"):[ ]*(.*)")
+_SKILL_NAME = re.compile(r"(?:^|,)\s*([A-Za-z0-9._-]+)\s*:")
 _HEADING = re.compile(r"## (\S+): (.*)")
 _CRITERION = re.compile(r"(\d+)\. (.*)")
 
@@ -82,3 +86,14 @@ def parse_tasks(text: str) -> TasksFile:
             current.scenarios.append(line[2:].strip())
 
     return TasksFile(bool(FIRST_LINE.fullmatch(first)), table_header, rows, blocks)
+
+
+def task_skill_picks(text: str, task_id: str) -> Optional[List[str]]:
+    """The skill names on a task's `Skills: name: reason, name: reason` line, or None when the task
+    has no such line. Raises DataError for a task that is not in the file."""
+    for block in parse_tasks(text).blocks:
+        if block.task_id == task_id:
+            if "Skills" not in block.labels:
+                return None
+            return _SKILL_NAME.findall(block.labels["Skills"])
+    raise DataError(task_id + " is not in the tasks file")
