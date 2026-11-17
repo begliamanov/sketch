@@ -54,6 +54,19 @@ class BriefSkillsTest(unittest.TestCase):
         self.assertEqual(paths, ["/skills/common/SKILL.md", "/skills/kotlin/SKILL.md",
                                  "/skills/compose/SKILL.md", "/extra/SKILL.md"])
 
+    def test_picks_narrow_the_roles_own_list_but_never_common_or_extras(self) -> None:
+        paths, _ = brief_skills(CONFIG, "implementer", ["/extra/SKILL.md"], everything_exists, picks=["compose"])
+        self.assertEqual(paths, ["/skills/common/SKILL.md", "/skills/compose/SKILL.md", "/extra/SKILL.md"])
+
+    def test_picks_that_are_not_in_the_roles_list_are_ignored(self) -> None:
+        paths, _ = brief_skills(CONFIG, "implementer", [], everything_exists, picks=["glossary"])
+        self.assertEqual(paths, ["/skills/common/SKILL.md"])
+
+    def test_the_story_reviewer_always_keeps_its_full_list(self) -> None:
+        paths, _ = brief_skills(CONFIG.replace("story-reviewer: []", "story-reviewer: [/skills/kotlin/SKILL.md]"),
+                                "story-reviewer", [], everything_exists, picks=["compose"])
+        self.assertEqual(paths, ["/skills/common/SKILL.md", "/skills/kotlin/SKILL.md"])
+
     def test_roles_that_never_get_skills_get_none(self) -> None:
         for role in ("tester", "pr-agent", "retro-agent"):
             with self.subTest(role=role):
@@ -221,6 +234,21 @@ class PlanExtraCliTest(unittest.TestCase):
     def test_brief_skills_prints_one_path_per_line(self) -> None:
         code, out, _ = run_tool(main, ["brief-skills", "--config", str(self.config), "--role", "implementer"])
         self.assertEqual((code, out), (0, "\n".join([self.skills["common"], self.skills["kotlin"], self.skills["compose"]]) + "\n"))
+
+    def test_brief_skills_narrows_to_the_picks_of_one_task(self) -> None:
+        self.tasks.write_text(TASKS.replace("Delivers:", "Skills: compose: the screen\nDelivers:", 1))
+        args = ["brief-skills", "--config", str(self.config), "--role", "implementer", "--tasks", str(self.tasks)]
+        code, out, _ = run_tool(main, args + ["--task", "t-1"])
+        self.assertEqual((code, out), (0, self.skills["common"] + "\n" + self.skills["compose"] + "\n"))
+        # a task without a Skills line gets the role's full list
+        code, out, _ = run_tool(main, args + ["--task", "t-2"])
+        self.assertEqual((code, out), (0, "\n".join([self.skills["common"], self.skills["kotlin"], self.skills["compose"]]) + "\n"))
+
+    def test_brief_skills_needs_tasks_and_task_together(self) -> None:
+        base = ["brief-skills", "--config", str(self.config), "--role", "implementer"]
+        self.assertEqual(run_tool(main, base + ["--task", "t-1"])[0], 3)
+        self.assertEqual(run_tool(main, base + ["--tasks", str(self.tasks)])[0], 3)
+        self.assertEqual(run_tool(main, base + ["--tasks", str(self.tasks), "--task", "t-99"])[0], 1)
 
     def test_brief_skills_reads_the_extra_skills_from_the_state(self) -> None:
         state = self.dir / "state.md"

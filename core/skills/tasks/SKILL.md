@@ -32,8 +32,8 @@ The table:
 
 ```
 Story <n>: <title> -> <k> tasks
-1. t-1  <title>   blocked by: none   <n> scenarios
-2. t-2  <title>   blocked by: t-1   <n> scenarios
+1. t-1  <title>   blocked by: none   <n> scenarios   skills: <short names>
+2. t-2  <title>   blocked by: t-1   <n> scenarios   skills: <short names>
 ```
 
 When run by hand, offer to show any task's criteria and scenarios in full. The developer may approve, merge tasks, split them, reorder, or rewrite criteria. Apply small changes to `.sketch/tasks.md` yourself. For a new split, run the task-writer again with the developer's feedback.

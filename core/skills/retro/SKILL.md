@@ -18,12 +18,15 @@ Run the `retro-agent` in the right mode (give it the next run number for this st
 
 ## 3. Walk through it with the developer
 
-1. First, list every `[me]` line from `.sketch/journal.md` for the stories covered (NOTE, EDIT and CONTEXT), verbatim, one per line. Get them from the tool, not by reading: `{{TOOLS}}/sketch-journal me-lines --journal .sketch/journal.md --after <the last story the previous retro covered>` (or `--story S<n>`), and print its lines exactly as they are. These are the developer's own words, so they come before anything else. Later, say for each note whether it became a proposal, and if not, why not.
-2. Show the drift block of each story covered: planned, built, drift items with who found each and when, and the signals.
-3. Ask: "Anything to add from your side?" (what felt wrong, slow, confusing, or good). Record their answer in the draft under "Developer's view", and as a `[me]` NOTE line in the journal.
-4. Show where each review problem should have been caught earlier, and the root cause of each flag.
+Follow "How to talk" in the orchestrator rules.
 
-Keep it short. If a story had nothing notable, say so and move on.
+1. One line per finding: every flag or cap hit, every defect the developer or the team found in review, and every `[me]` line from `.sketch/journal.md` for the stories covered (NOTE, EDIT and CONTEXT; cut at a sentence end, never reworded) with what became of it. Get them from the tool, not by reading: `{{TOOLS}}/sketch-journal me-lines --journal .sketch/journal.md --after <the last story the previous retro covered>` (or `--story S<n>`), and print its lines exactly as they are. These are the developer's own words, so they come before anything else. Later, say for each note whether it became a proposal, and if not, why not.
+2. Your take on the cause and the fix.
+3. Ask: "Anything to add from your side?" (what felt wrong, slow, confusing, or good). Record the answer in the draft under "Developer's view", and as a `[me]` NOTE line in the journal.
+4. Drift blocks, where each review problem should have been caught, and flag causes: only when the developer asks.
+
+In `final` mode, include the one-line numbers (rounds, flags, comments from the developer and from the team per story).
+If a story had nothing notable, say so and move on.
 
 ## 4. Proposals
 

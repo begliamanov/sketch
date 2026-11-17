@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, List, Sequence, Set, Tuple
+from typing import Callable, List, Optional, Sequence, Set, Tuple
 
 from sketch_tools.core.config_file import parse_config, parse_list
 from sketch_tools.core.errors import DataError, UsageError
@@ -22,10 +22,13 @@ def parse_extra_skills(value: str) -> List[str]:
 
 
 def brief_skills(
-    config_text: str, role: str, extra: Sequence[str], exists: Callable[[str], bool]
+    config_text: str, role: str, extra: Sequence[str], exists: Callable[[str], bool],
+    picks: Optional[Sequence[str]] = None,
 ) -> Tuple[List[str], List[str]]:
     """(paths, problems): `common`, then the role's own list, then the story's extra skills, each
     once, in that order. A role that never gets skills (tester, pr-agent, retro-agent) gets none.
+    With `picks` (the skill names a task asked for), the role's own list keeps only the skills whose
+    folder name is picked; `common` and the extras stay, and the story-reviewer keeps its full list.
     Raises UsageError for an unknown role, DataError when the config lacks the role or a list."""
     known = ROLES_WITH_SKILLS + ROLES_WITHOUT_SKILLS
     if role not in known:
@@ -41,6 +44,8 @@ def brief_skills(
         paths, _problem = parse_list(config.roles[name])
         if paths is None:
             raise DataError("skills role " + name + " is not a list: run config-check")
+        if picks is not None and name == role and role != "story-reviewer":
+            paths = [path for path in paths if path.split("/")[-2] in picks]
         sources += [(path, "skills role " + name) for path in paths]
     for path in extra:
         if not (path.startswith("/") and path.endswith("/SKILL.md")):

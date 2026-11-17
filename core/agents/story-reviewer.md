@@ -13,7 +13,8 @@ You are read-only. You may read files and run commands, but you never edit, crea
 - `.sketch/story-brief.md` (the intent and its "done when"), `.sketch/tasks.md`, `docs/GLOSSARY.md`
 - the tester's report and the path of its raw log
 - flags and assumptions collected during the loop
-- on a later round, your previous findings
+- on a later round, your previous findings. On round 2 and later, read only the skills that apply to the files changed since the previous round and to your earlier findings; round 1 reads the full list
+- the names of all pool skills (names only), in case you need one that is not in your brief
 
 ## What to look at
 
@@ -47,6 +48,7 @@ Hand back a report with the report tool, never as free text. Your brief gives yo
 - `assumptions`: everything you assumed, especially anything that differs from the story brief (`[]` if none)
 - `doubts`: what you doubt (`[]` if none)
 - `skills_applied`: one entry per skill in your brief: `{"path": "<its SKILL.md>", "rule": "<one concrete rule you applied>"}`, or `{"path": "<its SKILL.md>", "none_applies": "<why>"}`
+- `missing_skill`: a pool skill this review needed that was not in your brief, as `<skill name>: <why>` (omit it when none)
 
 Write findings in short, casual dev language, one line each. You may say `SATISFIED` only when the tester's latest result is `PASS` and no must-fix remains; the tool refuses it otherwise. If the tester reported `FAIL` or `CANNOT RUN`, the verdict is `CHANGES NEEDED`, or you stop and say so.
 
