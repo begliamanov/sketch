@@ -2,6 +2,15 @@
 
 Sketch follows [semantic versioning](https://semver.org). The current version is in `VERSION`.
 
+## Unreleased
+
+- Deterministic tools in `tools/` (Python 3.9+, standard library only, tests written first): `sketch-journal add`; `sketch-state set`, `bump`, `flag add`, `check`; `sketch-repo-check commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`. The Claude Code installer copies them to `~/.claude/sketch/tools/` and creates a launcher per tool. Needs `python3` 3.9 or newer.
+- The orchestrator, `/run-story`, `/tasks`, `/sketch`, `/pause`, `/stop`, `/resume-story` and `/note` call the tools for state, journal and git checks. Counters are enforced by `sketch-state bump`; the reviewer gets the mechanical check results in its brief.
+- Removed the `drift-notetaker` agent: `sketch-journal add` does its job. The installer now removes stale generated agents, skills and core files, so a deleted agent does not linger in `~/.claude`.
+- `state.md` always has a `stop_after_task` line (`no` or `yes`).
+- New config key `test_paths`: globs of the project's test files, asked by `/tune-skills`. Re-run `/tune-skills` or add the line to `.sketch/config.md`.
+- Removed the Pi placeholder sections from the README. Pi is not supported.
+
 ## 0.0.1
 
 First versioned release. Designed and written, not yet run end to end.

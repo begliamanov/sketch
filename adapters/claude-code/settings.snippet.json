@@ -23,7 +23,8 @@
       "Bash(glab mr create:*)",
       "Bash(glab mr view:*)",
       "Bash(glab mr list:*)",
-      "Bash(glab auth status:*)"
+      "Bash(glab auth status:*)",
+      "Bash(~/.claude/sketch/tools/bin/*)"
     ],
     "deny": [
       "Bash(gh pr merge:*)",

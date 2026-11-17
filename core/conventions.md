@@ -97,7 +97,7 @@ docs/                tracked, the team sees it
 CHANGELOG.md
 ```
 
-`state.md` is written after every completed step, with the round and attempt counters, so a resume never resets a cap.
+`state.md` is written after every completed step, with the round and attempt counters, so a resume never resets a cap. It is changed only with `sketch-state`, and `journal.md` only with `sketch-journal` (see the orchestrator rules, "Tools").
 
 ## Reports
 

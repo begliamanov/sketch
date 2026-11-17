@@ -56,9 +56,10 @@ The developer may give paths to skills (local `SKILL.md` files, or skills for an
 
 ## 6. Test commands
 
-Propose two commands from the build files. Do not run the full suite now.
+Propose two commands and the test file paths from the build files. Do not run the full suite now.
 - `test_full`: the full unit-test command, for example `./gradlew testDebugUnitTest` (or `./gradlew test`, depending on the modules and variants).
 - `test_task`: the form that runs one test class, with `{class}` as the placeholder, for example `./gradlew :app:testDebugUnitTest --tests "{class}"`.
+- `test_paths`: globs that match every test file of the project, for example `**/src/test/**` or `Tests/**`. `*` stays inside one folder, `**` crosses folders. The loop uses them to check that the implementer never changes a test, so they must cover all test files and nothing else. Look at the test directories you found and show the globs you chose.
 
 Say that these are proposals and that the first baseline check will exercise them. Never guess a command that the build files do not support. If there is no build tool you recognize, ask.
 
@@ -73,6 +74,7 @@ tracker_cli: gh | glab
 default_branch: <name>
 test_full: <command>
 test_task: <command with {class}>
+test_paths: [<glob>, ...]
 
 skills:
   common: [<absolute path to SKILL.md>, ...]

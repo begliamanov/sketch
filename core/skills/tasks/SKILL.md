@@ -22,7 +22,7 @@ If it reports that the story is too big or too vague, relay that to the develope
 
 There are two cases. Check which one applies before doing anything else in this step.
 
-**Started by `/sketch` (the normal case).** The developer's approval of the playback is the approval for the tasks and the issues. Do not ask again. Show the table below as information, followed by the task-writer's doubts and assumptions, if any, one line each. Then go straight to step 4. Send the assumptions to the `drift-notetaker`. The only exception is step 2: if the story is too big or too vague, stop and ask.
+**Started by `/sketch` (the normal case).** The developer's approval of the playback is the approval for the tasks and the issues. Do not ask again. Show the table below as information, followed by the task-writer's doubts and assumptions, if any, one line each. Then go straight to step 4. Journal each assumption as an ASSUME line: `{{TOOLS}}/sketch-journal add ASSUME S<n> - "<the assumption>" --journal .sketch/journal.md`. The only exception is step 2: if the story is too big or too vague, stop and ask.
 
 **Run by hand (`/tasks` typed by the developer).** The developer must approve the list explicitly. Do not create any issue before they say yes.
 
@@ -38,7 +38,7 @@ When run by hand, offer to show any task's criteria and scenarios in full. The d
 
 ## 4. Publish
 
-Run the `task-writer` agent in **publish** mode. Afterwards check `.sketch/state.md`: the story issue number and every task's issue number are there, and the task table is complete. Set `phase: baseline`.
+Run the `task-writer` agent in **publish** mode. Afterwards run `{{TOOLS}}/sketch-state check --state .sketch/state.md`: it must print `ok`, and the story issue number and every task's issue number must be in the file. Then set the phase: `{{TOOLS}}/sketch-state set phase baseline --state .sketch/state.md`.
 
 If publishing fails (sub-issues or blocking links unsupported, a CLI error, an auth problem), stop with the STOPPED report and quote the error. Do not ask for a workaround. Issues created before the failure stay recorded in the state, and running `/tasks` again creates only what is missing.
 

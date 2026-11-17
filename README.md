@@ -31,12 +31,11 @@ Lost? `/how`.
 
 ## Setup
 
-The system is plain Markdown in `core/`. A harness adapter copies it to where the harness looks and fills in three placeholders: `{{CORE}}` becomes the path of a filled-in copy of `core/` (so files that point to each other resolve), `{{CORE_SOURCE}}` the path of the repo's `core/` (used by `/retro`, which edits the source), and `{{VERSION}}` the contents of `VERSION`.
+The system is plain Markdown in `core/`. A harness adapter copies it to where the harness looks and fills in four placeholders: `{{CORE}}` becomes the path of a filled-in copy of `core/` (so files that point to each other resolve), `{{CORE_SOURCE}}` the path of the repo's `core/` (used by `/retro`, which edits the source), `{{TOOLS}}` the folder with the launchers of the deterministic tools (`tools/`, see below), and `{{VERSION}}` the contents of `VERSION`.
 
 | Harness | Adapter | Status |
 |---|---|---|
 | Claude Code | `adapters/claude-code/` | Installs. Loop not run yet. |
-| Pi | none yet | Unverified |
 | Cline | none yet | Unverified |
 | GitHub Copilot (VS Code) | none yet | Unverified |
 | Anything else | none yet | See "Writing an adapter" |
@@ -44,6 +43,7 @@ The system is plain Markdown in `core/`. A harness adapter copies it to where th
 ### Requirements (every harness)
 
 - git, plus `gh` (GitHub) or `glab` (GitLab), installed **and logged in**
+- Python 3.9 or newer (`python3`), for the deterministic tools in `tools/`. Standard library only: nothing to `pip install`.
 - a build tool with a test command (built around Gradle; others should work)
 - a harness that can run **subagents**: separate agents, each with its own fresh context. The loop depends on this. Without it, there is no adapter.
 
@@ -54,25 +54,13 @@ adapters/claude-code/install.sh              # install or update
 adapters/claude-code/install.sh uninstall    # remove only what it generated
 ```
 
-- Writes `~/.claude/agents/*.md` and `~/.claude/skills/*/SKILL.md` (or under `$CLAUDE_HOME`).
+- Writes `~/.claude/agents/*.md` and `~/.claude/skills/*/SKILL.md` (or under `$CLAUDE_HOME`), and copies the tools to `~/.claude/sketch/tools/` with one launcher per tool in its `bin/` (`sketch-state`, `sketch-journal`, `sketch-repo-check`). Launchers run `python3 -I`, so a file in your project folder can never replace a library the tools use.
 - Won't overwrite a file it didn't generate. Edit `core/` and rerun; never edit the generated files.
 - **Permissions:** merge `adapters/claude-code/settings.snippet.json` into your settings by hand. It allows what the loop needs and denies merges, closing issues, force-pushes and pushes to main.
 - Models: only `story-reviewer` is pinned (`opus`), in `adapters/claude-code/agents.list`. The rest inherit your session's model.
 - Start a new session afterwards.
 
 Details and known limits: [`adapters/claude-code/README.md`](adapters/claude-code/README.md).
-
-### Pi *(unverified)*
-
-No adapter yet. What a Pi adapter would map, from what Pi documents (check against your version):
-
-| Sketch | Pi |
-|---|---|
-| `core/skills/<name>/SKILL.md` (commands) | prompt templates (`~/.pi/agent/prompts/<name>.md`) or skills (`~/.pi/agent/skills/`) |
-| `core/agents/*.md` (subagents) | Pi has no built-in subagents. You need an extension or package that adds them |
-| `settings.snippet.json` deny list | needs an extension that blocks commands. Prompts alone are not a guardrail |
-
-Open question from the design notes: does the pi-pstack package already provide subagents we can reuse?
 
 ### Cline *(unverified)*
 
@@ -93,12 +81,13 @@ Open question from the design notes: does the pi-pstack package already provide 
 
 ### Writing an adapter
 
-The Claude Code installer is about 110 lines of bash. A new adapter must:
+The Claude Code installer is about 200 lines of bash. A new adapter must:
 
 1. Write a copy of all of `core/` with `{{CORE}}` replaced by that copy's path and `{{CORE_SOURCE}}` by the repo's `core/`. Then copy each `core/skills/<name>/SKILL.md`, with the same replacements, to wherever the harness reads slash commands. Keep `$ARGUMENTS`, or map it to the harness's argument syntax.
 2. Copy each `core/agents/<name>.md` to wherever the harness defines subagents. Give each one the tools listed for it in `agents.list` (the reviewers are **read-only**).
 3. Deny the dangerous commands in the harness's own permission system, not just in the prompts.
-4. **Fail hard** if the harness can't do one of these. Don't turn subagents into "the main agent does it all": the loop depends on fresh contexts and an orchestrator that never sees test logs.
+4. Copy `tools/sketch_tools` to a fixed place, create a launcher per tool (`python3 -I run.py <tool> "$@"`), and fill `{{TOOLS}}` with the folder of the launchers. Fail hard if Python 3.9 or newer is missing.
+5. **Fail hard** if the harness can't do one of these. Don't turn subagents into "the main agent does it all": the loop depends on fresh contexts and an orchestrator that never sees test logs.
 
 Quick and dirty way to read the files without an adapter:
 
@@ -185,6 +174,7 @@ STOP. Wait for you.
 | The orchestrator never runs tests | It gets verdicts, not logs. Its context stays small. |
 | One commit prefix per task (`t-3: ...`), no squashing | You can read the PR task by task. |
 | Every task adds a CHANGELOG line ending `(#issue)` | Missing = must fix. |
+| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. Same input, same answer, every time. |
 
 Caps and rules: [`core/conventions.md`](core/conventions.md).
 
@@ -299,7 +289,6 @@ If the answer isn't in the docs, it says so instead of guessing.
 | story-reviewer | **read-only** | whole story diff, Opus |
 | tester | no | runs commands, keeps raw logs, PASS / FAIL / CANNOT RUN |
 | pr-agent | no | pushes the story branch, opens the PR |
-| drift-notetaker | journal only | appends events, no opinions |
 | retro-agent | `.sketch/retro/` only | drift analysis, proposals |
 
 ## Where things live
@@ -320,13 +309,15 @@ sketch/                         this repo
     orchestrator.md             how the main session behaves
     state-format.md             state, journal, stop-note formats
     agents/  skills/
+  tools/                        the deterministic tools (Python, standard library only) and their tests
   adapters/claude-code/         installer, agent tool/model list, permission snippet
+  design/                       notes on the tools: decisions, what is built, what is open
   docs/design-notes.md          why it is the way it is
 ```
 
 ## Known gaps
 
-- Never run end to end. First-run checklist: [`adapters/claude-code/README.md`](adapters/claude-code/README.md#not-verified).
+- Never run end to end. The tools have 194 tests, but the loop that calls them has not run for real. First-run checklist: [`adapters/claude-code/README.md`](adapters/claude-code/README.md#not-verified).
 - `gh` sub-issues and blocking links: untested. `glab`: tested by hand.
-- No adapters for Pi, Cline or Copilot yet.
+- No adapters for Cline or Copilot yet.
 - Why each decision was made: [`docs/design-notes.md`](docs/design-notes.md).

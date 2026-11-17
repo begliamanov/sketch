@@ -40,14 +40,30 @@ Every brief contains:
 
 Restate the goal in every brief. Agents start with no memory of this conversation.
 
+## Tools
+
+Three deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
+
+- `sketch-state` is the only way to change `.sketch/state.md`: `set` (a field, or a task's field with `--task`), `bump` (a counter), `flag add`, `check`. Never edit the state file by hand. The one exception is adding the rows of the task table (see `{{CORE}}/state-format.md`); run `check` right after.
+- `sketch-journal` is the only way to add a line to `.sketch/journal.md`.
+- `sketch-repo-check` answers yes or no on text you pipe in from git: `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`.
+
+Exit codes mean the same everywhere: `0` ok, `1` a check found problems or a file is damaged, `2` refused (a counter is at its cap), `3` the call itself was wrong. A `3` is your mistake: fix the call and run it again once, then fail hard. Never work around a tool or do its job by hand.
+
+Examples:
+- `{{TOOLS}}/sketch-state set phase task-loop --state .sketch/state.md`
+- `{{TOOLS}}/sketch-state check --state .sketch/state.md`
+- `{{TOOLS}}/sketch-journal add FLAG S2 t-3 "review cap hit (2/2)" --journal .sketch/journal.md`
+- `git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean`
+
 ## State discipline
 
-- Update `.sketch/state.md` after every completed step (schema in `{{CORE}}/state-format.md`). Counters live there, so a resume never resets a cap.
-- Send events to the `drift-notetaker` agent as they happen: a flag, a cap hit, an assumption that differs from the brief, a review summary, the developer's `/pause` context. Batch them at the end of each task when nothing is urgent.
+- Update `.sketch/state.md` after every completed step with `sketch-state` (schema in `{{CORE}}/state-format.md`). Counters live there, so a resume never resets a cap, and `bump` refuses to pass one.
+- Write events to the journal with `sketch-journal` the moment they happen: a flag, a cap hit, an assumption that differs from the brief, a review summary, the developer's `/pause` context.
 
 ## Checking what comes back
 
-- Do not trust a report. After an agent that commits, look at `git log` and `git status` yourself (these are cheap) to confirm the commits exist, carry the right prefix, and the tree is clean.
+- Do not trust a report. After an agent that commits, check it with the tools: its commits carry the right prefix (`git log --format=%s <sha before the agent>..HEAD | {{TOOLS}}/sketch-repo-check commit-prefix --task t-3`) and the tree is clean (`git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean`). Note `git rev-parse HEAD` before you start an agent so you know where its commits begin.
 - A report that lacks its required parts (skills applied, assumptions, verdict format) is incomplete: send it back once, then fail hard.
 
 ## Pause and stop

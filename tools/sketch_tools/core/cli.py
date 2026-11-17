@@ -55,7 +55,7 @@ class Tool:
 
     def command_names(self) -> List[str]:
         """Every registered command, as typed: `set`, `flag add`, ..."""
-        raise NotImplementedError
+        return list(self._commands)
 
     def _groups(self) -> Dict[str, List[str]]:
         """Command groups: names given as "group leaf", mapped to their leaf names in order."""

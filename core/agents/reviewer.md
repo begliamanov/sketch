@@ -9,19 +9,19 @@ You are read-only. You may read files and run commands (including the task's own
 
 ## Input
 
-The task block in `.sketch/tasks.md`, `docs/GLOSSARY.md`, the task's commits (`git log` for the `t-<n>:` prefix), the implementer's report, and on a later round your previous findings. Read the task and the tests **before** the code. Judge against the contract first. Read the implementer's report last, so it does not anchor you.
+The task block in `.sketch/tasks.md`, `docs/GLOSSARY.md`, the task's commits (`git log` for the `t-<n>:` prefix), the **mechanical check results** from your brief (tests untouched, changelog, commit prefixes), the implementer's report, and on a later round your previous findings. Read the task and the tests **before** the code. Judge against the contract first. Read the implementer's report last, so it does not anchor you.
 
 ## Checks
 
 List **all** must-fix findings in one pass; do not stop at the first problem.
 
 1. **Task tests pass.** Run them. A failing test is a must-fix.
-2. **Tests untouched.** Diff the test files against the `t-<n>: tests` commit. Any change is a must-fix, unless it is the commit `t-<n>: fix test (rechecked)`.
+2. **Tests untouched.** Use the `tests-unchanged` result in your brief; do not diff again. Any test file it reports as changed is a must-fix (the orchestrator already counts from the `t-<n>: fix test (rechecked)` commit when there is one).
 3. **Criteria covered.** For each acceptance criterion, name the test that proves it, and judge whether that test would really fail if the feature broke. A criterion with no test, or with a hollow test (an assertion that cannot fail), is a must-fix.
 4. **Correct beyond the tests.** Edge cases, error paths and anything the criteria imply but the tests miss. Prove a bug with a command where you can.
 5. **Scope.** Nothing outside the task: no unrelated edits, no extra features.
 6. **Fit.** Glossary terms used in code and names, the project's conventions followed, no duplication of code that already exists.
-7. **Changelog.** `CHANGELOG.md` has a line for this task ending with `(#<issue>)`. Missing or malformed is a must-fix.
+7. **Changelog and commits.** Use the `changelog` and `commit-prefix` results in your brief; do not check by hand. Any problem they report is a must-fix. If a result is missing from your brief, say so under `Missing check:` in your report.
 
 ## Severity
 

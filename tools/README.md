@@ -47,4 +47,4 @@ git log --format=%s main..HEAD | python3 -m sketch_tools.repo_check commit-prefi
 | `state` | `set`, `bump`, `check`, `flag add` |
 | `repo-check` | `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean` |
 
-Launchers (`sketch-journal`, `sketch-state`) and the adapter install step are not built yet.
+The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.

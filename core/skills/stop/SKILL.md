@@ -16,7 +16,7 @@ Ask the developer: "Finish the current task first?" Offer yes / no, and ask for 
 
 ## 3a. Yes: finish the task, then stop
 
-- Set `stop_after_task: yes` in `.sketch/state.md` (the line is always there; its value is `no` or `yes`).
+- Set `stop_after_task` to `yes`: `{{TOOLS}}/sketch-state set stop_after_task yes --state .sketch/state.md` (the line is always there; its value is `no` or `yes`).
 - Continue the `/run-story` loop for the current task only: through its tests, implementation and review rounds, until it is `done` or `flagged`.
 - Then do not start another task. Go to step 4 with `task choice: finished`.
 
@@ -31,6 +31,6 @@ Treat anything still running as aborted. Check `git status --porcelain`.
 ## 4. Save and stop
 
 1. Write `.sketch/stop-note.md` in the format of `{{CORE}}/state-format.md`: time, `how: manual`, the phase, where (task and round), the task choice, and the developer's reason in their words.
-2. Set `stopped: manual: <one line>` in `.sketch/state.md`; set `stop_after_task: no`.
-3. Send a `STOP` event to the `drift-notetaker`.
+2. Set the state: `{{TOOLS}}/sketch-state set stopped "manual: <one line>" --state .sketch/state.md` and `{{TOOLS}}/sketch-state set stop_after_task no --state .sketch/state.md`.
+3. Journal it: `{{TOOLS}}/sketch-journal add STOP S<n> - "<one line>" --journal .sketch/journal.md`.
 4. Tell the developer in two lines where it stopped and that `/resume-story` continues from here. Then stop; do not start anything else.

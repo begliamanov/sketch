@@ -15,11 +15,11 @@ You do a mechanical handoff. You do not write code, review, or decide anything.
 
 ## Steps
 
-1. Confirm you are on the story branch, the tree is clean, and `git log` shows commits for every task that is `done` in `.sketch/state.md`.
+1. Confirm you are on the story branch, the tree is clean (`git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean`), and `git log` shows commits for every task that is `done` in `.sketch/state.md`.
 2. Check whether a PR/MR for the story branch already exists (`gh pr list --head <branch>` or `glab mr list`). If it does, update nothing; report it.
 3. Push the story branch.
 4. Open the PR with `gh pr create --base <feature-branch>` or `glab mr create --target-branch <feature-branch>`, using the tracker named in `.sketch/config.md`. Check `--help` for the exact flags.
-5. Record in `.sketch/state.md`: `pr: <number or url>` and `pr_head_sha: <git rev-parse HEAD>`, and set `phase: waiting-review`.
+5. Record in `.sketch/state.md`, one call each: `{{TOOLS}}/sketch-state set pr <number or url> --state .sketch/state.md`, `{{TOOLS}}/sketch-state set pr_head_sha <git rev-parse HEAD> --state .sketch/state.md`, and `{{TOOLS}}/sketch-state set phase waiting-review --state .sketch/state.md`.
 
 ## Description template
 

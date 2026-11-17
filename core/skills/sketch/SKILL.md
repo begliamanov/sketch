@@ -19,7 +19,7 @@ If a check fails because something is missing, follow "Setup gaps" in the orches
 - You are on a feature branch, not the default branch from the config. If you are on the default branch, propose a name (`feature/<slug>` from the idea) and offer to create it from the default branch and push it. Do that only after the developer says yes to that name; if they decline, stop: "Create your feature branch first, then run /sketch." After this first push, the feature branch is the developer's: agents never push to it again.
 - `.sketch/state.md`, if it exists, does not show an unfinished story:
   - `phase: done`: fine.
-  - `phase: waiting-review`: look at the story PR/MR with `gh`/`glab`. If it is merged, set `phase: done` and continue. If it is still open, stop: "Story <n> is still waiting for your review. Merge it first."
+  - `phase: waiting-review`: look at the story PR/MR with `gh`/`glab`. If it is merged, set `phase: done` (`{{TOOLS}}/sketch-state set phase done --state .sketch/state.md`) and continue. If it is still open, stop: "Story <n> is still waiting for your review. Merge it first."
   - any other phase: stop: "Story <n> is unfinished. Run /resume-story."
 
 ## 2. Signals from the last story
@@ -87,7 +87,7 @@ When the draft has settled, restate your understanding **in the developer's word
 - `.sketch/initial-sketch.md`: written **only for the first story of a feature**, and never changed afterwards. It holds the feature-level picture as discussed and the first story. It is the baseline the retro compares against.
 - `.sketch/story-brief.md`: the approved story, replacing the previous one.
 - `.sketch/glossary-proposal.md`: new or changed terms, proposed ADRs. Replace the previous file's content, since earlier proposals were applied.
-- `.sketch/state.md`: a new record for this story (`{{CORE}}/state-format.md`): the story number, the title, `feature_branch` = the current branch, `phase: tasks`, `stopped: no`, `stop_after_task: no`, `extra_skills` from this command, everything else empty or `none`. Keep the previous story's tasks out of the new table.
+- `.sketch/state.md`: a new record for this story (`{{CORE}}/state-format.md`): the story number, the title, `feature_branch` = the current branch, `phase: tasks`, `stopped: no`, `stop_after_task: no`, `extra_skills` from this command, everything else empty or `none`. Keep the previous story's tasks out of the new table. No tool writes a new record yet, so write it by hand, then run `{{TOOLS}}/sketch-state check --state .sketch/state.md` and fix what it reports before going on.
 - Remove `.sketch/tasks.md`, `.sketch/tasks-approved.md` and `.sketch/story-context.md` left over from the previous story, after confirming that story is done.
 
 ## 9. Next
