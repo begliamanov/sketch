@@ -23,6 +23,11 @@ TASK_COLUMNS = ("id", "issue", "title", "blocked_by", "status", "attempts", "rev
 TASK_COUNTER_FIELDS = ("attempts", "review_rounds")
 SETTABLE_TASK_FIELDS = ("issue", "title", "blocked_by", "status")
 
+# starting values of the round caps (core/conventions.md); the commands take them as options
+DEFAULT_STORY_ROUNDS_CAP = 3
+DEFAULT_ATTEMPTS_CAP = 3
+DEFAULT_REVIEW_ROUNDS_CAP = 2
+
 FLAGS_HEADING = "## Flags"
 FLAG_LINE = re.compile(r"- (t-\d+): (\S.*)")
 

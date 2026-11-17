@@ -137,6 +137,29 @@ def _flags(lines: List[str]) -> Tuple[Optional[int], int, List[Tuple[int, str]]]
     return start, end, found
 
 
+def header_value(text: str, key: str) -> Optional[str]:
+    """The value of a header line, or None when the file has no such line."""
+    raise NotImplementedError
+
+
+def new_story(
+    story: str, title: str, feature_branch: str, extra_skills: str = "none",
+    story_rounds_cap: int = schema.DEFAULT_STORY_ROUNDS_CAP,
+) -> str:
+    """The text of a fresh state file for a story. Raises UsageError for a bad value."""
+    raise NotImplementedError
+
+
+def add_task(
+    text: str, task_id: str, title: str, blocked_by: str = "none", issue: str = "none",
+    attempts_cap: int = schema.DEFAULT_ATTEMPTS_CAP,
+    review_rounds_cap: int = schema.DEFAULT_REVIEW_ROUNDS_CAP,
+) -> str:
+    """Append a `pending` row to the task table. Raises UsageError for a bad value, RefusedError
+    when the task already exists, DataError when the file has no task table."""
+    raise NotImplementedError
+
+
 def add_flag(text: str, task_id: str, reason: str) -> str:
     """Append `- <task>: <reason>` to the Flags section. Raises UsageError for an unknown task or a
     bad reason, RefusedError when the task is already flagged, DataError without a Flags section."""
