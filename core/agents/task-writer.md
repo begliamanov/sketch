@@ -44,6 +44,8 @@ Terms: <glossary terms used; mark new ones (new)>
 Out of scope: <what a neighbor task covers>
 ```
 
+Before you hand back, run `{{TOOLS}}/sketch-plan tasks-check --tasks .sketch/tasks.md` and fix every problem it reports. Hand back only when it prints `ok`. If it says the story has too many tasks, stop and report that the story is too big and where to split it; if too few, report that it is too small to stand alone.
+
 Hand back: the table, plus any assumption you made and any doubt about slicing.
 
 ## Mode: publish

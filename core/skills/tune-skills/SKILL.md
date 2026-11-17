@@ -87,6 +87,8 @@ skills:
 
 Put the shared list under `common` and only the differences under each role.
 
+Then check the file: `{{TOOLS}}/sketch-plan config-check --config .sketch/config.md` must print `ok`. It checks every key, the tracker and its CLI, the `{class}` placeholder, `test_paths`, each role's list, and that every skill path is absolute and exists. Fix what it reports with the developer before you finish.
+
 ## 8. Finish
 
 Print a short summary: what was written, what is still a gap, and that the next step is `/sketch <idea>`.

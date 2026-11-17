@@ -18,6 +18,8 @@ Run the `task-writer` agent in **draft** mode. Brief it as described in the orch
 
 If it reports that the story is too big or too vague, relay that to the developer. They decide: go back to `/sketch`, or give you what is missing.
 
+Then check the file yourself: `{{TOOLS}}/sketch-plan tasks-check --tasks .sketch/tasks.md` must print `ok`. If it reports problems, give them to the `task-writer` verbatim and have it fix the file once; if it still reports problems, stop and tell the developer. A report that the story has too few or too many tasks is a decision for the developer too (merge it into the next story, or split it).
+
 ## 3. Approval
 
 There are two cases. Check which one applies before doing anything else in this step.

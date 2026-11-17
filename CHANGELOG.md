@@ -4,7 +4,8 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 
 ## Unreleased
 
-- Deterministic tools in `tools/` (Python 3.9+, standard library only, tests written first): `sketch-journal add`; `sketch-state new-story`, `task add`, `set`, `bump`, `flag add`, `check`; `sketch-repo-check commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`. The Claude Code installer copies them to `~/.claude/sketch/tools/` and creates a launcher per tool. Needs `python3` 3.9 or newer.
+- Deterministic tools in `tools/` (Python 3.9+, standard library only, tests written first): `sketch-journal add`; `sketch-state new-story`, `task add`, `set`, `bump`, `flag add`, `check`; `sketch-repo-check commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`; `sketch-plan tasks-check`, `tasks-order`, `config-check`. The Claude Code installer copies them to `~/.claude/sketch/tools/` and creates a launcher per tool. Needs `python3` 3.9 or newer.
+- `/tasks`, `task-writer`, `/run-story`, `/tune-skills` and `/resume-story` check `tasks.md` and `config.md` with `sketch-plan`, and `/run-story` takes the run order from `tasks-order`. A story with fewer than 3 or more than 8 tasks is reported.
 - The orchestrator, `/run-story`, `/tasks`, `/sketch`, `/pause`, `/stop`, `/resume-story` and `/note` call the tools for state, journal and git checks. Counters are enforced by `sketch-state bump`; the reviewer gets the mechanical check results in its brief.
 - Removed the `drift-notetaker` agent: `sketch-journal add` does its job. The installer now removes stale generated agents, skills and core files, so a deleted agent does not linger in `~/.claude`.
 - `state.md` always has a `stop_after_task` line (`no` or `yes`), and is written only by `sketch-state`: a new story with `new-story`, each task with `task add`.

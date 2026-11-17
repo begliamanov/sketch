@@ -144,6 +144,7 @@ All agreed 2026-11-16 ("build them all"). Each follows the Q5 rule: facts come i
 | 2026-11-15 | Notes file created. Nothing agreed yet. |
 | 2026-11-15 | Tool 1 `journal-add` agreed: build it, delete the `drift-notetaker` agent. Files to edit later: `orchestrator.md`, `pause`, `stop`, `run-story`, `note`, `agents.list`. |
 | 2026-11-15 | Tool 2 `state-set` agreed: build. Counters stay out of it (tool 3 `state-bump`). Writes via temp file + rename. |
+| 2026-11-17 | `plan` built (291 tests): `tasks-check`, `tasks-order`, `config-check`, wired into `/tasks`, `task-writer`, `/run-story`, `/tune-skills`, `/resume-story`. Limits: `tasks-check` cannot link a criterion to a scenario (scenarios are names only), so it checks that there are at least as many scenarios as criteria; task count defaults 3 to 8 (options); `config-check` still requires the `{class}` placeholder (the planned rename to `{target}` was not made). |
 | 2026-11-17 | `state new-story` and `state task add` built (228 tests): no state file is written by hand any more. Round caps are command options with the old defaults. |
 | 2026-11-17 | Wired the built tools into the system and moved the work to branch `deterministic-tools`, based on `add-versioning` (developer decision: A). Installer copies `tools/`, creates launchers, removes stale generated files; docs call the tools; `drift-notetaker` deleted; `test_paths` config key added. 194 tests. |
 | 2026-11-16 | `repo-check` built (174 tests green): `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`. Details fixed while building: `changelog` needs a full-context diff (`git diff -U99999`) and errors if the `## Unreleased` heading is not visible; test paths are globs (`*` one folder, `**` across folders, rest literal); `tree-clean` reports each path as `dirty: <porcelain line>`. |
@@ -195,9 +196,9 @@ Replaces the tier tables above. Status: proposed / agreed / rejected.
 | `tests` | `skipped-diff` | Compare skipped/disabled counts between two logs | **agreed**: build |
 | `tests` | `failures-diff` | Same failing tests in two runs? ("same failure twice" rule) | **agreed**: build |
 | `tests` | `logs-old` | List logs older than N stories, deletes nothing | **rejected** for now (cleanup can wait until logs hurt) |
-| `plan` | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | **agreed**: build |
-| `plan` | `tasks-order` | Run order, skipping tasks blocked by a flagged one | **agreed**: build |
-| `plan` | `config-check` | `config.md` has every key, every skill path exists | **agreed**: build |
+| `plan` | `tasks-check` | Validate `tasks.md` (criteria, `blocked_by`, cycles, task count) | **agreed**; **built** 2026-11-17 |
+| `plan` | `tasks-order` | Run order, skipping tasks blocked by a flagged one | **agreed**; **built** 2026-11-17 |
+| `plan` | `config-check` | `config.md` has every key, every skill path exists | **agreed**; **built** 2026-11-17 |
 | `pr` | `render-body` | Fill the PR template, enforce 20 lines and verbatim flags | **agreed**: build |
 | `pr` | `check-base` | PR base equals the feature branch, from `gh pr view` JSON | **agreed**: build |
 | `pr` | `check-flags` | Every flagged task and unresolved must-fix in `state.md` appears in the PR description | **agreed**: build |

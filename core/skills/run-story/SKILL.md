@@ -16,7 +16,7 @@ If a check fails because something is missing, follow "Setup gaps" in the orches
 - The state file is valid: `{{TOOLS}}/sketch-state check --state .sketch/state.md` prints `ok`. Otherwise stop and tell the developer.
 - The working tree is clean (`git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean`) and you are on the feature branch from the state, up to date with its remote (`git fetch`, then check you are not behind). Otherwise stop and tell the developer.
 - The tracker CLI works.
-- Every skill path in the config exists, and the config has `test_paths` (the globs of the project's test files).
+- The config and the tasks file are valid: `{{TOOLS}}/sketch-plan config-check --config .sketch/config.md` and `{{TOOLS}}/sketch-plan tasks-check --tasks .sketch/tasks.md` both print `ok`. (`config-check` also checks that every skill path exists and that `test_paths`, the globs of the project's test files, is set.)
 
 ## 2. Baseline check
 
@@ -30,7 +30,7 @@ Run the `tester` agent in mode `baseline` (the untouched feature branch). If the
 
 ## 4. Task loop, one task at a time
 
-Order the tasks by `blocked_by`. Work them **sequentially**. Skip a task whose blocker is flagged: mark it `flagged` with the reason "blocked by <id>" and move on.
+Work the tasks **sequentially**, in the order the tool gives. Ask for the order again before every task, because a flag changes it: `{{TOOLS}}/sketch-plan tasks-order --tasks .sketch/tasks.md --flagged <flagged ids> --done <done ids>` (ids from the state file, like `t-2,t-4`; leave an option out when there are none). Take the first `run` line. A `skip t-<n> (blocked by ...)` line means that task cannot run: flag it with the reason "blocked by <ids>" (see e. Flags below) and move on. When there is no `run` line left, the task loop is over.
 
 For each task, update the state after every step, check for `/pause` and `/stop` between agents, and write events to the journal the moment they happen. Note `git rev-parse HEAD` as the task's start when the task begins. After every task run `{{TOOLS}}/sketch-state check --state .sketch/state.md`; a problem means the state was damaged, so stop with the STOPPED report.
 

@@ -31,7 +31,7 @@ Collect **all risky mismatches before reporting**, so the developer sees them at
 - **Tracker**: the story issue and the task issues exist; issues closed or edited when the state says otherwise.
 - **PR**: if the state has one, whether it is open, merged or closed.
 - **Tools**: `gh` or `glab` is logged in.
-- **Config and skills**: the config exists and every skill path in it exists.
+- **Config and skills**: `{{TOOLS}}/sketch-plan config-check --config .sketch/config.md` prints `ok` (it checks that the config exists and that every skill path in it exists).
 
 ## 4. Report and wait
 

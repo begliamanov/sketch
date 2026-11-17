@@ -22,6 +22,7 @@ sketch_tools/
   journal/     logic.py (pure) + cli.py (arguments and files)
   state/       schema.py (allowed values, one place) + logic.py (pure) + cli.py
   repo_check/  globs.py (test-path patterns) + logic.py (pure checks on piped git text) + cli.py
+  plan/        tasks_file.py, config_file.py (parsers) + graph.py + logic.py (pure checks, run order) + cli.py
 tests/         unittest, with fixtures in tests/fixtures/
 ```
 
@@ -46,5 +47,6 @@ git log --format=%s main..HEAD | python3 -m sketch_tools.repo_check commit-prefi
 | `journal` | `add` |
 | `state` | `new-story`, `task add`, `set`, `bump`, `check`, `flag add` |
 | `repo-check` | `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean` |
+| `plan` | `tasks-check`, `tasks-order`, `config-check` |
 
-The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.
+The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`, `sketch-plan`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.
