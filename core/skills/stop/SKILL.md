@@ -25,7 +25,7 @@ If the developer interrupts with Esc while you are doing this, handle it as 3b.
 ## 3b. No: abort now
 
 Treat anything still running as aborted. Check `git status --porcelain`.
-- If the tree is dirty, you must be on the story branch from the state, otherwise stop and tell the developer what you found. Commit everything on the story branch as `t-<n>: [wip] interrupted, not reviewed` (or `story-<story>: [wip] interrupted, not reviewed` when no task was in progress).
+- If the tree is dirty, get the commit message from the tool: `{{TOOLS}}/sketch-state wip-message --state .sketch/state.md --branch <the branch you are on, from git rev-parse --abbrev-ref HEAD> --task t-<n>`, where `<n>` is the task that was in progress (leave `--task` out when no task was). It refuses (exit 2) when you are not on the story branch: then stop and tell the developer what you found; do not commit anywhere else. Commit everything on the story branch with that message.
 - Go to step 4 with `task choice: aborted (WIP committed)`.
 
 ## 4. Save and stop

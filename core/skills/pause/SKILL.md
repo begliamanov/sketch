@@ -12,8 +12,8 @@ The developer may have pressed Esc to interrupt a running agent and then typed t
 
 1. Fail hard if there is no story in progress (`.sketch/state.md` missing or `phase` is `done`).
 2. Check `git status --porcelain`. If the tree is dirty:
-   - You must be on the story branch from the state. If not, stop and tell the developer what you found; do not commit anywhere else.
-   - Commit everything on the story branch as `t-<n>: [wip] interrupted, not reviewed`, where `<n>` is the task that was in progress. If no task was in progress (for example during the story-end loop), use `story-<story>: [wip] interrupted, not reviewed`.
+   - Get the commit message from the tool: `{{TOOLS}}/sketch-state wip-message --state .sketch/state.md --branch <the branch you are on, from git rev-parse --abbrev-ref HEAD> --task t-<n>`, where `<n>` is the task that was in progress (leave `--task` out when no task was, for example during the story-end loop). It refuses (exit 2) when you are not on the story branch: then stop and tell the developer what you found; do not commit anywhere else.
+   - Commit everything on the story branch with that message.
 3. Set it in the state and keep every counter as it is: `{{TOOLS}}/sketch-state set stopped "manual: paused <time>" --state .sketch/state.md`.
 
 ## 2. Wait

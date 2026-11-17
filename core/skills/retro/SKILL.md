@@ -18,7 +18,7 @@ Run the `retro-agent` in the right mode (give it the next run number for this st
 
 ## 3. Walk through it with the developer
 
-1. First, list every `[me]` line from `.sketch/journal.md` for the stories covered (NOTE, EDIT and CONTEXT), verbatim, one per line. These are the developer's own words, so they come before anything else. Later, say for each note whether it became a proposal, and if not, why not.
+1. First, list every `[me]` line from `.sketch/journal.md` for the stories covered (NOTE, EDIT and CONTEXT), verbatim, one per line. Get them from the tool, not by reading: `{{TOOLS}}/sketch-journal me-lines --journal .sketch/journal.md --after <the last story the previous retro covered>` (or `--story S<n>`), and print its lines exactly as they are. These are the developer's own words, so they come before anything else. Later, say for each note whether it became a proposal, and if not, why not.
 2. Show the drift block of each story covered: planned, built, drift items with who found each and when, and the signals.
 3. Ask: "Anything to add from your side?" (what felt wrong, slow, confusing, or good). Record their answer in the draft under "Developer's view", and as a `[me]` NOTE line in the journal.
 4. Show where each review problem should have been caught earlier, and the root cause of each flag.

@@ -17,16 +17,18 @@ If a check fails because something is missing, follow "Setup gaps" in the orches
 - `.sketch/config.md` exists. If not, stop: "No project setup yet. Run /tune-skills first."
 - `.sketch/` is in `.git/info/exclude`.
 - You are on a feature branch, not the default branch from the config. If you are on the default branch, propose a name (`feature/<slug>` from the idea) and offer to create it from the default branch and push it. Do that only after the developer says yes to that name; if they decline, stop: "Create your feature branch first, then run /sketch." After this first push, the feature branch is the developer's: agents never push to it again.
-- `.sketch/state.md`, if it exists, does not show an unfinished story:
-  - `phase: done`: fine.
-  - `phase: waiting-review`: look at the story PR/MR with `gh`/`glab`. If it is merged, set `phase: done` (`{{TOOLS}}/sketch-state set phase done --state .sketch/state.md`) and continue. If it is still open, stop: "Story <n> is still waiting for your review. Merge it first."
-  - any other phase: stop: "Story <n> is unfinished. Run /resume-story."
+- `.sketch/state.md`, if it exists, does not show an unfinished story. Ask the tool: `{{TOOLS}}/sketch-state gate --state .sketch/state.md`. When the story waits for review it needs the PR's state: look it up (`gh pr view <number> --json state -q .state`, or `glab mr view <number> --output json`) and add `--pr-state open`, `merged` or `closed`. The tool prints:
+  - `go`: continue.
+  - `mark-done`: the story's PR was merged. Set the phase (`{{TOOLS}}/sketch-state set phase done --state .sketch/state.md`) and continue.
+  - `stop: <message>`: stop, and tell the developer that message word for word.
 
 ## 2. Signals from the last story
 
 If earlier stories exist, print one line, built from `.sketch/journal.md`, `.sketch/state.md` and the last story PR:
 
 `Since the last retro: <n> flags, <n> cap hits, <n> review comments from you, <n> lines you changed after the PR. Last retro: <n> stories ago.`
+
+The flag and cap counts come from the tool, the `FLAG` and `CAP` lines of `{{TOOLS}}/sketch-journal signals --journal .sketch/journal.md --after <the last story the last retro covered, from .sketch/retro/last.md>` (leave `--after` out when there was no retro). The review comments come from the tracker and the changed lines from `git diff --shortstat <pr_head_sha>..<the merged result>`.
 
 A retro is **recommended** if any of these hold: this is one of the first three stories, any flagged task, any cap hit, more than 20 lines changed by the developer after the PR was opened, more than 10 review comments. Otherwise say nothing is notable. The developer decides: if they want the retro, tell them to run `/retro` and stop; if not, continue.
 

@@ -47,8 +47,8 @@ git log --format=%s main..HEAD | python3 -m sketch_tools.repo_check commit-prefi
 
 | Tool | Subcommands |
 |---|---|
-| `journal` | `add` |
-| `state` | `new-story`, `task add`, `set`, `bump`, `check`, `flag add` |
+| `journal` | `add`, `me-lines`, `signals` |
+| `state` | `new-story`, `task add`, `set`, `bump`, `check`, `flag add`, `gate`, `wip-message`, `reconcile` |
 | `repo-check` | `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean` |
 | `plan` | `tasks-check`, `tasks-order`, `config-check` |
 | `pr` | `render-body`, `check-base`, `check-flags` |
