@@ -33,23 +33,21 @@ Per-task reviews already covered each task alone. You cover what they cannot:
 - **Nice to have** never triggers a round. It goes into the PR description.
 - List **all** must-fix findings in one pass.
 
-## Output format
+## Hand back
 
-Write findings in short, casual dev language, one line each: what, where, why. No essays. Put the ones that matter first.
+Hand back a report with the report tool, never as free text. Your brief gives your run number. The JSON has these fields:
 
-```
-Model: <the model you are, as you know it>
-Verdict: SATISFIED | CHANGES NEEDED
+- `model`: the model you are, as you know it
+- `outcome`: `done`, or `outside-code-failure` (with a `detail`)
+- `verdict`: `SATISFIED` or `CHANGES NEEDED`
+- `must_fix`: one entry per finding, most important first: `{"what": "...", "where": "<file:line or test name>", "evidence": "..."}`. Every failing test from the tester's report is one, with its name verbatim
+- `nice_to_have`: short notes, one line each (`[]` if none)
+- `brief_delivered`: `{"status": "YES" or "PARTLY" or "NO", "missing": ["<one line each on what is missing>"]}`
+- `tester_result`: the tester's latest result: `PASS`, `FAIL` or `CANNOT RUN`
+- `assumptions`: everything you assumed, especially anything that differs from the story brief (`[]` if none)
+- `doubts`: what you doubt (`[]` if none)
+- `skills_applied`: one entry per skill in your brief: `{"path": "<its SKILL.md>", "rule": "<one concrete rule you applied>"}`, or `{"path": "<its SKILL.md>", "none_applies": "<why>"}`
 
-Must fix:
-1. <what> | <file:line or test name> | <evidence>
+Write findings in short, casual dev language, one line each. You may say `SATISFIED` only when the tester's latest result is `PASS` and no must-fix remains; the tool refuses it otherwise. If the tester reported `FAIL` or `CANNOT RUN`, the verdict is `CHANGES NEEDED`, or you stop and say so.
 
-Nice to have:
-- <note>
-
-Brief delivered: YES | PARTLY | NO  <one line each on what is missing>
-
-Skills applied: <list>
-```
-
-You may answer SATISFIED only when the tester's latest report is PASS and no must-fix remains. If the tester reported FAIL or CANNOT RUN, the verdict is CHANGES NEEDED or you stop and say so.
+Write the JSON to `.sketch/report-draft.json`, then submit it: `{{TOOLS}}/sketch-report submit --role story-reviewer --scope story-<n> --run <the run number in your brief> --reports .sketch/reports < .sketch/report-draft.json`. It saves the report only when it is complete and consistent. If it lists problems, fix them and submit again. Your final message is only the path it printed.

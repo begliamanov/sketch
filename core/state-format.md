@@ -20,6 +20,7 @@ pr: none
 pr_head_sha: none
 story_rounds: 0/3
 extra_skills: <paths the developer gave for this story, or none>
+stop_after_task: no
 
 ## Tasks
 | id   | issue | title                  | blocked_by | status      | attempts | review_rounds |
@@ -35,9 +36,10 @@ extra_skills: <paths the developer gave for this story, or none>
 - `phase`: `sketch`, `tasks`, `baseline`, `task-loop`, `story-end`, `pr`, `waiting-review`, `done`.
 - `status`: `pending`, `tests-red`, `green`, `in-review`, `done`, `flagged`.
 - `stopped`: `no`, `failure: <one line>`, or `manual: <one line>` (including `manual: paused <time>`).
-- `stop_after_task: yes` is added by `/stop` when the developer wants the current task finished first, and removed when the run stops.
+- `stop_after_task` is always present: `no`, or `yes` when `/stop` was told to finish the current task first. It goes back to `no` when the run stops.
 - `pr_head_sha` is the story branch head when the PR was opened. The retro diffs it against the merged result to see what the developer changed by hand.
 - Attempts and rounds are `used/cap`.
+- Every change goes through `sketch-state` (`set`, `bump`, `flag add`), which rejects values outside this schema and never passes a cap. `check` reports every problem in the file. A new file is written with `new-story`, and each row of the task table with `task add`.
 
 ## `.sketch/journal.md`
 
@@ -54,6 +56,8 @@ Append-only. One line per event:
 ```
 
 Types: `FLAG`, `CAP`, `ASSUME`, `REVIEW`, `NOTE`, `EDIT`, `CONTEXT`, `STOP`. Lines written by the developer carry `[me]`. Never rewrite or delete earlier lines.
+
+Lines are added only with `sketch-journal add`, which checks the type, keeps the text exactly, and only ever appends. The spacing is fixed: the task is padded to 3 characters and followed by 2 spaces, the type is padded to 7 and followed by 1 space. Never write a journal line by hand.
 
 ## `.sketch/stop-note.md`
 

@@ -32,9 +32,9 @@ Look at the project, quickly:
 - build files and modules (`settings.gradle(.kts)`, `build.gradle(.kts)`, version catalogs) and the main dependencies
 - test directories and test libraries
 - `CLAUDE.md`, `AGENTS.md`, `README`, `docs/`; whether `docs/GLOSSARY.md` and `CHANGELOG.md` exist
-- the tracker: `git remote get-url origin` (github.com means GitHub and `gh`; a GitLab host means GitLab and `glab`; anything else: ask)
+- the tracker: `git remote get-url origin | {{TOOLS}}/sketch-plan detect-tracker` prints `tracker:` and `tracker_cli:` (github.com means GitHub and `gh`; a GitLab host means GitLab and `glab`), or `ask:` when the host is neither: then ask the developer
 - the default branch
-- skills available: `.claude/skills/*/SKILL.md` in the project, `~/.claude/skills/*/SKILL.md`, and skills inside installed plugins. Read each one's name and description only, and note the absolute path of each `SKILL.md`; the config stores paths, not plugin names.
+- skills available: `{{TOOLS}}/sketch-skills list --dir .claude/skills --dir ~/.claude/skills`, with one more `--dir` for each installed plugin folder. It finds every `SKILL.md` below a folder and prints its name, absolute path and description, tab-separated. Use those paths; the config stores paths, not plugin names.
 
 ## 5. Propose, then confirm
 
@@ -45,7 +45,7 @@ Show a table of roles and the skills you suggest for each:
 | task-writer | glossary and project conventions |
 | test-writer | language, testing libraries, project conventions |
 | implementer | language, framework (for example Android, Kotlin, Compose), project conventions |
-| task-reviewer | same as the implementer |
+| reviewer | same as the implementer |
 | story-reviewer | same as the implementer |
 
 The implementer and both reviewers share a list on purpose: they judge by the same rules.
@@ -56,9 +56,13 @@ The developer may give paths to skills (local `SKILL.md` files, or skills for an
 
 ## 6. Test commands
 
-Propose two commands from the build files. Do not run the full suite now.
+Propose the test commands, the test file paths and how the results are written, all from the build files. Do not run the full suite now.
 - `test_full`: the full unit-test command, for example `./gradlew testDebugUnitTest` (or `./gradlew test`, depending on the modules and variants).
-- `test_task`: the form that runs one test class, with `{class}` as the placeholder, for example `./gradlew :app:testDebugUnitTest --tests "{class}"`.
+- `test_task`: the form that runs one test class, with `{target}` as the placeholder, for example `./gradlew :app:testDebugUnitTest --tests "{target}"`.
+- `test_format` and `test_results`: how the tests report their results, in a file, not on the console. `test_format` is `junit-xml` (Gradle writes it itself under `build/test-results/`; pytest with `--junitxml=<file>`; Vitest and Playwright with their `junit` reporter; Jest with the `jest-junit` package; SwiftPM with `swift test --parallel --xunit-output <file>`) or `xcresult-json` (Xcode: the command removes the old bundle, runs `xcodebuild test ... -resultBundlePath <x>.xcresult`, then writes `xcrun xcresulttool get test-results tests --path <x>.xcresult > <file>.json`, and ends with the exit code of `xcodebuild`, like `rm -rf <x>.xcresult && xcodebuild test ...; rc=$?; xcrun xcresulttool get test-results tests --path <x>.xcresult > <file>.json; exit $rc`. Removing the old bundle first means a stale one can never be read as a fresh result). Change `test_full` and `test_task` so that the command writes the file. `test_results` is a glob of the result files, relative to the project and ending in `.xml` or `.json`, like `app/build/test-results/**/*.xml`. The tool **deletes every file that matches it before each run**, so it must match result files and nothing else. It must start with a folder name, not a wildcard (`app/build/test-results/**/*.xml`, never `**/*.xml`); the tool refuses a pattern that could reach the whole project.
+- If the runner can write neither format, offer to write a small reader instead: a `.py` file in `.sketch/formats/` (set `formats_dir: .sketch/formats`) that sets `FORMAT = "name"` and defines `read(text)` returning a list of `Case` (see `tools/sketch_tools/tests/model.py`), with a test file. Show it to the developer first. It is project code that the tools will run.
+- With the developer's yes, run **one** small test once, the narrowest `test_task` form, to capture a real result file: `{{TOOLS}}/sketch-tests run --config .sketch/config.md --mode task --target <one test> --logs .sketch/logs`. Keep that file as the reader's sample. If it has no failing test, ask the developer to name one, or say what to break temporarily. Never invent a result.
+- `test_paths`: globs that match every test file of the project, for example `**/src/test/**` or `Tests/**`. `*` stays inside one folder, `**` crosses folders. The loop uses them to check that the implementer never changes a test, so they must cover all test files and nothing else. Look at the test directories you found and show the globs you chose.
 
 Say that these are proposals and that the first baseline check will exercise them. Never guess a command that the build files do not support. If there is no build tool you recognize, ask.
 
@@ -72,18 +76,24 @@ tracker: github | gitlab
 tracker_cli: gh | glab
 default_branch: <name>
 test_full: <command>
-test_task: <command with {class}>
+test_task: <command with {target}>
+test_paths: [<glob>, ...]
+test_format: junit-xml | xcresult-json | <the name of your own reader>
+test_results: <glob of the result files, ending in .xml or .json>
+formats_dir: <folder of your own readers, only if you wrote some>
 
 skills:
   common: [<absolute path to SKILL.md>, ...]
   task-writer: [<in addition to common>]
   test-writer: [<in addition to common>]
   implementer: [<in addition to common>]
-  task-reviewer: [<in addition to common>]
+  reviewer: [<in addition to common>]
   story-reviewer: [<in addition to common>]
 ```
 
 Put the shared list under `common` and only the differences under each role.
+
+Then check the file: `{{TOOLS}}/sketch-plan config-check --config .sketch/config.md` must print `ok`. It checks every key, the tracker and its CLI, the `{target}` placeholder, `test_paths`, the test format (and your own readers), `test_results`, each role's list, and that every skill path is absolute and exists. Fix what it reports with the developer before you finish.
 
 ## 8. Finish
 

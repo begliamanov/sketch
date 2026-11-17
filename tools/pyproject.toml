@@ -1,0 +1,14 @@
+[project]
+name = "sketch-tools"
+version = "0.0.0"
+description = "Deterministic tools for Sketch: small, single-domain commands that read text in and give an exact answer."
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.mypy]
+strict = true
+python_version = "3.9"

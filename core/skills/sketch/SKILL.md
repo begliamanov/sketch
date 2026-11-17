@@ -1,6 +1,6 @@
 ---
 name: sketch
-description: Starts a story. Does a very light check whether something like the idea already exists, lets the developer explain, then leads like a senior developer. It proposes the next story, asks only what is unclear for it, and plays back its understanding. Saves the sketch, the story brief and glossary proposals. Usage - /sketch <idea> [--skill <path-to-SKILL.md>].
+description: Starts a story. Does a very light check whether something like the idea already exists, lets the developer explain, then leads like a senior developer: proposes the next story, asks only what is unclear for it, and plays back its understanding. Saves the sketch, the story brief and glossary proposals. Usage - /sketch <idea> [--skill <path-to-SKILL.md>].
 disable-model-invocation: true
 ---
 
@@ -17,10 +17,10 @@ If a check fails because something is missing, follow "Setup gaps" in the orches
 - `.sketch/config.md` exists. If not, stop: "No project setup yet. Run /tune-skills first."
 - `.sketch/` is in `.git/info/exclude`.
 - You are on a feature branch, not the default branch from the config. If you are on the default branch, propose a name (`feature/<slug>` from the idea) and offer to create it from the default branch and push it. Do that only after the developer says yes to that name; if they decline, stop: "Create your feature branch first, then run /sketch." After this first push, the feature branch is the developer's: agents never push to it again.
-- `.sketch/state.md`, if it exists, does not show an unfinished story:
-  - `phase: done`: fine.
-  - `phase: waiting-review`: look at the story PR/MR with `gh`/`glab`. If it is merged, set `phase: done` and continue. If it is still open, stop: "Story <n> is still waiting for your review. Merge it first."
-  - any other phase: stop: "Story <n> is unfinished. Run /resume-story."
+- `.sketch/state.md`, if it exists, does not show an unfinished story. Ask the tool: `{{TOOLS}}/sketch-state gate --state .sketch/state.md`. When the story waits for review it needs the PR's state: look it up (`gh pr view <number> --json state -q .state`, or `glab mr view <number> --output json`) and add `--pr-state open`, `merged` or `closed`. The tool prints:
+  - `go`: continue.
+  - `mark-done`: the story's PR was merged. Set the phase (`{{TOOLS}}/sketch-state set phase done --state .sketch/state.md`) and continue.
+  - `stop: <message>`: stop, and tell the developer that message word for word.
 
 ## 2. Signals from the last story
 
@@ -28,7 +28,9 @@ If earlier stories exist, print one line, built from `.sketch/journal.md`, `.ske
 
 `Since the last retro: <n> flags, <n> cap hits, <n> review comments from you, <n> lines you changed after the PR. Last retro: <n> stories ago.`
 
-A retro is **recommended** if any of these hold: this is one of the first three stories, any flagged task, any cap hit, more than 20 lines changed by the developer after the PR was opened, more than 10 review comments. Otherwise say nothing is notable. The developer decides: if they want the retro, tell them to run `/retro` and stop; if not, continue.
+The flag and cap counts come from the tool, the `FLAG` and `CAP` lines of `{{TOOLS}}/sketch-journal signals --journal .sketch/journal.md --after <the last story the last retro covered, from .sketch/retro/last.md>` (leave `--after` out when there was no retro). The review comments come from the tracker and the changed lines from `git diff --shortstat <pr_head_sha>..<the merged result>`.
+
+Ask the tool whether a retro is worth recommending: `{{TOOLS}}/sketch-retro recommend --story <the story that just finished> --flags <n> --caps <n> --lines-changed <n> --comments <n>`. It prints `recommended` with its reasons, or `not notable`. (It applies this rule: one of the first three stories, any flagged task, any cap hit, more than 20 lines changed by the developer after the PR was opened, or more than 10 review comments.) The developer decides: if they want the retro, tell them to run `/retro` and stop; if not, continue.
 
 ## 3. Quick check, then stop
 
@@ -87,7 +89,7 @@ When the draft has settled, restate your understanding **in the developer's word
 - `.sketch/initial-sketch.md`: written **only for the first story of a feature**, and never changed afterwards. It holds the feature-level picture as discussed and the first story. It is the baseline the retro compares against.
 - `.sketch/story-brief.md`: the approved story, replacing the previous one.
 - `.sketch/glossary-proposal.md`: new or changed terms, proposed ADRs. Replace the previous file's content, since earlier proposals were applied.
-- `.sketch/state.md`: a new record for this story (`{{CORE}}/state-format.md`): the story number, the title, `feature_branch` = the current branch, `phase: tasks`, `stopped: no`, `extra_skills` from this command, everything else empty or `none`. Keep the previous story's tasks out of the new table.
+- `.sketch/state.md`: a new record for this story (`{{CORE}}/state-format.md`): the story number, the title, `feature_branch` = the current branch, `phase: tasks`, `stopped: no`, `stop_after_task: no`, `extra_skills` from this command, everything else empty or `none`. Keep the previous story's tasks out of the new table. Write it with `{{TOOLS}}/sketch-state new-story --story <n> --title "<title>" --feature-branch <current branch> --extra-skills "<paths, or none>" --state .sketch/state.md` (it fills in everything else and refuses to replace an unfinished story), then run `{{TOOLS}}/sketch-state check --state .sketch/state.md`.
 - Remove `.sketch/tasks.md`, `.sketch/tasks-approved.md` and `.sketch/story-context.md` left over from the previous story, after confirming that story is done.
 
 ## 9. Next

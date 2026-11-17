@@ -4,14 +4,18 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 
 ## Unreleased
 
-## 0.1.0
-
-Run end to end in Claude Code. Adds a Pi adapter.
-
-- Pi adapter: a Pi package (`package.json` at the repo root) with the `/sketch-sync` extension (`adapters/pi/extensions/sketch-sync.ts`). `/sketch-sync` copies the skills and agents into `~/.pi/agent/` and a filled-in copy of `core/` into `~/.pi/agent/sketch/core/`, then you run `/reload`. `/sketch-sync remove` deletes exactly the files it wrote. It never overwrites a file it did not create. Tools and models per agent are set in `adapters/pi/agents.list`.
-- On Pi, commands are typed as `/skill:<name>`. The sync rewrites the command names in the copied text to match.
-- The `sketch` skill description is quoted, so its frontmatter parses as YAML.
-- Renamed agent `reviewer` to `task-reviewer`, so it can't clash with other harnesses' built-in `reviewer` agents. Claude Code users: delete the stale `~/.claude/agents/reviewer.md`, then rerun `install.sh`.
+- Deterministic tools in `tools/` (Python 3.9+, standard library only, tests written first): `sketch-journal add`, `me-lines`, `signals`; `sketch-state new-story`, `task add`, `set`, `bump`, `flag add`, `check`, `gate`, `wip-message`, `reconcile`; `sketch-repo-check commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`; `sketch-plan tasks-check`, `tasks-order`, `config-check`; `sketch-pr render-body`, `check-base`, `check-flags`; `sketch-guard check-command`; `sketch-report submit`, `check`, `get`; `sketch-tests run`, `classify`, `failures`, `summary`, `expect-red`, `skipped-diff`, `failures-diff`; `sketch-plan brief-skills`, `issues-todo`, `detect-tracker`; `sketch-setup check`; `sketch-retro recommend`; `sketch-skills list`. The Claude Code installer copies them to `~/.claude/sketch/tools/` and creates a launcher per tool. Needs `python3` 3.9 or newer.
+- `/tasks`, `task-writer`, `/run-story`, `/tune-skills` and `/resume-story` check `tasks.md` and `config.md` with `sketch-plan`, and `/run-story` takes the run order from `tasks-order`. A story with fewer than 3 or more than 8 tasks is reported.
+- Agents hand in their reports through `sketch-report submit` (JSON, one schema per role), saved in `.sketch/reports/<scope>-<role>-<run>.json` only when complete and consistent: a reviewer cannot say SATISFIED with an open must-fix or a coverage entry that is not OK, and the story-reviewer cannot say SATISFIED unless the tester said PASS. The orchestrator gives each agent a run number, checks the report with `sketch-report check` (including that every skill in the brief is named) and reads results with `sketch-report get`.
+- The "setup gaps" list, an agent's skills, what the tracker still needs, the tracker of a remote, skill discovery and the retro recommendation now come from tools (`sketch-setup`, `sketch-plan`, `sketch-skills`, `sketch-retro`) instead of being worked out by eye.
+- Tests are run and read through `sketch-tests`, from structured result files (JUnit XML, or `xcresulttool` JSON for Xcode), never from console text. New config keys: `test_format`, `test_results` (a glob of the result files; **files matching it are deleted before each test run**), and optionally `formats_dir` for your own readers. The placeholder in `test_task` is now `{target}` (was `{class}`). Re-run `/tune-skills` or edit `.sketch/config.md`. The tester, test-writer, implementer and reviewer use the tool; the test-writer's report now carries the red run's `target` and `results`.
+- `sketch-guard` runs as a `PreToolUse` hook (add it from `settings.snippet.json`), fails closed (its launcher turns any failure into a block), and blocks merges, force pushes, pushes to main or the feature branch, issue closing, and any `git push` that does not name its branch.
+- The PR description is built by `sketch-pr render-body` from the state file and a new `.sketch/pr-extras.json`; `/run-story` checks the PR with `check-base` and `check-flags`.
+- The orchestrator, `/run-story`, `/tasks`, `/sketch`, `/pause`, `/stop`, `/resume-story` and `/note` call the tools for state, journal and git checks. Counters are enforced by `sketch-state bump`; the reviewer gets the mechanical check results in its brief.
+- Removed the `drift-notetaker` agent: `sketch-journal add` does its job. The installer now removes stale generated agents, skills and core files, so a deleted agent does not linger in `~/.claude`.
+- `state.md` always has a `stop_after_task` line (`no` or `yes`), and is written only by `sketch-state`: a new story with `new-story`, each task with `task add`.
+- New config key `test_paths`: globs of the project's test files, asked by `/tune-skills`. Re-run `/tune-skills` or add the line to `.sketch/config.md`.
+- Removed the Pi placeholder sections from the README. Pi is not supported.
 
 ## 0.0.1
 

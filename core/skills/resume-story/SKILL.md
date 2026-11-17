@@ -9,6 +9,7 @@ Read `{{CORE}}/conventions.md`, `{{CORE}}/orchestrator.md` and `{{CORE}}/state-f
 ## 1. Read
 
 - `.sketch/state.md`, `.sketch/stop-note.md` (if present), `.sketch/config.md`, the last lines of `.sketch/journal.md`.
+- Run `{{TOOLS}}/sketch-state check --state .sketch/state.md`. Problems mean the state file was damaged (a crash, or a hand edit): count it as a risky mismatch and list the problems verbatim.
 - If there is no state, or `phase` is `done`, say there is nothing to resume.
 - If `phase` is `waiting-review`: look at the story PR/MR. Merged means the story is finished: set `phase: done` and suggest `/sketch` for the next story. Still open means there is nothing to resume yet.
 
@@ -18,19 +19,23 @@ The state says `stopped: failure: ...`. Re-run the specific check that failed (t
 
 ## 3. Reconcile with reality
 
-Check everything below and classify each difference.
+Gather the facts below, write them as JSON to `.sketch/reconcile-facts.json`, and let the tool classify what differs: `{{TOOLS}}/sketch-state reconcile --state .sketch/state.md < .sketch/reconcile-facts.json`. Leave out a fact you could not gather; it is then not checked. The keys:
 
-- **Harmless: adopt it, journal it, report it.** Commits on the story branch that the state does not know about and that only add to it (the developer's own work; record them in the state and journal an `EDIT` line); issue titles or text that were edited; a dirty tree left by a crash (committed as WIP, see below).
-- **Risky: stop and ask.** The feature branch moved since the story branch was created; issues closed, deleted or missing; commits the state records that are missing from the story branch; the story branch missing or rewritten; the PR merged or closed unexpectedly; `gh` or `glab` not logged in; the config or a skill path missing.
+- `feature_branch_exists`, `story_branch_exists` (`true` or `false`): `git rev-parse --verify <branch>` succeeds
+- `current_branch`: the branch you are on (`git rev-parse --abbrev-ref HEAD`)
+- `feature_moved` (`true` or `false`): the feature branch has commits that the story branch does not contain (`git merge-base --is-ancestor <feature-branch> <story-branch>` fails)
+- `task_commits`: for each task, whether `git log --grep '^t-<n>:'` finds commits on the story branch, like `{"t-1": true, "t-2": false}`
+- `unknown_commits`: the subjects of commits on the story branch that the state does not know about (they may be the developer's own)
+- `tree_dirty`: the lines of `git status --porcelain` (empty list when clean; `git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean` says the same)
+- `issues`: `"story"` and each task id, mapped to `open`, `closed` or `missing` on the tracker
+- `pr`: `open`, `merged`, `closed` or `missing`, only when the state has a PR
+- `cli_logged_in`: `gh auth status` (or `glab auth status`) succeeded
+- `config_problems`: the lines `{{TOOLS}}/sketch-plan config-check --config .sketch/config.md` printed, left out when it printed `ok`
+- `state_problems`: the lines `{{TOOLS}}/sketch-state check --state .sketch/state.md` printed, left out when it printed `ok`
 
-Collect **all risky mismatches before reporting**, so the developer sees them at once.
-
-- **Git**: the feature branch and the story branch exist; the commits the state records are on the story branch (`git log --grep '^t-<n>:'` for each finished task); commits on the story branch the state does not know about (they may be the developer's); the feature branch moved since the story branch was created; the current branch.
-- **Working tree**: if it is dirty (a crash or closed terminal left changes), commit it on the story branch as `t-<n>: [wip] interrupted, not reviewed` (or `story-<story>: [wip] ...`), and report which files it contained. If you are not on the story branch, do not commit; report it.
-- **Tracker**: the story issue and the task issues exist; issues closed or edited when the state says otherwise.
-- **PR**: if the state has one, whether it is open, merged or closed.
-- **Tools**: `gh` or `glab` is logged in.
-- **Config and skills**: the config exists and every skill path in it exists.
+It prints `risky:` lines first, then `harmless:` lines. Do not reclassify them.
+- **Risky: stop and ask.** Collect **all** of them before reporting, so the developer sees them at once.
+- **Harmless: adopt it, journal it, report it.** For commits the state did not know about (the developer's own work), journal an `EDIT` line: `{{TOOLS}}/sketch-journal add EDIT S<n> - "<what they added>" --me --journal .sketch/journal.md`. A dirty tree left by a crash is committed as WIP, with the message from the tool: `{{TOOLS}}/sketch-state wip-message --state .sketch/state.md --branch <the branch you are on> --task t-<n>` (leave `--task` out when no task was in progress). It refuses when you are not on the story branch: then do not commit, report it. Say which files the WIP commit contained.
 
 ## 4. Report and wait
 
@@ -48,7 +53,7 @@ Harmless differences were already adopted; list them so the developer can see th
 
 ## 5. On go
 
-- Set `stopped: no`. Journal a `NOTE` line saying the story was resumed and why it had stopped.
-- Continue `/run-story` from the recorded phase, restarting the interrupted step with a **fresh** agent. If the last commit is a `[wip]` commit, tell the agent it is interrupted work and may be incomplete: it reads the diff, decides whether to build on it or redo it, and states which in its report.
+- Set `stopped: no` (`{{TOOLS}}/sketch-state set stopped no --state .sketch/state.md`). Journal a `NOTE` line saying the story was resumed and why it had stopped (`{{TOOLS}}/sketch-journal add NOTE S<n> - "<resumed, and why it had stopped>" --journal .sketch/journal.md`).
+- Continue `/run-story` from the recorded phase, restarting the interrupted step with a **fresh** agent (it gets the next run number for its report; count the files in `.sketch/reports` for that role and scope). If the last commit is a `[wip]` commit, tell the agent it is interrupted work and may be incomplete: it reads the diff, decides whether to build on it or redo it, and states which in its report.
 - Counters are kept: a resume never resets a round or attempt cap.
 - Include `.sketch/story-context.md` in the briefs, if it exists.
