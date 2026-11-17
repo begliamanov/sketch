@@ -30,7 +30,17 @@ class Text(Spec):
         self.multiline = multiline
 
     def check(self, value: Any, path: str) -> List[str]:
-        raise NotImplementedError
+        if not isinstance(value, str):
+            return [path + " must be text"]
+        if not value.strip():
+            return [path + " must not be empty"]
+        if not self.multiline and ("\n" in value or "\r" in value):
+            return [path + " must be one line"]
+        if self.choices and value not in self.choices:
+            return [path + " must be one of " + ", ".join(self.choices) + " (got " + repr(value) + ")"]
+        if self.pattern and not self.pattern.fullmatch(value):
+            return [path + " must be " + self.pattern_hint + " (got " + repr(value) + ")"]
+        return []
 
 
 class Number(Spec):
@@ -40,7 +50,11 @@ class Number(Spec):
         self.minimum = minimum
 
     def check(self, value: Any, path: str) -> List[str]:
-        raise NotImplementedError
+        if isinstance(value, bool) or not isinstance(value, int):
+            return [path + " must be a whole number"]
+        if value < self.minimum:
+            return [path + " must be " + str(self.minimum) + " or more"]
+        return []
 
 
 class Items(Spec):
@@ -51,7 +65,15 @@ class Items(Spec):
         self.minimum = minimum
 
     def check(self, value: Any, path: str) -> List[str]:
-        raise NotImplementedError
+        if not isinstance(value, list):
+            return [path + " must be a list"]
+        problems: List[str] = []
+        if len(value) < self.minimum:
+            noun = "item" if self.minimum == 1 else "items"
+            problems.append(path + " needs at least " + str(self.minimum) + " " + noun)
+        for index, item in enumerate(value):
+            problems.extend(self.item.check(item, path + "[" + str(index) + "]"))
+        return problems
 
 
 class Fields(Spec):
@@ -62,7 +84,19 @@ class Fields(Spec):
         self.required: Set[str] = set(required)
 
     def check(self, value: Any, path: str) -> List[str]:
-        raise NotImplementedError
+        if not isinstance(value, dict):
+            return [(path + " must be an object") if path else "the report must be an object"]
+        problems: List[str] = []
+        for key in self.fields:
+            if key in self.required and key not in value:
+                problems.append(join_path(path, key) + " is required")
+        for key, spec in self.fields.items():
+            if key in value:
+                problems.extend(spec.check(value[key], join_path(path, key)))
+        for key in value:
+            if key not in self.fields:
+                problems.append(join_path(path, str(key)) + " is not a field of this report")
+        return problems
 
 
 class Mapping(Spec):
@@ -77,7 +111,18 @@ class Mapping(Spec):
         self.minimum = minimum
 
     def check(self, value: Any, path: str) -> List[str]:
-        raise NotImplementedError
+        if not isinstance(value, dict):
+            return [path + " must be an object"]
+        problems: List[str] = []
+        if len(value) < self.minimum:
+            noun = "entry" if self.minimum == 1 else "entries"
+            problems.append(path + " needs at least " + str(self.minimum) + " " + noun)
+        for key, item in value.items():
+            if not isinstance(key, str) or not self.key_pattern.fullmatch(key):
+                problems.append(path + " key " + repr(key) + " must be " + self.key_hint)
+                continue
+            problems.extend(self.value.check(item, join_path(path, key)))
+        return problems
 
 
 def join_path(path: str, key: str) -> str:
