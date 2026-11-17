@@ -23,6 +23,7 @@ sketch_tools/
   state/       schema.py (allowed values, one place) + logic.py (pure) + cli.py
   repo_check/  globs.py (test-path patterns) + logic.py (pure checks on piped git text) + cli.py
   guard/       shellparse.py (splits a command line into its simple commands) + logic.py (the rules) + cli.py (the hook)
+  tests/       readers/ (junit-xml, xcresult-json, project plugins) + settings.py + runner.py (the one place anything is run) + logic.py + cli.py
   report/      schema.py (the validator) + roles.py (a schema and rules per agent role) + logic.py + cli.py
   pr/          logic.py (render the description, check the PR JSON and flags) + cli.py
   plan/        tasks_file.py, config_file.py (parsers) + graph.py + logic.py (pure checks, run order) + cli.py
@@ -53,6 +54,7 @@ git log --format=%s main..HEAD | python3 -m sketch_tools.repo_check commit-prefi
 | `plan` | `tasks-check`, `tasks-order`, `config-check` |
 | `pr` | `render-body`, `check-base`, `check-flags` |
 | `report` | `submit`, `check`, `get` (one schema per agent role; reports are `<scope>-<role>-<run>.json`) |
+| `tests` | `run`, `classify`, `failures`, `summary`, `expect-red`, `skipped-diff`, `failures-diff` (reads JUnit XML and xcresulttool JSON, or your own reader) |
 | `guard` | `check-command` (a hook: reads the tool call as JSON, exit 2 blocks) |
 
-The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`, `sketch-plan`, `sketch-pr`, `sketch-guard`, `sketch-report`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.
+The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`, `sketch-plan`, `sketch-pr`, `sketch-guard`, `sketch-report`, `sketch-tests`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.

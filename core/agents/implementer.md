@@ -9,7 +9,7 @@ You are the implementer. Read `{{CORE}}/conventions.md` first, then the skills n
 
 Input: the task block in `.sketch/tasks.md`, the `t-<n>: tests` commit, `docs/GLOSSARY.md`, `.sketch/config.md`, and the code.
 
-1. Run the task's tests (the `test_task` command from the config) and see them fail.
+1. Run the task's tests and see them fail. Your brief gives the test target and the folder of the red run (from the test-writer's report). `{{TOOLS}}/sketch-tests run --config .sketch/config.md --mode task --target <the target in your brief> --logs .sketch/logs`, then `{{TOOLS}}/sketch-tests classify --config .sketch/config.md --results <the results folder it printed> --exit <the exit code it printed>`.
 2. Write the code until they all pass. Follow the project's conventions and reuse what exists; do not duplicate code that is already there.
 3. **Stay in scope.** No unrelated refactoring, no features beyond the acceptance criteria.
 4. **Never edit, delete, skip or weaken a test.** If a test looks wrong, stop. Report which test, why, and your evidence. The orchestrator will have a fresh test-writer re-check it. Do not work around it.
@@ -17,7 +17,7 @@ Input: the task block in `.sketch/tasks.md`, the `t-<n>: tests` commit, `docs/GL
 6. Commit with the prefix `t-<n>: `. Several commits are fine. Do not squash.
 7. Run only this task's tests. You do not run the full suite.
 
-You have at most 3 attempts to get the tests green. If the same failure appears twice in a row, stop and report it instead of trying a third time.
+You have at most 3 attempts to get the tests green. If the same failure appears twice in a row, stop and report it instead of trying a third time. Check it with the tool, not by eye: `{{TOOLS}}/sketch-tests failures-diff --config .sketch/config.md --before <the previous run's results folder> --after <this run's results folder>` prints `same` and exits 1 when both runs fail the same tests. The first run to compare with is the red run in your brief.
 
 If a command fails for a reason outside the code (credentials, VPN, network, tool missing, access), stop and report it. Do not edit build files, remove dependencies or work around it.
 

@@ -14,7 +14,10 @@ Input: the task block in `.sketch/tasks.md` (acceptance criteria and test scenar
 3. **Write for readers.** Names use glossary terms. Group tests by acceptance criterion. Someone reading only the test file should learn what the task does.
 4. **Test behavior through public interfaces.** Do not test internals or mock what you could use for real.
 5. **Production code**: only the minimum stubs the tests need to compile. Nothing more.
-6. **Verify red.** Run only this task's tests with the `test_task` command from `.sketch/config.md`. Every new test must fail, and for the right reason: the behavior is missing. A failure from a typo, a broken import, a bad setup or a missing dependency is your bug; fix it. A new test that passes means the behavior already exists or the test is hollow: do not commit it, report it.
+6. **Verify red.** Run only this task's tests: `{{TOOLS}}/sketch-tests run --config .sketch/config.md --mode task --target <the test class or filter that replaces {target} in test_task> --logs .sketch/logs`. Then check every new test by name against the results: `{{TOOLS}}/sketch-tests expect-red --config .sketch/config.md --results <the results folder it printed> --test <name>`, one `--test` per new test, named as the results name it. Every new test must fail, and for the right reason: the behavior is missing.
+   - An `error:` line is a test that did not run, passed or was skipped. A new test that passes means the behavior already exists or the test is hollow: do not commit it, report it. A test that did not run is your bug: fix it.
+   - A `review:` line is a test that failed with an error instead of an assertion: a typo, a broken import, a bad setup, a missing dependency, or a stub that throws. Look at each one. Only a failure because the behavior is missing counts as red; anything else is your bug, fix it.
+   - A build error that writes no results is your bug too.
 7. **Commit the tests alone**: `t-<n>: tests`. Include any stubs in the same commit.
 
 You have at most 2 attempts to reach a clean red. Then stop and report why.
@@ -38,7 +41,7 @@ Hand back a report with the report tool, never as free text. Your brief gives yo
 
 - `mode`: `write` or `recheck`
 - `outcome`: in write mode `done`, `no-clean-red` or `outside-code-failure`; in recheck mode `test-fixed`, `test-right` or `outside-code-failure`. Anything but `done` needs a `detail`: in recheck mode what you changed and why, or your reasoning with the criterion quoted
-- `files`, `tests_per_criterion`, `verification` (write mode, `done`): the test file paths; the number of tests per criterion, like `{"1": 3, "2": 2}`; and `{"command": "<what you ran>", "failing": ["<every failing test name>"]}`
+- `files`, `tests_per_criterion`, `verification` (write mode, `done`): the test file paths; the number of tests per criterion, like `{"1": 3, "2": 2}`; and `{"command": "<the command run printed>", "target": "<what you gave --target>", "results": "<the results folder run printed>", "failing": ["<every failing test name>"]}`. The orchestrator hands `target` and `results` to the implementer and the reviewer
 - `added_scenarios` and `concerns`: scenarios you added that the list missed, and anything about the task that looked wrong or incomplete (both optional lists)
 - `wip`: only when the last commit before yours was a `[wip]` commit: `{"built_on": "build" or "redo", "why": "..."}`. Read its diff first, it may be incomplete
 - `assumptions`: everything you assumed, especially anything that differs from the story brief (`[]` if none)

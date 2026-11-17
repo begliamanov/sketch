@@ -44,7 +44,7 @@ The system is plain Markdown in `core/`. A harness adapter copies it to where th
 
 - git, plus `gh` (GitHub) or `glab` (GitLab), installed **and logged in**
 - Python 3.9 or newer (`python3`), for the deterministic tools in `tools/`. Standard library only: nothing to `pip install`.
-- a build tool with a test command (built around Gradle; others should work)
+- a build tool with a test command that can write its results to a file: JUnit XML (Gradle, pytest, Vitest, Playwright, Jest, SwiftPM and more) or Xcode's `xcresulttool` JSON. If yours cannot, `/tune-skills` helps you write a small reader. (Built around Gradle; others should work.)
 - a harness that can run **subagents**: separate agents, each with its own fresh context. The loop depends on this. Without it, there is no adapter.
 
 ### Claude Code
@@ -174,7 +174,7 @@ STOP. Wait for you.
 | The orchestrator never runs tests | It gets verdicts, not logs. Its context stays small. |
 | One commit prefix per task (`t-3: ...`), no squashing | You can read the PR task by task. |
 | Every task adds a CHANGELOG line ending `(#issue)` | Missing = must fix. |
-| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`, every agent hands in its report through `sketch-report`, the "can a new story start?" answer and the WIP commit message come from `sketch-state`, the developer's own journal lines from `sketch-journal`, and which refuses an incomplete or self-contradicting one (a reviewer cannot say SATISFIED with a must-fix open). The PR description is rendered by `sketch-pr`, and a hook (`sketch-guard`) blocks merges, force pushes, pushes to main or the feature branch, and issue closing before they run. Same input, same answer, every time. |
+| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`, tests are run and read through `sketch-tests` (structured result files, never console text), every agent hands in its report through `sketch-report`, the "can a new story start?" answer and the WIP commit message come from `sketch-state`, the developer's own journal lines from `sketch-journal`, and which refuses an incomplete or self-contradicting one (a reviewer cannot say SATISFIED with a must-fix open). The PR description is rendered by `sketch-pr`, and a hook (`sketch-guard`) blocks merges, force pushes, pushes to main or the feature branch, and issue closing before they run. Same input, same answer, every time. |
 
 Caps and rules: [`core/conventions.md`](core/conventions.md).
 

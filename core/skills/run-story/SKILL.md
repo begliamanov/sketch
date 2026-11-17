@@ -36,9 +36,9 @@ For each task, update the state after every step, check for `/pause` and `/stop`
 
 Every agent you start gets a run number for its report, and you check its report when it returns: `{{TOOLS}}/sketch-report check --role <role> --scope t-<n> --run <k> --reports .sketch/reports` must print `ok` (add a `--skills <path>` for each skill in the brief; orchestrator rules, "Checking what comes back"). The report's `outcome` is how you read the result: `{{TOOLS}}/sketch-report get --role <role> --scope t-<n> --run <k> --reports .sketch/reports outcome`. An `outside-code-failure` outcome stops everything with the STOPPED report, quoting its `detail`.
 
-**a. Tests.** Run `test-writer` (mode write). Check its report, its commits and the tree with the tools, and that `git log` has the `t-<n>: tests` commit. `outcome` `no-clean-red` means it could not get a clean red in 2 attempts: flag the task. Otherwise set the status: `{{TOOLS}}/sketch-state set --task t-<n> status tests-red --state .sketch/state.md`.
+**a. Tests.** Run `test-writer` (mode write). Check its report, its commits and the tree with the tools, and that `git log` has the `t-<n>: tests` commit. `outcome` `no-clean-red` means it could not get a clean red in 2 attempts: flag the task. Otherwise set the status: `{{TOOLS}}/sketch-state set --task t-<n> status tests-red --state .sketch/state.md`. Then read where the red run is kept, because the implementer and the reviewer need both in their briefs: `{{TOOLS}}/sketch-report get --role test-writer --scope t-<n> --run <k> --reports .sketch/reports verification.target` and the same with `verification.results`.
 
-**b. Implement.** Count the attempt first: `{{TOOLS}}/sketch-state bump --task t-<n> attempts --state .sketch/state.md`. Exit code 2 means the cap is reached: flag the task. Otherwise run `implementer` (mode implement), check its report, commits and the tree with the tools, and read its `outcome`:
+**b. Implement.** Count the attempt first: `{{TOOLS}}/sketch-state bump --task t-<n> attempts --state .sketch/state.md`. Exit code 2 means the cap is reached: flag the task. Otherwise run `implementer` (mode implement; its brief gets the test target and the red run's results folder), check its report, commits and the tree with the tools, and read its `outcome`:
 - `done`: set `status: green`.
 - `test-looks-wrong`: run `test-writer` in mode `recheck` with the implementer's `detail` (its evidence). Its outcome `test-fixed`: run the implementer again (this counts as an attempt). `test-right`: give its `detail` (the reasoning) to the implementer and run it again. If the implementer still insists, flag the task.
 - `conflicts-with-earlier-test`: flag the task: "conflicts with <id>'s test". That is a decision for the developer.
@@ -49,7 +49,7 @@ Every agent you start gets a run number for its report, and you check its report
 - Changelog: `git diff -U99999 <tests-sha>..HEAD -- CHANGELOG.md | {{TOOLS}}/sketch-repo-check changelog --issue <issue number of the task>`
 - Commits: `git log --format=%s <task start>..HEAD | {{TOOLS}}/sketch-repo-check commit-prefix --task t-<n>`
 
-Then set `status: in-review` and run `reviewer`, and read its `verdict` with `get` (`outside-code-failure` as its `outcome` stops everything).
+Then set `status: in-review` and run `reviewer` (its brief gets the test target and the red run's results folder too), and read its `verdict` with `get` (`outside-code-failure` as its `outcome` stops everything).
 - `SATISFIED`: set `status: done`. Journal a REVIEW line if its `nice_to_have` is not empty.
 - `CHANGES NEEDED`: its `must_fix` (read it with `--json`) is what the fix round gets. Count the round: `{{TOOLS}}/sketch-state bump --task t-<n> review_rounds --state .sketch/state.md`. If it succeeds, run a **fresh** `implementer` in mode `fix` with the `must_fix` findings quoted verbatim, then the mechanical checks again and a **fresh** `reviewer`. If it exits 2 (the cap), or the same finding comes back unchanged, flag the task with the unresolved must-fix findings, and journal a CAP line.
 

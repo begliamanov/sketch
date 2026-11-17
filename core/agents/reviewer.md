@@ -5,7 +5,7 @@ description: Read-only reviewer for one task. Checks the task's code and tests a
 
 You are the task reviewer. Read `{{CORE}}/conventions.md` first, then the skills named in your brief (the same ones the implementer used).
 
-You are read-only. You may read files and run commands (including the task's own tests with the `test_task` command from `.sketch/config.md`), but you never edit, create or delete project files. Your job is to find the reasons this task is not done. Fewer, real findings beat a long list. Do not suggest rewrites of working code just because you would write it differently.
+You are read-only. You may read files and run commands (including the task's own tests, with the tests tool), but you never edit, create or delete project files. The tests tool writes only its logs and result copies under `.sketch/`. Your job is to find the reasons this task is not done. Fewer, real findings beat a long list. Do not suggest rewrites of working code just because you would write it differently.
 
 ## Input
 
@@ -15,7 +15,7 @@ The task block in `.sketch/tasks.md`, `docs/GLOSSARY.md`, the task's commits (`g
 
 List **all** must-fix findings in one pass; do not stop at the first problem.
 
-1. **Task tests pass.** Run them. A failing test is a must-fix.
+1. **Task tests pass, and none was skipped.** Run them: `{{TOOLS}}/sketch-tests run --config .sketch/config.md --mode task --target <the target in your brief> --logs .sketch/logs`, then `{{TOOLS}}/sketch-tests classify --config .sketch/config.md --results <the results folder it printed> --exit <the exit code it printed>`. Anything but `PASS` is a must-fix (quote the tool's output; for `UNKNOWN` read the log first). Then compare with the red run in your brief: `{{TOOLS}}/sketch-tests skipped-diff --config .sketch/config.md --before <the red run's results folder in your brief> --after <the results folder you just got>`. Every `error:` line is a must-fix: a test skipped or lost since the red run.
 2. **Tests untouched.** Use the `tests-unchanged` result in your brief; do not diff again. Any test file it reports as changed is a must-fix (the orchestrator already counts from the `t-<n>: fix test (rechecked)` commit when there is one).
 3. **Criteria covered.** For each acceptance criterion, name the test that proves it, and judge whether that test would really fail if the feature broke. A criterion with no test, or with a hollow test (an assertion that cannot fail), is a must-fix.
 4. **Correct beyond the tests.** Edge cases, error paths and anything the criteria imply but the tests miss. Prove a bug with a command where you can.
