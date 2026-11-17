@@ -59,7 +59,7 @@ class TasksOrderCliTest(PlanCliCase):
 
     def test_flagged_and_done_take_comma_separated_ids(self) -> None:
         argv = ["tasks-order", "--tasks", str(self.tasks), "--done", "t-1", "--flagged", "t-2,t-9x"]
-        code, _, err = run_tool(main, argv)
+        code, _, _ = run_tool(main, argv)
         self.assertEqual(code, 3)
         argv = ["tasks-order", "--tasks", str(self.tasks), "--done", "t-1", "--flagged", "t-2"]
         code, out, _ = run_tool(main, argv)

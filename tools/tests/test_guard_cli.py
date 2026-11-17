@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from sketch_tools.guard import main
 
@@ -71,6 +72,15 @@ class GuardCliTest(unittest.TestCase):
         argv = ["--protect", "main", "--protect", "master"]
         self.assertEqual(self.check(hook("git push origin master"), *argv)[0], 2)
         self.assertEqual(self.check(hook("git push origin develop"), *argv)[0], 0)
+
+
+class GuardFailsClosedTest(unittest.TestCase):
+    def test_a_bug_inside_the_guard_blocks_the_command_and_says_so(self) -> None:
+        with mock.patch("sketch_tools.guard.cli.logic.check_command", side_effect=RuntimeError("boom")):
+            code, out, err = run_tool(main, ["check-command"], stdin=hook("git status"))
+        self.assertEqual((code, out), (2, ""))
+        self.assertIn("guard failed", err)
+        self.assertIn("boom", err)
 
 
 class GuardStateTest(unittest.TestCase):

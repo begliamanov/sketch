@@ -143,7 +143,6 @@ class SetupCheckTest(unittest.TestCase):
         )
 
     def test_gitlab_commands(self) -> None:
-        found = dict((text[:9], kind) for kind, text in missing_steps(self.facts(tracker_cli="glab", has_remote=False, cli_logged_in=False)))
         steps = missing_steps(self.facts(tracker_cli="glab", has_remote=False, cli_logged_in=False))
         self.assertEqual(steps[0], ("ask", "glab repo create <name> --private (the developer names it and picks the visibility)"))
         self.assertEqual(steps[1], ("yours", "glab auth login"))

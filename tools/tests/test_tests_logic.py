@@ -223,8 +223,10 @@ class ResultsPatternTest(unittest.TestCase):
     def test_unsafe_patterns_say_why(self) -> None:
         for pattern, needle in (
             ("", "empty"), ("/etc/*.xml", "relative"), ("../x/*.xml", ".."), ("a/../../b.xml", ".."),
-            ("build/*", ".xml or .json"), ("**", ".xml or .json"), ("out/", ".xml or .json"),
+            ("build/*", ".xml or .json"), ("**", "folder"), ("out/", ".xml or .json"),
             ("build/*.txt", ".xml or .json"), ("~/r.xml", "relative"),
+            ("*.xml", "folder"), ("**/*.json", "folder"), ("*/x.xml", "folder"), ("**/build/r.xml", "folder"),
+            ("?uild/r.xml", "folder"), ("[bc]uild/r.xml", "folder"),
         ):
             with self.subTest(pattern=pattern):
                 problem = results_pattern_problem(pattern)

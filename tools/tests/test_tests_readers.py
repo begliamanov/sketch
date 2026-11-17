@@ -9,7 +9,6 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from typing import List
 
 from sketch_tools.core.errors import DataError, UsageError
 from sketch_tools.tests.model import ASSERTION, ERROR, FAILED, PASSED, SKIPPED, Case

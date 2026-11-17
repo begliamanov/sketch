@@ -4,7 +4,6 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
-from typing import List
 
 from sketch_tools.tests import main
 
@@ -92,7 +91,7 @@ class RunTest(RunCase):
     def test_the_command_cannot_wait_for_input(self) -> None:
         self.write_config(test_full="cat; echo done", test_results="out/*.xml")
         started = time.time()
-        code, out, _ = self.run_it()
+        _, out, _ = self.run_it()
         self.assertLess(time.time() - started, 5)
         self.assertIn("done", (self.logs / "20261112-104100-full.log").read_text())
         self.assertIn("exit: 0\n", out)
@@ -111,7 +110,7 @@ class RunTest(RunCase):
         self.write_config(test_full="echo one", test_results="out/*.xml")
         self.run_it()
         self.write_config(test_full="echo two", test_results="out/*.xml")
-        _, out, _ = self.run_it()
+        self.run_it()
         logs = sorted(p.name for p in self.logs.glob("*.log"))
         self.assertEqual(logs, ["20261112-104100-full-2.log", "20261112-104100-full.log"])
         self.assertIn("two", (self.logs / "20261112-104100-full-2.log").read_text())
@@ -142,7 +141,7 @@ class RunRefusesTest(RunCase):
         decoy = self.root.parent / "decoy.xml"
         decoy.write_text("<x/>")
         (self.root / "mine.txt").write_text("keep")
-        for pattern in ("../*.xml", "/tmp/*.xml", "*", "**", "out/"):
+        for pattern in ("../*.xml", "/tmp/*.xml", "*", "**", "out/", "**/*.json", "*.xml"):
             with self.subTest(pattern=pattern):
                 self.write_config(test_full="echo ran > ran.txt", test_results=pattern)
                 code, out, err = self.run_it()

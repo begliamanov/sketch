@@ -212,7 +212,7 @@ class ReconcileCliTest(unittest.TestCase):
 
     def test_a_damaged_state_exits_1(self) -> None:
         self.state.write_text("garbage\n")
-        code, _, err = self.run_reconcile(GOOD)
+        code, _, _ = self.run_reconcile(GOOD)
         self.assertEqual(code, 1)
 
     def test_the_state_file_is_not_changed(self) -> None:

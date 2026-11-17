@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 INSTALL = ROOT / "adapters" / "claude-code" / "install.sh"
@@ -167,6 +167,50 @@ class SettingsSnippetTest(unittest.TestCase):
         deny = self.snippet["permissions"]["deny"]
         self.assertIn("Bash(gh pr merge:*)", deny)
         self.assertIn("Bash(git push --force:*)", deny)
+
+
+class GuardLauncherFailsClosedTest(InstallCase):
+    """Claude Code only blocks a command on exit 2 and lets it run on any other failure, so the
+    guard's launcher turns every failure into a 2."""
+
+    def run_guard(self, *args: str, stdin: str = "", env: Optional[dict] = None):
+        return subprocess.run(
+            [str(self.bin / "sketch-guard"), *args], input=stdin, capture_output=True, text=True,
+            timeout=60, cwd=str(self.work), env=env,
+        )
+
+    def hook(self, command: str) -> str:
+        import json
+
+        return json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+
+    def test_a_clean_pass_and_a_real_block_keep_their_codes(self) -> None:
+        self.install()
+        self.assertEqual(self.run_guard("check-command", "--protect", "main", stdin=self.hook("git status")).returncode, 0)
+        result = self.run_guard("check-command", "--protect", "main", stdin=self.hook("git push origin main"))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("protected", result.stderr)
+
+    def test_help_still_exits_0(self) -> None:
+        self.install()
+        self.assertEqual(self.run_guard("--help").returncode, 0)
+
+    def test_a_wrong_option_in_the_hook_line_blocks_instead_of_letting_everything_through(self) -> None:
+        self.install()
+        result = self.run_guard("check-command", "--no-such-option", stdin=self.hook("git status"))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("no-such-option", result.stderr)
+
+    def test_python_missing_blocks_instead_of_letting_everything_through(self) -> None:
+        self.install()
+        result = self.run_guard("check-command", stdin=self.hook("git status"), env={"PATH": "/nonexistent"})
+        self.assertEqual(result.returncode, 2)
+
+    def test_the_other_launchers_keep_their_own_exit_codes(self) -> None:
+        self.install()
+        result = subprocess.run([str(self.bin / "sketch-journal"), "add", "BOGUS", "S1", "-", "x", "--journal", str(self.work / "j.md")],
+                                capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 3)
 
 
 class UninstallTest(InstallCase):

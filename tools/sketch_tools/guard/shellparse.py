@@ -7,7 +7,7 @@ from __future__ import annotations
 import os
 import re
 import shlex
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 _WRAPPERS = {"env", "command", "sudo", "doas", "nice", "nohup", "time", "exec", "builtin",
              "stdbuf", "timeout", "ionice", "setsid"}

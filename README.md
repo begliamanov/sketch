@@ -317,7 +317,7 @@ sketch/                         this repo
 
 ## Known gaps
 
-- Never run end to end. The tools have 194 tests, but the loop that calls them has not run for real. First-run checklist: [`adapters/claude-code/README.md`](adapters/claude-code/README.md#not-verified).
+- Never run end to end. The tools are tested on their own (`cd tools && python3 -m unittest discover -s tests -t .`), but the loop that calls them has not run for real. First-run checklist: [`adapters/claude-code/README.md`](adapters/claude-code/README.md#not-verified).
 - `gh` sub-issues and blocking links: untested. `glab`: tested by hand.
 - No adapters for Cline or Copilot yet.
 - Why each decision was made: [`docs/design-notes.md`](docs/design-notes.md).

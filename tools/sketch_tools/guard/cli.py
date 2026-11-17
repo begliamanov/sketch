@@ -1,9 +1,10 @@
 """Command-line layer of the guard tool: reads the hook input, answers by exit code.
 
 Claude Code runs this before every Bash command. Exit 0 lets the command run, exit 2 blocks it and
-shows stderr to the agent. It fails closed: input it cannot read, or a command it cannot parse, is
-blocked. (A usage error, like a wrong option in the hook line, exits 3, which Claude Code treats as
-a non-blocking error, so a misconfigured hook is visible but does not block.)"""
+shows stderr to the agent. It fails closed: input it cannot read, a command it cannot parse and a
+bug in the guard itself all block. Its launcher goes one step further: any exit code other than 0
+becomes 2 (a wrong option in the hook line, no python3), because Claude Code lets a command run on
+every other failure."""
 
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ from typing import Any, List, Optional
 
 from sketch_tools.core import exitcodes
 from sketch_tools.core.cli import Env, Tool
-from sketch_tools.core.errors import RefusedError
+from sketch_tools.core.errors import RefusedError, ToolError
 from sketch_tools.guard import logic
 from sketch_tools.state.logic import header_value
 
@@ -68,8 +69,16 @@ def _run_check_command(args: argparse.Namespace, env: Env) -> int:
     command = raw.strip("\n") if args.raw else _command_from_hook(raw)
     if command is None:
         return exitcodes.OK
-    protected, push_block = _protection(args)
-    reasons = logic.check_command(command, protected, push_block)
+    try:
+        protected, push_block = _protection(args)
+        reasons = logic.check_command(command, protected, push_block)
+    except ToolError:
+        raise
+    except Exception as err:  # a bug in the guard must never let a command through
+        raise RefusedError(
+            "the guard failed on this command (" + type(err).__name__ + ": " + str(err)
+            + "), so it is blocked: tell the developer"
+        ) from err
     if reasons:
         raise RefusedError("; ".join(reasons))
     return exitcodes.OK

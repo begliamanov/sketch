@@ -56,13 +56,16 @@ def command_for(settings: Settings, mode: str, target: Optional[str]) -> str:
 
 def results_pattern_problem(pattern: str) -> Optional[str]:
     """Why a `test_results` pattern is unsafe to delete files by, or None. It must be relative,
-    stay inside the project (no `..`), and end in `.xml` or `.json`."""
+    stay inside the project (no `..`), start with a folder name and not a wildcard, and end in
+    `.xml` or `.json`."""
     if not pattern.strip():
         return "the pattern is empty"
     if pattern.startswith(("/", "~")) or (len(pattern) > 1 and pattern[1] == ":"):
         return "the pattern must be relative to the project (got " + repr(pattern) + ")"
     if ".." in pattern.split("/"):
         return "the pattern must stay inside the project: no .. in it (got " + repr(pattern) + ")"
+    if any(char in pattern.split("/")[0] for char in "*?["):
+        return "the pattern must start with a folder name, not a wildcard, so that it cannot reach the whole project (got " + repr(pattern) + ")"
     if not pattern.endswith((".xml", ".json")):
         return "the pattern must end in .xml or .json so that it only matches result files (got " + repr(pattern) + ")"
     return None

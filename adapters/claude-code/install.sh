@@ -186,11 +186,23 @@ sys.exit(importlib.import_module("sketch_tools." + module).main())
 EOF
 for module in $(tool_modules); do
   launcher="$TOOLS_BIN/$(launcher_name "$module")"
-  cat > "$launcher" <<EOF
+  if [ "$module" = "guard" ]; then
+    # Claude Code blocks a command only on exit 2 and lets it run on any other failure, so the
+    # guard's launcher turns every failure (a crash, a wrong option, no python3) into a 2
+    cat > "$launcher" <<EOF
+#!/bin/sh
+# $MARK_KEY (sketch $VERSION). Edit tools/ in the Sketch repo and rerun the script.
+# Claude Code blocks a command only on exit 2, so every failure of the guard must be a 2.
+python3 -I "$TOOLS_OUT/run.py" $module "\$@" && exit 0
+exit 2
+EOF
+  else
+    cat > "$launcher" <<EOF
 #!/bin/sh
 # $MARK_KEY (sketch $VERSION). Edit tools/ in the Sketch repo and rerun the script.
 exec python3 -I "$TOOLS_OUT/run.py" $module "\$@"
 EOF
+  fi
   chmod +x "$launcher"
   echo "tool   $(launcher_name "$module")"
 done

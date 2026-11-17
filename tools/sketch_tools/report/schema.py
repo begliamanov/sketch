@@ -5,8 +5,7 @@ path of the field in it (`must_fix[1].evidence must not be empty`). Standard lib
 
 from __future__ import annotations
 
-import re
-from typing import Any, Dict, List, Optional, Pattern, Sequence, Set, Tuple
+from typing import Any, Dict, List, Optional, Pattern, Sequence, Set
 
 
 class Spec:

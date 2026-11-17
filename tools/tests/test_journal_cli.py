@@ -22,7 +22,7 @@ class JournalAddTest(unittest.TestCase):
         return run_tool(main, ["add", *args, "--journal", str(self.journal)])
 
     def test_creates_the_journal_with_its_header_and_the_line(self) -> None:
-        code, out, err = self.add("FLAG", "S2", "t-2", "test believed wrong: expects 5, spec says 4")
+        code, _, err = self.add("FLAG", "S2", "t-2", "test believed wrong: expects 5, spec says 4")
         self.assertEqual((code, err), (0, ""))
         self.assertEqual(self.journal.read_text(), HEADER + LINE + "\n")
 

@@ -261,7 +261,7 @@ class StateTaskAddCliTest(unittest.TestCase):
         self.assertEqual(self.state.read_text(), VALID)
 
     def test_bad_values_exit_3(self) -> None:
-        code, _, err = self.run_state("task", "add", "--id", "t5", "--title", "T")
+        code, _, _ = self.run_state("task", "add", "--id", "t5", "--title", "T")
         self.assertEqual(code, 3)
         self.assertEqual(self.state.read_text(), VALID)
 

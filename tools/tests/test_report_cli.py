@@ -177,7 +177,7 @@ class GetTest(ReportCliCase):
         self.assertIn("no report", err)
 
     def test_the_field_is_required(self) -> None:
-        code, _, err = run_tool(main, ["get", *self.args()])
+        code, _, _ = run_tool(main, ["get", *self.args()])
         self.assertEqual(code, 3)
 
 

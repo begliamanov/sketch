@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Callable, Dict, List, Sequence, Set, Tuple
 
 from sketch_tools.core.errors import DataError, UsageError
 from sketch_tools.core import config_file
