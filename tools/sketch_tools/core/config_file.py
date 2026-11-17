@@ -1,5 +1,5 @@
-"""Read `config.md` into plain parts. It only splits the text; deciding what is wrong is logic.py's
-job. Format: core/skills/tune-skills/SKILL.md, step 7."""
+"""Read `config.md` into plain parts. It only splits the text; deciding what is wrong is the job
+of the tool that uses it (`plan config-check`). Format: core/skills/tune-skills/SKILL.md, step 7."""
 
 from __future__ import annotations
 

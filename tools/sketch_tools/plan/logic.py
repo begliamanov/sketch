@@ -8,8 +8,11 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from sketch_tools.core.errors import DataError, UsageError
-from sketch_tools.plan import config_file, tasks_file
+from sketch_tools.core import config_file
+from sketch_tools.plan import tasks_file
 from sketch_tools.plan.graph import find_cycle, task_number
+from sketch_tools.tests.readers import BUILTIN_NAMES
+from sketch_tools.tests.settings import TARGET_PLACEHOLDER, results_pattern_problem
 
 DEFAULT_MIN_TASKS = 3
 DEFAULT_MAX_TASKS = 8
@@ -223,18 +226,19 @@ def order_tasks(text: str, flagged: Sequence[str] = (), done: Sequence[str] = ()
 
 
 _TRACKERS = {"github": "gh", "gitlab": "glab"}
-_REQUIRED_KEYS = ("tracker", "tracker_cli", "default_branch", "test_full", "test_task", "test_paths")
+_REQUIRED_KEYS = ("tracker", "tracker_cli", "default_branch", "test_full", "test_task", "test_paths",
+                  "test_format", "test_results")
+_OPTIONAL_KEYS = ("formats_dir",)
 _ROLES = ("common", "task-writer", "test-writer", "implementer", "reviewer", "story-reviewer")
-TEST_TASK_PLACEHOLDER = "{class}"
 
 
-def _check_keys(config: config_file.ConfigFile) -> List[str]:
+def _check_keys(config: config_file.ConfigFile, formats: Sequence[str]) -> List[str]:
     problems: List[str] = []
     for key in _REQUIRED_KEYS:
         if key not in config.keys:
             problems.append("missing key: " + key)
     for key, count in config.key_counts.items():
-        if key not in _REQUIRED_KEYS:
+        if key not in _REQUIRED_KEYS and key not in _OPTIONAL_KEYS:
             problems.append("unknown key: " + key)
         elif count > 1:
             problems.append("key " + key + " appears twice")
@@ -256,8 +260,22 @@ def _check_keys(config: config_file.ConfigFile) -> List[str]:
     if config.keys.get("test_full") == "":
         problems.append("test_full must not be empty")
     test_task = config.keys.get("test_task")
-    if test_task is not None and TEST_TASK_PLACEHOLDER not in test_task:
-        problems.append("test_task must contain the placeholder " + TEST_TASK_PLACEHOLDER)
+    if test_task is not None and TARGET_PLACEHOLDER not in test_task:
+        problems.append("test_task must contain the placeholder " + TARGET_PLACEHOLDER)
+    test_format = config.keys.get("test_format")
+    if test_format == "":
+        problems.append("test_format must not be empty")
+    elif test_format is not None and test_format not in formats:
+        problems.append(
+            'test_format "' + test_format + '" is not a format that can be read (known: ' + ", ".join(formats) + ")"
+        )
+    results = config.keys.get("test_results")
+    if results is not None:
+        pattern_problem = results_pattern_problem(results)
+        if pattern_problem:
+            problems.append("test_results: " + pattern_problem)
+    if config.keys.get("formats_dir") == "":
+        problems.append("formats_dir must not be empty when it is given")
     if "test_paths" in config.keys:
         items, problem = config_file.parse_list(config.keys["test_paths"])
         if items is None:
@@ -302,13 +320,16 @@ def _check_skills(config: config_file.ConfigFile, exists: Callable[[str], bool])
     return problems
 
 
-def check_config(text: str, exists: Callable[[str], bool]) -> List[str]:
-    """Every problem in a config.md, one message each. `exists` says whether a skill file exists."""
+def check_config(
+    text: str, exists: Callable[[str], bool], formats: Sequence[str] = BUILTIN_NAMES
+) -> List[str]:
+    """Every problem in a config.md, one message each. `exists` says whether a skill file exists;
+    `formats` are the test result formats that can be read (the built-in ones, and the project's own)."""
     config = config_file.parse_config(text)
     problems: List[str] = []
     if not config.first_line_ok:
         problems.append('first line must be "' + config_file.FIRST_LINE + '"')
-    problems.extend(_check_keys(config))
+    problems.extend(_check_keys(config, formats))
     problems.extend(_check_skills(config, exists))
     for line in config.stray:
         problems.append("unexpected line: " + line.strip())

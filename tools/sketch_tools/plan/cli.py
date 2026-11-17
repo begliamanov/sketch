@@ -9,8 +9,10 @@ from typing import List, Optional
 
 from sketch_tools.core import exitcodes
 from sketch_tools.core.cli import Env, Tool
-from sketch_tools.core.errors import UsageError
+from sketch_tools.core import config_file
+from sketch_tools.core.errors import DataError, UsageError
 from sketch_tools.plan import logic
+from sketch_tools.tests.readers import BUILTIN_NAMES, load_plugins
 
 
 def _read(path_text: str) -> str:
@@ -63,7 +65,16 @@ def _configure_config_check(parser: argparse.ArgumentParser) -> None:
 
 
 def _run_config_check(args: argparse.Namespace, env: Env) -> int:
-    return _report(logic.check_config(_read(args.config), os.path.isfile), env)
+    text = _read(args.config)
+    formats = list(BUILTIN_NAMES)
+    extra: List[str] = []
+    folder = config_file.parse_config(text).keys.get("formats_dir")
+    if folder:  # the project's own readers: their names are formats too
+        try:
+            formats += list(load_plugins(Path(folder)))
+        except (DataError, UsageError) as err:
+            extra.append("formats_dir: " + str(err))
+    return _report(logic.check_config(text, os.path.isfile, formats) + extra, env)
 
 
 def build_tool() -> Tool:

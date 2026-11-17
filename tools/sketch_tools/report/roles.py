@@ -155,7 +155,8 @@ _TEST_WRITER = Fields(
         "files": _LINES,
         "tests_per_criterion": Mapping(re.compile(r"\d+"), "a criterion number like 1", Number(minimum=1)),
         "verification": Fields(
-            {"command": _LINE, "failing": Items(_LINE, minimum=1)}, required=["command", "failing"]
+            {"command": _LINE, "target": _LINE, "results": _LINE, "failing": Items(_LINE, minimum=1)},
+            required=["command", "target", "results", "failing"],
         ),
         "added_scenarios": _LINES,
         "concerns": _LINES,
@@ -269,6 +270,7 @@ _TESTER = Fields(
         "sha": _SHA,
         "command": _LINE,
         "log": _LINE,
+        "results": _LINE,
         "counts": Fields(
             {"passed": Number(), "failed": Number(), "skipped": Number()},
             required=["passed", "failed", "skipped"],
