@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sketch_tools.core.errors import DataError, RefusedError, UsageError
 from sketch_tools.state import schema
@@ -242,6 +242,32 @@ def add_task(
     ]
     lines.insert(table[-1] + 1, "|" + "|".join(cells) + "|")
     return _join(lines)
+
+
+def gate(text: Optional[str], pr_state: Optional[str] = None) -> Tuple[str, str]:
+    """Can a new story start? Returns (decision, message): `go`, `mark-done` (the story's PR was
+    merged: set the phase to done, then go) or `stop` with the reason. `text` is None when there is
+    no state file. Raises UsageError for a PR state that is missing when it is needed or unknown,
+    DataError for a state file without a phase."""
+    raise NotImplementedError
+
+
+def wip_message(text: str, branch: str, task: Optional[str] = None) -> str:
+    """The commit message for interrupted work: `t-3: [wip] interrupted, not reviewed`, or
+    `story-2: ...` when no task was in progress. Raises RefusedError when `branch` is not the story
+    branch or no story is running, UsageError for a task that is not in the table."""
+    raise NotImplementedError
+
+
+def parse_facts(text: str) -> Dict[str, Any]:
+    """Read and validate the facts JSON for `reconcile`. Raises UsageError for anything wrong."""
+    raise NotImplementedError
+
+
+def reconcile(text: str, facts: Dict[str, Any]) -> List[Tuple[str, str]]:
+    """Compare the state file with the facts gathered from git, the tracker and the PR. Returns
+    (kind, message) pairs: `risky` ones first, then `harmless` ones that can be adopted."""
+    raise NotImplementedError
 
 
 def read_tasks(text: str) -> List[Dict[str, str]]:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
+from typing import Dict, List, Optional, Sequence
 
 from sketch_tools.core.errors import UsageError
 
@@ -14,6 +15,18 @@ _TYPE_WIDTH = max(len(t) for t in ENTRY_TYPES)
 _TASK_WIDTH = 3
 _STORY = re.compile(r"S\d+")
 _TASK = re.compile(r"t-\d+|-")
+
+
+def me_lines(text: str, stories: Sequence[str] = (), after: Optional[int] = None) -> List[str]:
+    """Every line the developer wrote (`[me]`), exactly as in the journal. `stories` (like `S2`)
+    and `after` (a story number: only later stories) narrow it down. Raises UsageError for a story
+    that does not look like S2."""
+    raise NotImplementedError
+
+
+def signals(text: str, stories: Sequence[str] = (), after: Optional[int] = None) -> Dict[str, int]:
+    """How many entries of each type, in the order of ENTRY_TYPES, zeros included. Same filters."""
+    raise NotImplementedError
 
 
 def format_entry(

@@ -65,6 +65,25 @@ class ReportsAreHandedInThroughTheToolTest(unittest.TestCase):
         self.assertIn("sketch-report get", run_story)
 
 
+class SkillsUseTheReadingToolsTest(unittest.TestCase):
+    """The skills that used to work these answers out by eye now ask the tools."""
+
+    WIRED = {
+        "sketch": ("sketch-state gate", "sketch-journal signals"),
+        "retro": ("sketch-journal me-lines",),
+        "resume-story": ("sketch-state reconcile",),
+        "pause": ("sketch-state wip-message",),
+        "stop": ("sketch-state wip-message",),
+    }
+
+    def test_each_skill_calls_its_tool(self) -> None:
+        for skill, needles in self.WIRED.items():
+            text = (ROOT / "core" / "skills" / skill / "SKILL.md").read_text()
+            for needle in needles:
+                with self.subTest(skill=skill, tool=needle):
+                    self.assertIn(needle, text)
+
+
 class DriftNotetakerIsGoneTest(unittest.TestCase):
     def test_the_agent_file_is_deleted(self) -> None:
         self.assertFalse((ROOT / "core" / "agents" / "drift-notetaker.md").exists())
