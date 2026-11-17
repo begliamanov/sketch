@@ -40,7 +40,7 @@ class CoreCallsRealToolsTest(unittest.TestCase):
                 self.assertTrue(one in names or two in names, "no command %r in %r" % (words, names))
 
     def test_a_call_always_points_the_tool_at_its_file(self) -> None:
-        needs = {"state": "--state", "journal": "--journal", "report": "--reports", "tests": "--config"}
+        needs = {"state": "--state", "journal": "--journal", "report": "--reports", "tests": "--config", "skills": "--dir"}
         for path, tool_name, words, rest in calls():
             if tool_name in needs:
                 with self.subTest(file=path.name, call=tool_name + " " + " ".join(words)):
@@ -109,6 +109,22 @@ class TheTestsToolIsUsedWhereTestsAreRunTest(unittest.TestCase):
 
     def test_the_orchestrator_knows_the_tool(self) -> None:
         self.assertIn("sketch-tests", (ROOT / "core" / "orchestrator.md").read_text())
+
+
+class TheSmallToolsAreWiredTest(unittest.TestCase):
+    WIRED = {
+        ("orchestrator.md",): ("sketch-setup check", "sketch-plan brief-skills"),
+        ("skills", "sketch", "SKILL.md"): ("sketch-retro recommend",),
+        ("skills", "tune-skills", "SKILL.md"): ("sketch-skills list", "sketch-plan detect-tracker"),
+        ("agents", "task-writer.md"): ("sketch-plan issues-todo",),
+    }
+
+    def test_each_file_uses_its_commands(self) -> None:
+        for parts, needles in self.WIRED.items():
+            text = ROOT.joinpath("core", *parts).read_text()
+            for needle in needles:
+                with self.subTest(file="/".join(parts), needle=needle):
+                    self.assertIn(needle, text)
 
 
 class DriftNotetakerIsGoneTest(unittest.TestCase):

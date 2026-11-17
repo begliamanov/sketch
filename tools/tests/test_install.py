@@ -45,7 +45,8 @@ class InstallTest(InstallCase):
     def test_a_launcher_exists_and_is_executable_for_each_tool(self) -> None:
         self.install()
         for name in ("sketch-journal", "sketch-state", "sketch-repo-check", "sketch-plan",
-                     "sketch-guard", "sketch-pr"):
+                     "sketch-guard", "sketch-pr", "sketch-report", "sketch-tests", "sketch-skills",
+                     "sketch-setup", "sketch-retro"):
             with self.subTest(launcher=name):
                 path = self.bin / name
                 self.assertTrue(path.is_file())
