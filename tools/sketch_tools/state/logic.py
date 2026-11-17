@@ -244,6 +244,17 @@ def add_task(
     return _join(lines)
 
 
+def read_tasks(text: str) -> List[Dict[str, str]]:
+    """The rows of the task table, each as a dict keyed by column name. Raises DataError when the
+    file has no task table."""
+    raise NotImplementedError
+
+
+def read_flags(text: str) -> List[str]:
+    """The lines of the Flags section that start with `- `, exactly as written."""
+    raise NotImplementedError
+
+
 def add_flag(text: str, task_id: str, reason: str) -> str:
     """Append `- <task>: <reason>` to the Flags section. Raises UsageError for an unknown task or a
     bad reason, RefusedError when the task is already flagged, DataError without a Flags section."""

@@ -44,7 +44,8 @@ class InstallTest(InstallCase):
 
     def test_a_launcher_exists_and_is_executable_for_each_tool(self) -> None:
         self.install()
-        for name in ("sketch-journal", "sketch-state", "sketch-repo-check"):
+        for name in ("sketch-journal", "sketch-state", "sketch-repo-check", "sketch-plan",
+                     "sketch-guard", "sketch-pr"):
             with self.subTest(launcher=name):
                 path = self.bin / name
                 self.assertTrue(path.is_file())
@@ -136,6 +137,35 @@ class InstallTest(InstallCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("sketch-state", result.stderr)
         self.assertEqual(theirs.read_text(), "#!/bin/sh\necho mine\n")
+
+
+class SettingsSnippetTest(unittest.TestCase):
+    """The permission snippet wires the guard in as a hook and allows the launchers."""
+
+    def setUp(self) -> None:
+        import json
+
+        self.snippet = json.loads((ROOT / "adapters" / "claude-code" / "settings.snippet.json").read_text())
+
+    def test_the_guard_runs_before_every_bash_command(self) -> None:
+        hooks = self.snippet["hooks"]["PreToolUse"]
+        bash = [h for h in hooks if h["matcher"] == "Bash"]
+        self.assertEqual(len(bash), 1)
+        commands = [h["command"] for h in bash[0]["hooks"]]
+        self.assertEqual(len(commands), 1)
+        self.assertIn("sketch/tools/bin/sketch-guard check-command", commands[0])
+        self.assertIn("--protect main", commands[0])
+        self.assertIn("--protect master", commands[0])
+        self.assertIn("--state .sketch/state.md", commands[0])
+        self.assertEqual(bash[0]["hooks"][0]["type"], "command")
+
+    def test_the_launchers_are_allowed(self) -> None:
+        self.assertIn("Bash(~/.claude/sketch/tools/bin/*)", self.snippet["permissions"]["allow"])
+
+    def test_the_deny_list_is_still_there(self) -> None:
+        deny = self.snippet["permissions"]["deny"]
+        self.assertIn("Bash(gh pr merge:*)", deny)
+        self.assertIn("Bash(git push --force:*)", deny)
 
 
 class UninstallTest(InstallCase):
