@@ -42,12 +42,15 @@ Restate the goal in every brief. Agents start with no memory of this conversatio
 
 ## Tools
 
-Four deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
+Five deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
 
 - `sketch-state` is the only way to change `.sketch/state.md`: `new-story` (a fresh file; it refuses to replace an unfinished story), `task add` (a row of the task table), `set` (a field, or a task's field with `--task`), `bump` (a counter), `flag add`, `check`. Never edit the state file by hand.
 - `sketch-journal` is the only way to add a line to `.sketch/journal.md`.
 - `sketch-repo-check` answers yes or no on text you pipe in from git: `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`.
 - `sketch-plan` checks the planning files and gives the order tasks run in: `tasks-check`, `tasks-order`, `config-check`.
+- `sketch-pr` builds the PR description and checks the PR afterwards: `render-body`, `check-base`, `check-flags`.
+
+A sixth, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing issues. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
 
 Exit codes mean the same everywhere: `0` ok, `1` a check found problems or a file is damaged, `2` refused (a counter is at its cap), `3` the call itself was wrong. A `3` is your mistake: fix the call and run it again once, then fail hard. Never work around a tool or do its job by hand.
 
@@ -57,6 +60,7 @@ Examples:
 - `{{TOOLS}}/sketch-journal add FLAG S2 t-3 "review cap hit (2/2)" --journal .sketch/journal.md`
 - `git status --porcelain | {{TOOLS}}/sketch-repo-check tree-clean`
 - `{{TOOLS}}/sketch-plan config-check --config .sketch/config.md`
+- `{{TOOLS}}/sketch-pr render-body --state .sketch/state.md --extras .sketch/pr-extras.json`
 
 ## State discipline
 

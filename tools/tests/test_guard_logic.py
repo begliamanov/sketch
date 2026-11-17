@@ -74,6 +74,12 @@ DENIED: List[Tuple[str, str]] = [
     ("git push origin HEAD", "explicit branch"),
     ("git push origin @", "explicit branch"),
     ("git push origin --tags", "explicit branch"),
+    ("git push origin $BRANCH", "explicit branch"),
+    ("git push origin \"$BRANCH\"", "explicit branch"),
+    ("git push origin ${BRANCH}", "explicit branch"),
+    ("BRANCH=main; git push origin $BRANCH", "explicit branch"),
+    ("git push origin `git branch --show-current`", "explicit branch"),
+    ("git push origin $(git branch --show-current)", "explicit branch"),
     # everything at once, deletions
     ("git push --all origin", "all"),
     ("git push --mirror origin", "all"),

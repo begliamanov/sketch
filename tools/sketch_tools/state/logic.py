@@ -247,12 +247,17 @@ def add_task(
 def read_tasks(text: str) -> List[Dict[str, str]]:
     """The rows of the task table, each as a dict keyed by column name. Raises DataError when the
     file has no task table."""
-    raise NotImplementedError
+    lines = _split(text)
+    rows = _table_lines(lines)[2:]
+    return [
+        dict(zip(schema.TASK_COLUMNS, [cell.strip() for cell in lines[index].split("|")[1:-1]]))
+        for index in rows
+    ]
 
 
 def read_flags(text: str) -> List[str]:
     """The lines of the Flags section that start with `- `, exactly as written."""
-    raise NotImplementedError
+    return [line for _index, line in _flags(_split(text))[2]]
 
 
 def add_flag(text: str, task_id: str, reason: str) -> str:

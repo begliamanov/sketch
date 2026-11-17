@@ -166,7 +166,7 @@ STOP. Wait for you.
 
 | Rule | Why |
 |---|---|
-| Agents never merge, force-push, push to main/feature, or close issues | You own what lands. Enforced by the deny list, not just prompts. |
+| Agents never merge, force-push, push to main/feature, or close issues | You own what lands. Enforced by the deny list and a guard hook that reads every shell command, not just prompts. |
 | Tests are written before the code, and are a contract | The implementer can't make its own test pass by editing it. Only a fresh test-writer can change a test, and only on the acceptance criteria. |
 | Fresh agent every round | No anchoring on the last attempt. |
 | Round caps (3 / 2 / 2 / 3) | No grinding. Hit the cap → flag the task, carry on with the tasks that don't depend on it. |
@@ -174,7 +174,7 @@ STOP. Wait for you.
 | The orchestrator never runs tests | It gets verdicts, not logs. Its context stays small. |
 | One commit prefix per task (`t-3: ...`), no squashing | You can read the PR task by task. |
 | Every task adds a CHANGELOG line ending `(#issue)` | Missing = must fix. |
-| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`. Same input, same answer, every time. |
+| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`. The PR description is rendered by `sketch-pr`, and a hook (`sketch-guard`) blocks merges, force pushes, pushes to main or the feature branch, and issue closing before they run. Same input, same answer, every time. |
 
 Caps and rules: [`core/conventions.md`](core/conventions.md).
 

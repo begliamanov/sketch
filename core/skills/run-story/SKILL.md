@@ -72,11 +72,11 @@ Journal a REVIEW line with the outcome and the rounds used (`{{TOOLS}}/sketch-jo
 
 ## 6. Open the PR
 
-Set `phase: pr` (`{{TOOLS}}/sketch-state set phase pr --state .sketch/state.md`) and run the `pr-agent` with: the story branch, the feature branch, the paths of the state, brief and tasks files, the story-reviewer's report (including its model and the nice-to-have items), the implementers' assumptions, and the flags.
+Set `phase: pr` (`{{TOOLS}}/sketch-state set phase pr --state .sketch/state.md`). Write `.sketch/pr-extras.json` from the reports, quoting items verbatim: `summary` (two or three plain lines on what the user gets, from the brief), `tests_passed` (the count from the tester's full-suite report), `reviewer_model` (the story-reviewer's model), `unresolved` (must-fix items still open, only if the story-end loop hit its cap), `nice_to_have` (the story-reviewer's, most important first), `manual_checks` (from the brief and the reviewers), `differs` (implementer assumptions that differ from the brief, each starting with its task id), `wip_commits` (`[wip]` commits never followed by a completed step). Only the first three keys are required; leave out a list that would be empty. Then run the `pr-agent` with: the story branch, the feature branch, the paths of the state, brief and tasks files, and `.sketch/pr-extras.json`. It builds the description with the pr tool.
 
 Then verify, yourself:
-- the PR/MR exists and its **base is the feature branch** (`gh pr view` or `glab mr view`)
-- every flagged task and every unresolved must-fix appears in its description
+- the PR/MR exists and its **base is the feature branch**: `gh pr view <number> --json baseRefName,headRefName,state | {{TOOLS}}/sketch-pr check-base --base <feature-branch> --head <story-branch>` prints `ok` (for GitLab, `glab mr view <number> --output json` instead)
+- every flagged task and every unresolved must-fix appears in its description: `gh pr view <number> --json body -q .body | {{TOOLS}}/sketch-pr check-flags --state .sketch/state.md --extras .sketch/pr-extras.json` prints `ok`
 - `{{TOOLS}}/sketch-state check --state .sketch/state.md` prints `ok`, and the state has the PR and `pr_head_sha`
 
 If anything is off, do not repair it silently. Stop with the STOPPED report.
