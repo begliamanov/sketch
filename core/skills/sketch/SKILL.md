@@ -30,7 +30,7 @@ If earlier stories exist, print one line, built from `.sketch/journal.md`, `.ske
 
 The flag and cap counts come from the tool, the `FLAG` and `CAP` lines of `{{TOOLS}}/sketch-journal signals --journal .sketch/journal.md --after <the last story the last retro covered, from .sketch/retro/last.md>` (leave `--after` out when there was no retro). The review comments come from the tracker and the changed lines from `git diff --shortstat <pr_head_sha>..<the merged result>`.
 
-A retro is **recommended** if any of these hold: this is one of the first three stories, any flagged task, any cap hit, more than 20 lines changed by the developer after the PR was opened, more than 10 review comments. Otherwise say nothing is notable. The developer decides: if they want the retro, tell them to run `/retro` and stop; if not, continue.
+Ask the tool whether a retro is worth recommending: `{{TOOLS}}/sketch-retro recommend --story <the story that just finished> --flags <n> --caps <n> --lines-changed <n> --comments <n>`. It prints `recommended` with its reasons, or `not notable`. (It applies this rule: one of the first three stories, any flagged task, any cap hit, more than 20 lines changed by the developer after the PR was opened, or more than 10 review comments.) The developer decides: if they want the retro, tell them to run `/retro` and stop; if not, continue.
 
 ## 3. Quick check, then stop
 

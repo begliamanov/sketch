@@ -26,6 +26,7 @@ sketch_tools/
   tests/       readers/ (junit-xml, xcresult-json, project plugins) + settings.py + runner.py (the one place anything is run) + logic.py + cli.py
   report/      schema.py (the validator) + roles.py (a schema and rules per agent role) + logic.py + cli.py
   pr/          logic.py (render the description, check the PR JSON and flags) + cli.py
+  setup/ retro/ skills/   one small `logic.py` + `cli.py` each
   plan/        tasks_file.py, config_file.py (parsers) + graph.py + logic.py (pure checks, run order) + cli.py
 tests/         unittest, with fixtures in tests/fixtures/
 ```
@@ -51,10 +52,13 @@ git log --format=%s main..HEAD | python3 -m sketch_tools.repo_check commit-prefi
 | `journal` | `add`, `me-lines`, `signals` |
 | `state` | `new-story`, `task add`, `set`, `bump`, `check`, `flag add`, `gate`, `wip-message`, `reconcile` |
 | `repo-check` | `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean` |
-| `plan` | `tasks-check`, `tasks-order`, `config-check` |
+| `plan` | `tasks-check`, `tasks-order`, `config-check`, `brief-skills`, `issues-todo`, `detect-tracker` |
+| `setup` | `check` (what is missing before Sketch can run here) |
+| `retro` | `recommend` (is a retro worth the developer's time) |
+| `skills` | `list` (find the SKILL.md files on this machine) |
 | `pr` | `render-body`, `check-base`, `check-flags` |
 | `report` | `submit`, `check`, `get` (one schema per agent role; reports are `<scope>-<role>-<run>.json`) |
 | `tests` | `run`, `classify`, `failures`, `summary`, `expect-red`, `skipped-diff`, `failures-diff` (reads JUnit XML and xcresulttool JSON, or your own reader) |
 | `guard` | `check-command` (a hook: reads the tool call as JSON, exit 2 blocks) |
 
-The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`, `sketch-plan`, `sketch-pr`, `sketch-guard`, `sketch-report`, `sketch-tests`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.
+The Claude Code installer (`adapters/claude-code/install.sh`) copies the package to `~/.claude/sketch/tools/` and creates a launcher per tool: `sketch-journal`, `sketch-state`, `sketch-repo-check`, `sketch-plan`, `sketch-pr`, `sketch-guard`, `sketch-report`, `sketch-tests`, `sketch-setup`, `sketch-retro`, `sketch-skills`. The docs in `core/` call them as `{{TOOLS}}/sketch-<tool> ...`; a test checks that every such call names a real command.

@@ -32,9 +32,9 @@ Look at the project, quickly:
 - build files and modules (`settings.gradle(.kts)`, `build.gradle(.kts)`, version catalogs) and the main dependencies
 - test directories and test libraries
 - `CLAUDE.md`, `AGENTS.md`, `README`, `docs/`; whether `docs/GLOSSARY.md` and `CHANGELOG.md` exist
-- the tracker: `git remote get-url origin` (github.com means GitHub and `gh`; a GitLab host means GitLab and `glab`; anything else: ask)
+- the tracker: `git remote get-url origin | {{TOOLS}}/sketch-plan detect-tracker` prints `tracker:` and `tracker_cli:` (github.com means GitHub and `gh`; a GitLab host means GitLab and `glab`), or `ask:` when the host is neither: then ask the developer
 - the default branch
-- skills available: `.claude/skills/*/SKILL.md` in the project, `~/.claude/skills/*/SKILL.md`, and skills inside installed plugins. Read each one's name and description only, and note the absolute path of each `SKILL.md`; the config stores paths, not plugin names.
+- skills available: `{{TOOLS}}/sketch-skills list --dir .claude/skills --dir ~/.claude/skills`, with one more `--dir` for each installed plugin folder. It finds every `SKILL.md` below a folder and prints its name, absolute path and description, tab-separated. Use those paths; the config stores paths, not plugin names.
 
 ## 5. Propose, then confirm
 

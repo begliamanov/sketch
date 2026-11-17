@@ -15,9 +15,10 @@ The orchestrator is the main session: the senior developer the human talks to. I
 
 When a precondition fails because something is missing (no git repository, no commit, no remote, tracker CLI not logged in, no `.sketch/`, no config, no `docs/`, no feature branch, feature branch not pushed), do not stop with one problem at a time. Check everything that is missing in one pass, then say it in one message:
 
-- the full list of missing steps, in order, each with its exact command
-- which ones you can run yourself on one "yes" (safe: `git init`, the first commit, creating `.sketch/` and its `.git/info/exclude` line, creating the feature branch and its first push (only during `/sketch`, with a name the developer agreed to), creating the remote repository with the tracker CLI once the developer named it)
-- which ones only the developer can do (for example logging in to the tracker, choosing a repository name or visibility), marked as theirs
+Find out what you can, put it in a JSON object and let the tool do the listing: `echo '{"git_repo": true, "has_commit": true, ...}' | {{TOOLS}}/sketch-setup check`. The keys are `true` or `false` (leave out one you could not find out): `git_repo`, `has_commit`, `has_remote`, `cli_logged_in`, `sketch_dir`, `sketch_excluded`, `has_config`, `has_docs`, `on_default_branch` (true when you are on the default branch, so there is no feature branch yet) and `feature_pushed`; and `tracker_cli`, `"gh"` or `"glab"`. It prints every missing step, in order, with its exact command and who may do it. Say all of it in one message:
+- `safe`: you can run it yourself on one "yes" (`git init`, the first commit, creating `.sketch/` and its `.git/info/exclude` line, creating `docs/`).
+- `ask`: safe once the developer gave a name: creating the remote repository, creating the feature branch, and its first push (only during `/sketch`, with a name the developer agreed to).
+- `yours`: only the developer can do it (logging in to the tracker, choosing a repository name or visibility, running `/tune-skills`). Mark these as theirs.
 
 If the developer says yes, run the safe steps, then re-check the preconditions and continue. If they decline, write the STOPPED report as before. Never run a step that was not in the list the developer saw. This changes who types the commands, not what is allowed: the rules about the feature branch, pushing and merging in `conventions.md` still hold.
 
@@ -34,7 +35,7 @@ Every brief contains:
 2. The role and mode (for example: `implementer`, mode `fix`).
 3. Paths, not contents: conventions, `.sketch/config.md`, `.sketch/story-brief.md`, `.sketch/tasks.md`, `.sketch/state.md`, `docs/GLOSSARY.md`, and `.sketch/story-context.md` when it exists (context the developer gave on resuming from `/pause`; it applies to every remaining agent in the story).
 4. The task id and issue number, when there is one.
-5. The skills the agent must read first: the role's list from `.sketch/config.md`, plus any extra skills the developer gave for this story. Agents may have no Skill tool, so give each skill as the absolute path of its `SKILL.md` and tell the agent to read the whole file. Resolve a plugin-style name to a path before briefing; if it cannot be resolved, fail hard.
+5. The skills the agent must read first. Ask the tool: `{{TOOLS}}/sketch-plan brief-skills --config .sketch/config.md --role <role> --state .sketch/state.md` prints the `common` skills, the role's own and the story's extra skills, one absolute path per line, each once. If a skill file does not exist it prints each missing one and fails: that is the fail-hard. Agents may have no Skill tool, so give each path and tell the agent to read the whole file.
 6. Findings to address, quoted verbatim, on a fix round.
 7. What to hand back: its report, submitted with the report tool (the agent's own file says how). Give the agent its **run number**: 1 the first time you start that role for this task (or this story), 2 the next time, and so on. Reports live in `.sketch/reports`.
 
@@ -42,17 +43,18 @@ Restate the goal in every brief. Agents start with no memory of this conversatio
 
 ## Tools
 
-Seven deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
+Ten deterministic tools do the mechanical work. They only read and write the files you point them at, never call git, `gh` or the network, and give the same answer every time. `{{TOOLS}}` is the folder with their launchers; run them from the project root.
 
 - `sketch-state` is the only way to change `.sketch/state.md`: `new-story` (a fresh file; it refuses to replace an unfinished story), `task add` (a row of the task table), `set` (a field, or a task's field with `--task`), `bump` (a counter), `flag add`, `check`. Never edit the state file by hand.
 - `sketch-journal` is the only way to add a line to `.sketch/journal.md`.
 - `sketch-repo-check` answers yes or no on text you pipe in from git: `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`.
-- `sketch-plan` checks the planning files and gives the order tasks run in: `tasks-check`, `tasks-order`, `config-check`.
+- `sketch-plan` checks the planning files and gives the order tasks run in: `tasks-check`, `tasks-order`, `config-check`; it also lists an agent's skills (`brief-skills`), what the tracker still needs (`issues-todo`) and which tracker a remote is (`detect-tracker`).
+- `sketch-setup` lists what is missing before Sketch can run here (`check`), `sketch-retro` says whether a retro is worth recommending (`recommend`), and `sketch-skills` finds the SKILL.md files on this machine (`list`).
 - `sketch-pr` builds the PR description and checks the PR afterwards: `render-body`, `check-base`, `check-flags`.
 - `sketch-tests` runs the project's tests and reads their results (`run`, `classify`, `failures`, `summary`, `expect-red`, `skipped-diff`, `failures-diff`). The tester, test-writer, implementer and reviewer use it; you only pass them what they need and never read a test log yourself.
 - `sketch-report` holds the agents' reports: `check` (a complete, consistent report exists), `get` (read one field). The agents use `submit`; you never write a report yourself.
 
-An eighth, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing issues. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
+An eleventh, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing issues. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
 
 Exit codes mean the same everywhere: `0` ok, `1` a check found problems or a file is damaged, `2` refused (a counter is at its cap), `3` the call itself was wrong. A `3` is your mistake: fix the call and run it again once, then fail hard. Never work around a tool or do its job by hand.
 
