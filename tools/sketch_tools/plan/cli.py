@@ -10,8 +10,9 @@ from typing import List, Optional
 from sketch_tools.core import exitcodes
 from sketch_tools.core.cli import Env, Tool
 from sketch_tools.core import config_file
+from sketch_tools.state.logic import header_value
 from sketch_tools.core.errors import DataError, UsageError
-from sketch_tools.plan import logic
+from sketch_tools.plan import briefing, issues, logic, tracker
 from sketch_tools.tests.readers import BUILTIN_NAMES, load_plugins
 
 
@@ -77,6 +78,47 @@ def _run_config_check(args: argparse.Namespace, env: Env) -> int:
     return _report(logic.check_config(text, os.path.isfile, formats) + extra, env)
 
 
+def _configure_brief_skills(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--config", required=True, metavar="PATH", help="the config file")
+    parser.add_argument("--role", required=True, metavar="ROLE", help="the agent role, like implementer")
+    parser.add_argument("--state", metavar="PATH", help="the state file: its extra_skills are added")
+
+
+def _run_brief_skills(args: argparse.Namespace, env: Env) -> int:
+    extra: List[str] = []
+    if args.state:
+        extra = briefing.parse_extra_skills(header_value(_read(args.state), "extra_skills") or "none")
+    paths, problems = briefing.brief_skills(_read(args.config), args.role, extra, os.path.isfile)
+    if problems:
+        for problem in problems:
+            env.stdout.write("error: " + problem + "\n")
+        return exitcodes.CHECK_FAILED
+    for path in paths:
+        env.stdout.write(path + "\n")
+    return exitcodes.OK
+
+
+def _configure_issues_todo(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--tasks", required=True, metavar="PATH", help="the tasks file")
+
+
+def _run_issues_todo(args: argparse.Namespace, env: Env) -> int:
+    facts = issues.parse_issue_facts(env.stdin.read())
+    lines = issues.issues_todo(_read(args.tasks), facts)
+    for line in lines:
+        env.stdout.write(line + "\n")
+    return exitcodes.CHECK_FAILED if any(line.startswith("todo") for line in lines) else exitcodes.OK
+
+
+def _run_detect_tracker(args: argparse.Namespace, env: Env) -> int:
+    kind, cli, host = tracker.detect_tracker(env.stdin.read())
+    if kind is None:
+        env.stdout.write("ask: " + host + " is not github.com or a GitLab host: ask the developer which tracker this is\n")
+        return exitcodes.CHECK_FAILED
+    env.stdout.write("tracker: " + kind + "\ntracker_cli: " + str(cli) + "\n")
+    return exitcodes.OK
+
+
 def build_tool() -> Tool:
     tool = Tool("plan", "Checks on the planning files and the order tasks run in.")
     tool.add_command(
@@ -89,6 +131,18 @@ def build_tool() -> Tool:
     tool.add_command(
         "config-check", "report every problem in a config file, including skill files that are missing",
         _configure_config_check, _run_config_check,
+    )
+    tool.add_command(
+        "brief-skills", "print the skill files an agent of this role must read, one path per line",
+        _configure_brief_skills, _run_brief_skills,
+    )
+    tool.add_command(
+        "issues-todo", "stdin: the issues already on the tracker, as JSON. Prints what is there and what is still to create.",
+        _configure_issues_todo, _run_issues_todo,
+    )
+    tool.add_command(
+        "detect-tracker", "stdin: the git remote URL. Prints the tracker and its CLI, or asks.",
+        lambda parser: None, _run_detect_tracker,
     )
     return tool
 
