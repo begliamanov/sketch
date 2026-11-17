@@ -40,11 +40,29 @@ class CoreCallsRealToolsTest(unittest.TestCase):
                 self.assertTrue(one in names or two in names, "no command %r in %r" % (words, names))
 
     def test_a_call_always_points_the_tool_at_its_file(self) -> None:
-        needs = {"state": "--state", "journal": "--journal"}
+        needs = {"state": "--state", "journal": "--journal", "report": "--reports"}
         for path, tool_name, words, rest in calls():
             if tool_name in needs:
                 with self.subTest(file=path.name, call=tool_name + " " + " ".join(words)):
                     self.assertIn(needs[tool_name], rest)
+
+
+class ReportsAreHandedInThroughTheToolTest(unittest.TestCase):
+    def test_every_agent_tells_the_agent_to_submit_its_report_with_its_own_role(self) -> None:
+        from tests.report_examples import EXAMPLES
+
+        for role in EXAMPLES:
+            with self.subTest(role=role):
+                text = (ROOT / "core" / "agents" / (role + ".md")).read_text()
+                self.assertIn("sketch-report submit", text)
+                self.assertIn("--role " + role, text)
+
+    def test_the_orchestrator_checks_reports_and_reads_fields_from_them(self) -> None:
+        orchestrator = (ROOT / "core" / "orchestrator.md").read_text()
+        self.assertIn("sketch-report check", orchestrator)
+        run_story = (ROOT / "core" / "skills" / "run-story" / "SKILL.md").read_text()
+        self.assertIn("sketch-report check", run_story)
+        self.assertIn("sketch-report get", run_story)
 
 
 class DriftNotetakerIsGoneTest(unittest.TestCase):
