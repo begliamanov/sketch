@@ -9,13 +9,14 @@ from sketch_tools.core.errors import UsageError
 from sketch_tools.repo_check.globs import glob_to_regex
 
 _TASK = re.compile(r"t-\d+")
+_STORY_PREFIX = re.compile(r"story-\d+: \S.*")
 _ANY_PREFIX = re.compile(r"(?:t-\d+|story-\d+): \S.*")
 _UNRELEASED = "Unreleased"
 
 
 def check_commit_prefix(subjects: str, task: Optional[str] = None) -> List[str]:
     """Commit subjects, one per line. Each must start with `t-N: ` or `story-N: `; with a task
-    given, with exactly `<task>: `. Blank lines are ignored."""
+    given, with exactly `<task>: ` or `story-N: ` (a story-end fix). Blank lines are ignored."""
     required: Optional[re.Pattern[str]] = None
     if task is not None:
         if not _TASK.fullmatch(task):
@@ -27,7 +28,7 @@ def check_commit_prefix(subjects: str, task: Optional[str] = None) -> List[str]:
         if not line.strip():
             continue
         if required is not None:
-            if required.fullmatch(line):
+            if required.fullmatch(line) or _STORY_PREFIX.fullmatch(line):
                 continue
             if _ANY_PREFIX.fullmatch(line):
                 problems.append('"' + line + '" is not ' + str(task))
