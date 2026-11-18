@@ -4,6 +4,8 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 
 ## Unreleased
 
+- The xcresult reader keeps system failures (Test Case nodes under a "System Failures" suite) out of the passed/failed counts and keeps their message (#8)
+
 ## 0.1.1
 
 Deterministic tools, per-task skills and models, and a draft PR from the start of a story. Designed and written, not yet run end to end.
