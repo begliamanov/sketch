@@ -12,6 +12,7 @@ from sketch_tools.plan.logic import check_tasks
 
 _TASK_ID = re.compile(r"t-\d+")
 _TASK_TITLE = re.compile(r"(t-\d+):")
+_STORY_TITLE = re.compile(r"Story \d+:")
 
 
 def parse_issue_facts(text: str) -> Dict[str, Any]:
@@ -52,7 +53,7 @@ def parse_issue_facts(text: str) -> Dict[str, Any]:
 
 def issues_todo(tasks_text: str, facts: Dict[str, Any]) -> List[str]:
     """`have` and `todo` lines for the story issue, each task issue and each blocking link, in that
-    order. Raises DataError for a tasks file with problems or two issues for one task."""
+    order. Raises DataError for a tasks file with problems or two issues for one task of the current story."""
     problems = check_tasks(tasks_text)
     if problems:
         raise DataError("the tasks file has problems, run tasks-check first: " + problems[0])
@@ -63,14 +64,18 @@ def issues_todo(tasks_text: str, facts: Dict[str, Any]) -> List[str]:
     story_number = match.group(1)
     story_title = "Story " + story_number + ": " + first.split(": ", 1)[1]
 
-    story_issues: List[int] = []
+    issues = facts.get("issues", [])
+    story_issues = [i["number"] for i in issues if i["title"].startswith("Story " + story_number + ":")]
     task_issues: Dict[str, List[int]] = {}
-    for issue in facts.get("issues", []):
-        title = issue["title"]
-        if title.startswith("Story " + story_number + ":"):
-            story_issues.append(issue["number"])
-        task = _TASK_TITLE.match(title)
-        if task:
+    if len(story_issues) <= 1:
+        # A task issue counts only inside the window: above the story issue, below the next later story issue.
+        lower = story_issues[0] if story_issues else None
+        later = [i["number"] for i in issues if _STORY_TITLE.match(i["title"]) and lower is not None and i["number"] > lower]
+        upper = min(later) if later else None
+        for issue in issues:
+            task = _TASK_TITLE.match(issue["title"])
+            if not task or lower is None or issue["number"] <= lower or (upper is not None and issue["number"] >= upper):
+                continue
             task_issues.setdefault(task.group(1), []).append(issue["number"])
     if len(story_issues) > 1:
         raise DataError("two issues for the story: " + " and ".join("#" + str(n) for n in story_issues))

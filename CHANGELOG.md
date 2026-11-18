@@ -6,6 +6,7 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 
 - The xcresult reader keeps system failures (Test Case nodes under a "System Failures" suite) out of the passed/failed counts and keeps their message (#8)
 - `sketch-tests classify` and `summary` treat system failures as CANNOT RUN (alone) or name them in the FAIL reason, and never count them as passed or failed (#9)
+- `sketch-plan issues-todo` matches task issues of the current story only: above the story issue's number, below the next later story issue's, and titled `t-<n>:` (#10)
 
 ## 0.1.1
 
