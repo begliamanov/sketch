@@ -11,11 +11,10 @@ could not launch, and the run ended with exit code 65.
 "Results with no system failure classify as before" is covered by the existing classify and summary
 tests in test_tests_cli.py / test_tests_logic.py, which stay green; a new test for it could not be red.
 
-JUnit (criterion 5), decided from the reader's code and what real harnesses write: JUnit XML has
-no system failure concept. Gradle, pytest, Vitest, Jest and SwiftPM write a failed launch or
-collection as an ordinary <failure>/<error> testcase, or as no testcase at all, and the reader
-already handles both: the first is a failing test, the second is classified from the exit code
-and the empty result. Nothing to fix there, so no JUnit test is added (it could not be red).
+JUnit (criterion 5), decided by the developer: JUnit XML has no system failure concept, so the JUnit
+reader cannot tell a runner launch error from a code error such as a broken import. It keeps an
+error case as a failing test (FAIL), unchanged. A test pins that. It passes at once: it records
+existing, intended behavior, so it is not red.
 """
 
 import json
@@ -153,3 +152,23 @@ class CliOutputTest(SystemFailureCase):
         data = json.loads(self.run_it("summary", "--json")[1])
         self.assertEqual((data["passed"], data["failed"], data["skipped"]), (1, 1, 0))
         self.assertIn("Runner crashed", json.dumps(data))
+
+
+class JunitReaderTest(unittest.TestCase):
+    """5. The JUnit reader keeps an error case (including a launch-error shaped one) as FAIL, unchanged."""
+
+    def test_a_launch_error_shaped_error_case_classifies_as_fail(self) -> None:
+        # Pinned on purpose: JUnit has no system failure, so a launch error and a broken import look
+        # the same (an error case). The reader must not guess CANNOT RUN from the message text.
+        junit = ('<testsuites><testsuite name="S" tests="1" errors="1"><testcase name="' + LAUNCH_NAME
+                 + '"><error message="' + LAUNCH_START + '"/></testcase></testsuite></testsuites>')
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            config = base / "config.md"
+            config.write_text("# sketch config\ntest_format: junit-xml\n")
+            folder = base / "results"
+            folder.mkdir()
+            (folder / "001-results.xml").write_text(junit)
+            code, out, _ = run_tool(main, ["classify", "--config", str(config), "--results", str(folder), "--exit", "65"])
+        self.assertEqual((code, out.splitlines()[0]), (1, "FAIL"))
+        self.assertIn("1 failing test", out)
