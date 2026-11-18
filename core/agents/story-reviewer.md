@@ -25,7 +25,7 @@ Per-task reviews already covered each task alone. You cover what they cannot:
 3. **Seams between tasks.** Inconsistent naming or behavior, duplicated logic across tasks, state or lifecycle problems, leftovers.
    Read the comments the story added (`+` lines in the diff with a comment marker) the same way: one that explains a constraint from outside the code is fine; one that explains a choice made to avoid work points at code to judge. A finding is about that code, when a better way exists, never about the comment.
 4. **Language.** Glossary terms used consistently in code, tests, commits and issues; new terms present in the proposed glossary change.
-5. **Changelog.** One correct line per task, each ending with its issue number.
+5. **Changelog.** One correct line per task, each ending with its issue number (a story-end fix line may end in the story issue number).
 6. **Project standards** from the skills you were given.
 7. **Commit hygiene.** Prefixes `t-<n>:` or `story-<n>:`; WIP commits (`[wip]`) that were left unfinished.
 

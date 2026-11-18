@@ -6,6 +6,7 @@ import argparse
 from typing import Callable, List, Optional
 
 from sketch_tools.core import exitcodes
+from sketch_tools.core.errors import UsageError
 from sketch_tools.core.cli import Env, Handler, Tool
 from sketch_tools.repo_check import logic
 
@@ -45,6 +46,14 @@ def _configure_changelog(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--story", action="store_true", help="accept several lines, one per story issue")
 
 
+def _check_changelog(text: str, args: argparse.Namespace) -> List[str]:
+    if args.story:
+        return logic.check_changelog(text, story_issues=args.issue)
+    if len(args.issue) > 1:
+        raise UsageError("several --issue values need --story (task mode takes one issue)")
+    return logic.check_changelog(text, args.issue[0])
+
+
 def build_tool() -> Tool:
     tool = Tool("repo-check", "Rules about commits, tests, the changelog and the working tree, "
                               "checked on text piped in from git.")
@@ -61,8 +70,7 @@ def build_tool() -> Tool:
     tool.add_command(
         "changelog", "stdin: a full-context diff of CHANGELOG.md (git diff -U99999). One new entry.",
         _configure_changelog,
-        _piped(lambda text, args: logic.check_changelog(
-            text, args.issue[-1], story_issues=args.issue if args.story else None)),
+        _piped(_check_changelog),
     )
     tool.add_command(
         "tree-clean", "stdin: git status --porcelain. Flag every dirty or untracked path.",

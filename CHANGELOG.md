@@ -4,6 +4,7 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 
 ## Unreleased
 
+- `sketch-repo-check changelog --story --issue <n> --issue <m> ...` accepts several new lines under Unreleased, each a list item ending in `(#<n>)` for one of the story's issue numbers; task mode stays strict, and repeated `--issue` without `--story` is a usage error (#19)
 - `sketch-repo-check commit-prefix --task t-<n>` accepts `story-<n>:` commits (story-end fixes) in a task's range as well as the task's own prefix; other prefixes still fail (#18)
 - `sketch-report` accepts a story scope (`story-<n>`) from the test-writer and implementer as well as a task scope, so their story-end fixes can be reported; roles with one scope kind keep it (#17)
 - Agents close a task issue when its review is satisfied, with a comment naming the task's commit SHAs, and never close the story issue (#16)

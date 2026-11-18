@@ -80,9 +80,10 @@ def _added_lines(diff: str) -> Tuple[List[Tuple[Optional[str], str]], bool]:
 def check_changelog(diff: str, issue: Optional[str] = None, *,
                     story_issues: Optional[List[str]] = None) -> List[str]:
     """A full-context unified diff of CHANGELOG.md. Exactly one added line under `## Unreleased`,
-    a list item ending in `(#<issue>)`."""
+    a list item ending in `(#<issue>)`. With `story_issues`, one or more such lines, each ending
+    in `(#<n>)` for one of those issue numbers."""
     if story_issues is not None:
-        return ["story mode is not implemented"]  # stub for t-5
+        return _check_story_changelog(diff, story_issues)
     if issue is None or not re.fullmatch(r"\d+", issue):
         raise UsageError("issue must be a number (got " + repr(issue) + ")")
     added, saw_unreleased = _added_lines(diff)
@@ -108,6 +109,37 @@ def check_changelog(diff: str, issue: Optional[str] = None, *,
             problems.append("new line is not a list item: " + text)
         if not text.endswith("(#" + issue + ")"):
             problems.append("new line does not end with (#" + issue + "): " + text)
+    return problems
+
+
+def _check_story_changelog(diff: str, story_issues: List[str]) -> List[str]:
+    if not story_issues:
+        raise UsageError("give at least one story issue number")
+    for number in story_issues:
+        if not re.fullmatch(r"\d+", number):
+            raise UsageError("issue must be a number (got " + repr(number) + ")")
+    added, saw_unreleased = _added_lines(diff)
+    if not added:
+        return ["no new line under Unreleased"]
+    if not saw_unreleased:
+        return [
+            "cannot find the Unreleased heading in the diff: pass a full-context diff "
+            "(git diff -U99999 ... -- CHANGELOG.md)"
+        ]
+    problems: List[str] = []
+    endings = ["(#" + number + ")" for number in story_issues]
+    inside = [content for section, content in added if section == _UNRELEASED]
+    for section, content in added:
+        if section != _UNRELEASED:
+            problems.append("new line is not under Unreleased: " + content)
+    if not inside:
+        problems.append("no new line under Unreleased")
+    for content in inside:
+        text = content.rstrip()
+        if not text.startswith("- "):
+            problems.append("new line is not a list item: " + text)
+        if not any(text.endswith(ending) for ending in endings):
+            problems.append("new line does not end with " + " or ".join(endings) + ": " + text)
     return problems
 
 
