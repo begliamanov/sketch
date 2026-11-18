@@ -53,7 +53,7 @@ def parse_issue_facts(text: str) -> Dict[str, Any]:
 
 def issues_todo(tasks_text: str, facts: Dict[str, Any]) -> List[str]:
     """`have` and `todo` lines for the story issue, each task issue and each blocking link, in that
-    order. Raises DataError for a tasks file with problems or two issues for one task of the current story."""
+    order. Raises DataError for a tasks file with problems or more than one issue for the story or for one task of the current story."""
     problems = check_tasks(tasks_text)
     if problems:
         raise DataError("the tasks file has problems, run tasks-check first: " + problems[0])
