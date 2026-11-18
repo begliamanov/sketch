@@ -1,7 +1,8 @@
 """plan issues-todo: only task issues of the current story count (t-3).
 
-A task issue belongs to the current story when its number is above the story issue's number and its
-full title is "t-<n>: <title from tasks.md>". Every story restarts at t-1, so the title alone cannot
+A task issue belongs to the current story when its number is above the story issue's number, below the
+next later "Story <m>:" issue's number (if there is one), and its title starts with "t-<n>:" (a title
+edited by hand after the prefix still counts). Every story restarts at t-1, so the title alone cannot
 tell stories apart. Without a story issue, every task is todo.
 """
 
@@ -60,11 +61,23 @@ class CurrentStoryOnlyTest(unittest.TestCase):
             "todo task t-3: t-3: Offline banner", "todo task t-4: t-4: Retry failed syncs"])
 
     # Criterion 3
-    def test_task_issue_above_the_story_issue_with_a_different_title_is_todo(self) -> None:
-        issues = [{"number": 120, "title": STORY_TITLE}, {"number": 121, "title": "t-1: Something else entirely"},
-                  {"number": 122, "title": "t-2: Sync on reconnect"}]
+    def test_task_issue_above_a_later_story_issue_is_todo(self) -> None:
+        issues = [{"number": 120, "title": STORY_TITLE}, {"number": 121, "title": "t-1: Read notes from cache"},
+                  {"number": 122, "title": "t-2: Sync on reconnect"},
+                  {"number": 130, "title": "Story 3: Something else"},
+                  {"number": 131, "title": "t-3: Offline banner"}, {"number": 132, "title": "t-4: Retry failed syncs"}]
         self.assertEqual(task_lines(issues), [
-            "have story: #120", "todo task t-1: t-1: Read notes from cache", "have task t-2: #122",
+            "have story: #120", "have task t-1: #121", "have task t-2: #122",
+            "todo task t-3: t-3: Offline banner", "todo task t-4: t-4: Retry failed syncs"])
+
+    def test_hand_edited_title_inside_the_window_is_have_and_the_same_prefix_above_a_later_story_is_not(self) -> None:
+        issues = [{"number": 120, "title": STORY_TITLE},
+                  {"number": 121, "title": "t-1: Something else entirely"},  # edited by hand, inside the window
+                  {"number": 122, "title": "t-2: Sync on reconnect"},
+                  {"number": 130, "title": "Story 3: Something else"},
+                  {"number": 131, "title": "t-1: Read notes from cache"}]  # above the later story: ignored
+        self.assertEqual(task_lines(issues), [
+            "have story: #120", "have task t-1: #121", "have task t-2: #122",
             "todo task t-3: t-3: Offline banner", "todo task t-4: t-4: Retry failed syncs"])
 
     # Criterion 4
