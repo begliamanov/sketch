@@ -150,7 +150,8 @@ class CliOutputTest(SystemFailureCase):
     def test_summary_json_keeps_the_counts_and_shows_the_system_failure(self) -> None:
         self.write(with_system_failure("Runner crashed", "boom", "Passed", "Failed"))
         data = json.loads(self.run_it("summary", "--json")[1])
-        self.assertEqual((data["passed"], data["failed"], data["skipped"]), (1, 1, 0))
+        counts = data["counts"]
+        self.assertEqual((counts["passed"], counts["failed"], counts["skipped"]), (1, 1, 0))
         self.assertIn("Runner crashed", json.dumps(data))
 
 
