@@ -349,8 +349,9 @@ class TesterTest(RoleCase):
         self.assert_valid("tester", with_changes("tester", results=".sketch/logs/20261112-104100-full.results"))
         self.assert_problem("tester", with_changes("tester", results=""), "results")
 
-    def test_counts_are_optional_but_whole(self) -> None:
-        self.assert_valid("tester", with_changes("tester", counts=...))
+    def test_counts_are_optional_on_cannot_run_but_whole(self) -> None:
+        cannot_run = with_changes("tester", result="CANNOT RUN", counts=..., cannot_run_because="Could not resolve com.example:lib (401)")
+        self.assert_valid("tester", cannot_run)
         self.assert_problem("tester", with_changes("tester", counts={"passed": "42", "failed": 0, "skipped": 0}), "counts.passed")
 
 

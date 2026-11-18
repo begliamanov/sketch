@@ -65,7 +65,7 @@ class FailuresAndSummaryTest(AnalysisCase):
         folder = self.results("r", **{"001-a.xml": SWIFTPM})
         self.assertEqual(self.run_it("summary", "--results", str(folder)), (0, "passed 2\nfailed 1\nskipped 0\n", ""))
         code, out, _ = self.run_it("summary", "--results", str(folder), "--json")
-        self.assertEqual((code, json.loads(out)), (0, {"passed": 2, "failed": 1, "skipped": 0}))
+        self.assertEqual((code, json.loads(out)), (0, {"counts": {"passed": 2, "failed": 1, "skipped": 0}}))
 
     def test_several_files_are_read_together_in_name_order(self) -> None:
         folder = self.results("r", **{"001-a.xml": ALL_PASS, "002-b.xml": SWIFTPM})

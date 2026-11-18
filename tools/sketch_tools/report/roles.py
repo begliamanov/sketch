@@ -301,6 +301,8 @@ def _tester_rules(report: Dict[str, Any]) -> List[str]:
     failing = _items(report, "failing_tests")
     if result == "FAIL" and not failing:
         problems.append("failing_tests must list the failing tests when result is FAIL")
+    if result in ("PASS", "FAIL") and "counts" not in report:
+        problems.append("counts is required when result is PASS or FAIL")
     if result == "CANNOT RUN" and "cannot_run_because" not in report:
         problems.append("cannot_run_because is required when result is CANNOT RUN")
     if result == "PASS":
