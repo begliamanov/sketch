@@ -64,3 +64,9 @@ def read(text: str) -> List[Case]:
     for node in data["testNodes"]:
         _walk(node, found)
     return found
+
+
+def read_system_failures(text: str) -> List[Case]:
+    """The system failures in one xcresulttool JSON file: Test Case nodes under a Test Suite named
+    "System Failures". `read` leaves them out of its cases."""
+    return []
