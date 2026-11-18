@@ -16,8 +16,8 @@ FAILING = [{"name": "BannerTests.hides", "message": "expected hidden"}]
 
 
 class CountsRequiredUnlessCannotRunTest(RoleCase):
-    # criterion 1 (a CANNOT RUN report without counts is accepted) and criterion 3 (a CANNOT RUN
-    # report with valid counts is accepted) already hold before t-5: no red test is possible.
+    # criterion 1 (a CANNOT RUN report without counts is accepted) already holds before t-5:
+    # no red test is possible.
 
     def test_a_fail_report_without_counts_is_rejected(self) -> None:
         report = with_changes("tester", result="FAIL", failing_tests=FAILING, counts=...)
@@ -30,6 +30,12 @@ class CountsRequiredUnlessCannotRunTest(RoleCase):
     def test_counts_missing_on_a_task_mode_pass_is_rejected(self) -> None:
         report = with_changes("tester", mode="task", result="PASS", counts=...)
         self.assertTrue(any("counts" in p for p in self.problems("tester", report, scope="t-3")))
+
+    # criterion 3. Pins behavior that already exists and is intended, so it passes at once: a later
+    # rule that rejected counts on CANNOT RUN must not get through the suite.
+    def test_a_cannot_run_report_with_valid_counts_is_still_accepted(self) -> None:
+        report = with_changes("tester", result="CANNOT RUN", counts=COUNTS, cannot_run_because="Could not resolve com.example:lib (401)")
+        self.assert_valid("tester", report)
 
 
 class TesterFileTest(unittest.TestCase):
