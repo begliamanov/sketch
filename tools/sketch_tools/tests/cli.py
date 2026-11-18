@@ -8,14 +8,14 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sketch_tools.core import exitcodes
 from sketch_tools.core.cli import Env, Tool
 from sketch_tools.core.errors import DataError, UsageError
 from sketch_tools.tests import logic
 from sketch_tools.tests.model import Case
-from sketch_tools.tests.readers import Reader, get_reader, load_plugins
+from sketch_tools.tests.readers import SYSTEM_FAILURES, Reader, get_reader, load_plugins
 from sketch_tools.tests.runner import run_tests
 from sketch_tools.tests.settings import MODES, Settings, parse_settings
 
@@ -52,6 +52,22 @@ def _read_folder(folder_text: str, reader: Reader) -> Tuple[int, List[Case]]:
 
 def _cases(args: argparse.Namespace, folder_text: str) -> Tuple[int, List[Case]]:
     return _read_folder(folder_text, _reader(_settings(args)))
+
+
+def _system_failures(args: argparse.Namespace, folder_text: str) -> List[Case]:
+    """The system failures in a results folder, for formats whose runner reports them."""
+    settings = _settings(args)
+    plugins = load_plugins(Path(settings.formats_dir)) if settings.formats_dir else {}
+    reader = SYSTEM_FAILURES.get(settings.test_format) if settings.test_format not in plugins else None
+    if reader is None:
+        return []
+    found: List[Case] = []
+    for path in sorted(p for p in Path(folder_text).iterdir() if p.is_file()):
+        try:
+            found.extend(reader(path.read_text(encoding="utf-8")))
+        except ValueError as err:
+            raise DataError(str(path) + ": " + str(err)) from None
+    return found
 
 
 def _add_config(parser: argparse.ArgumentParser) -> None:
@@ -110,11 +126,17 @@ def _configure_summary(parser: argparse.ArgumentParser) -> None:
 
 def _run_summary(args: argparse.Namespace, env: Env) -> int:
     counts = logic.summarize(_cases(args, args.results)[1])
+    system = _system_failures(args, args.results)
     if args.json:
-        env.stdout.write(json.dumps(counts) + "\n")
+        data: Dict[str, Any] = dict(counts)
+        if system:
+            data["system_failures"] = [{"name": case.name, "message": case.message} for case in system]
+        env.stdout.write(json.dumps(data) + "\n")
     else:
         for status, count in counts.items():
             env.stdout.write(status + " " + str(count) + "\n")
+        for case in system:
+            env.stdout.write(logic.describe_system_failures([case]) + "\n")
     return exitcodes.OK
 
 
@@ -125,7 +147,7 @@ def _configure_classify(parser: argparse.ArgumentParser) -> None:
 
 def _run_classify(args: argparse.Namespace, env: Env) -> int:
     files, cases = _cases(args, args.results)
-    result, reason = logic.classify(args.exit, files, cases)
+    result, reason = logic.classify(args.exit, files, cases, _system_failures(args, args.results))
     env.stdout.write(result + "\n")
     if reason:
         env.stdout.write("reason: " + reason + "\n")
