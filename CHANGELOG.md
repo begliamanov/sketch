@@ -4,6 +4,10 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 
 ## Unreleased
 
+## 0.1.1
+
+Deterministic tools, per-task skills and models, and a draft PR from the start of a story. Designed and written, not yet run end to end.
+
 - Skills are picked per task: the task-writer adds a `Skills:` line to each task (`sketch-plan tasks-check` accepts it), `sketch-plan brief-skills --tasks ... --task t-<n>` narrows a role's skills to it, reviewers can report a `missing_skill` and are resumed with it, and every report must name one concrete rule per skill. Agents have fixed models in `agents.list` (sonnet for writers, opus for reviewers and the retro, haiku for the tester and the PR agent).
 - The tester also runs one task's tests before its review (`mode task`, scope `t-<n>`, `sketch-report` accepts it), so the reviewer reads the tester's report and never runs tests itself.
 - A draft PR/MR is opened when a story starts; the pr-agent fills its description and marks it ready at the end.

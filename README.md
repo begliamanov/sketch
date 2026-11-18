@@ -4,7 +4,7 @@ You talk. Agents build. You merge.
 
 Sketch turns a feature into **stories**: thin end-to-end pieces that work for real through every layer, like a slice of cake (screen, logic, storage), each big enough to be worth your review. (*The Pragmatic Programmer* calls this a tracer bullet.) For each story, agents write the tests first, implement, review their own work, and open a PR into your feature branch. Then they stop and wait for you. **No agent ever merges.**
 
-Version: **0.0.1** (see `VERSION` and `CHANGELOG.md`).
+Version: **0.1.1** (see `VERSION` and `CHANGELOG.md`).
 
 > Status: designed and written, **not yet run end to end**. The Claude Code adapter installs cleanly. Everything else is marked *unverified* below.
 
