@@ -1,6 +1,6 @@
 [project]
 name = "sketch-tools"
-version = "0.0.0"
+version = "0.1.1"
 description = "Deterministic tools for Sketch: small, single-domain commands that read text in and give an exact answer."
 requires-python = ">=3.9"
 dependencies = []
