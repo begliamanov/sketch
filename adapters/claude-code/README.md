@@ -21,7 +21,7 @@ Start a new Claude Code session afterwards so the agents and skills are picked u
 
 ## The guard hook
 
-`settings.snippet.json` also adds a `PreToolUse` hook that runs `sketch-guard check-command` before every Bash command. It blocks `git merge`, `gh pr merge` and `glab mr merge`, merge and issue-close calls through `gh api` and `glab api`, force pushes (including `+branch`, `--force-with-lease`, `-f`), deleting or mirroring remote branches, pushes to `main`, `master` and the feature branch of the running story (read from `.sketch/state.md`), closing issues, and any `git push` that does not name its branch (`git push -u origin <story-branch>`), or that uses a variable instead. It sees through wrappers (`sudo`, `env`, `command`), `&&` and `;` chains, `$( )`, backticks, `bash -c` and `eval`, and heredocs fed to a shell. It fails closed: input it cannot read, a command it cannot parse and a bug in the guard itself all block. Its launcher turns every failure into a block (exit 2), including a wrong option in the hook line and a missing `python3`, because Claude Code lets a command run on any other failure.
+`settings.snippet.json` also adds a `PreToolUse` hook that runs `sketch-guard check-command` before every Bash command. It blocks `git merge`, `gh pr merge` and `glab mr merge`, merge and issue-close calls through `gh api` and `glab api`, force pushes (including `+branch`, `--force-with-lease`, `-f`), deleting or mirroring remote branches, pushes to `main`, `master` and the feature branch of the running story (read from `.sketch/state.md`), closing any issue that is not a task of the running story (the task table in `.sketch/state.md`), and any `git push` that does not name its branch (`git push -u origin <story-branch>`), or that uses a variable instead. It sees through wrappers (`sudo`, `env`, `command`), `&&` and `;` chains, `$( )`, backticks, `bash -c` and `eval`, and heredocs fed to a shell. It fails closed: input it cannot read, a command it cannot parse and a bug in the guard itself all block. Its launcher turns every failure into a block (exit 2), including a wrong option in the hook line and a missing `python3`, because Claude Code lets a command run on any other failure.
 
 It cannot see what a script, a variable or `python -c` does, so it lowers the risk, it is not a seal. The deny rules below stay as the first line.
 
@@ -29,7 +29,7 @@ It cannot see what a script, a variable or `python -c` does, so it lowers the ri
 
 The script does not touch `settings.json`. Merge `settings.snippet.json` into your user or project settings by hand:
 - **allow**: the commands the loop needs, so it can run unattended, including the tool launchers
-- **deny**: merging, closing issues, force-pushes, pushes to main or master
+- **deny**: merging, closing issues outside the running story's tasks, force-pushes, pushes to main or master
 
 Known limits of that file:
 - Pushing to the **feature branch** cannot be denied generically, because its name differs per feature. The PR agent is told to push only `git push -u origin <story-branch>`, and the orchestrator checks the PR afterwards.

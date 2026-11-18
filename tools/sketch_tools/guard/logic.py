@@ -16,7 +16,7 @@ _GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--
                       "--super-prefix", "--config-env"}
 _PUSH_VALUE_OPTIONS = {"--push-option", "--receive-pack", "--exec", "--repo"}
 _FORGE_VALUE_OPTIONS = {"-R", "--repo", "--hostname"}
-_CLOSE_VALUE_OPTIONS = {"-c", "--comment", "-r", "--reason"} | _FORGE_VALUE_OPTIONS
+_CLOSE_VALUE_OPTIONS = {"-c", "--comment", "-r", "--reason", "--duplicate-of"} | _FORGE_VALUE_OPTIONS
 _MERGE_ENDPOINT = re.compile(r"(^|/)merge($|[/?])")
 _CLOSE_FIELD = re.compile(r"(state|state_event)=(closed?)")
 
@@ -134,19 +134,25 @@ def _check_close(tool: str, args: List[str], task_issues: Set[str], close_block:
     """`args` follow `issue close`. Only a number in `task_issues` may be closed."""
     if close_block:
         return [close_block]
-    number = None
+    numbers: List[str] = []
+    unknown = False
     index = 0
     while index < len(args):
         arg = args[index]
         if arg in _CLOSE_VALUE_OPTIONS:
-            index += 1
-        elif not arg.startswith("-") and number is None:
-            number = arg.lstrip("#")
+            index += 1  # the next word is this option's value, not an issue number
+        elif arg.startswith("-"):
+            # only a known option with its value attached (--comment=x) is understood; any other
+            # option might take a value that hides an issue number, so it blocks
+            unknown = unknown or arg.split("=", 1)[0] not in _CLOSE_VALUE_OPTIONS or "=" not in arg
+        else:
+            numbers.append(arg.lstrip("#"))
         index += 1
-    if number is not None and number in task_issues:
+    if not unknown and len(numbers) == 1 and numbers[0] in task_issues:
         return []
+    shown = numbers[0] if len(numbers) == 1 and not unknown else "<unclear number>"
     return [
-        tool + " issue close " + (number if number is not None else "<no number>")
+        tool + " issue close " + shown
         + " is not allowed: it is not a task issue of the current story"
     ]
 

@@ -24,8 +24,9 @@ def _configure_check_command(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--protect", action="append", default=[], metavar="BRANCH",
                         help="a branch nobody may push to, like main. Repeat for more.")
     parser.add_argument("--state", metavar="PATH",
-                        help="the state file: its feature_branch is protected too. A missing file is fine "
-                             "(no story running); one without a feature_branch blocks every push.")
+                        help="the state file: its feature_branch is protected too. A missing file blocks every "
+                             "issue close; one without a feature_branch blocks every push. Its task table says "
+                             "which issues may be closed.")
     parser.add_argument("--raw", action="store_true",
                         help="stdin is the command itself, not the hook's JSON (for trying it out)")
 
