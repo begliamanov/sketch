@@ -42,7 +42,7 @@ Stop early if the same failure appears twice in a row. A flagged task does not s
 
 - By default, agents create a story branch from the feature branch for each story and push only that branch.
 - The feature branch belongs to the developer. During `/sketch`, the orchestrator may offer to create it and push it once, if the developer agrees to the name. After that first push, no agent pushes to it.
-- Never merge. Never push to the feature branch (apart from that first push) or main. Never force-push. Never close issues (comment "done in PR #N" instead). A guard hook blocks these commands before they run, and `git push` must always name its branch: `git push -u origin <story-branch>`.
+- Never merge. Never push to the feature branch (apart from that first push) or main. Never force-push. Agents close a task issue when its review is satisfied, with a comment naming the task's commit SHAs, and never close the story issue. A flagged task's issue stays open, with a comment saying why. A guard hook blocks these commands before they run, and `git push` must always name its branch: `git push -u origin <story-branch>`.
 - Every commit message starts with its task: `t-3: ...`. A fix spanning several tasks uses `story-2: ...`.
 - Do not squash. Review fixes are their own commits.
 - Interrupted work is committed on the story branch as `t-3: [wip] interrupted, not reviewed`.

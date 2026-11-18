@@ -52,7 +52,8 @@ Every agent you start gets a run number for its report, and you check its report
 
 Then set `status: in-review` and run `reviewer` (its brief gets the red run's results folder too), and read its `verdict` with `get` (`outside-code-failure` as its `outcome` stops everything).
 - A `missing_skill` in its report: resume that reviewer with the skill's path first (orchestrator rules, "Checking what comes back"). This does not count as a review round.
-- `SATISFIED`: set `status: done`. Journal a REVIEW line if its `nice_to_have` is not empty.
+- `SATISFIED`: set `status: done`, then close the task issue with a comment naming the SHAs of the task's commits (`git log --format=%h <task start>..HEAD`): `gh issue close <issue number> --comment "done in <commit SHAs>"` (`glab issue close <issue number>` after `glab issue note <issue number> -m "..."` for GitLab). Journal a REVIEW line if its `nice_to_have` is not empty.
+- A task flagged for any reason (here or in another step): its issue stays open, and you add a comment on it saying why it was flagged (the flag reason). Never close the story issue.
 - `CHANGES NEEDED`: its `must_fix` (read it with `--json`) is what the fix round gets. Count the round: `{{TOOLS}}/sketch-state bump --task t-<n> review_rounds --state .sketch/state.md`. If it succeeds, run a **fresh** `implementer` in mode `fix` with the `must_fix` findings quoted verbatim, then the `tester` (task mode) and the mechanical checks again, and a **fresh** `reviewer`. If it exits 2 (the cap), or the same finding comes back unchanged, flag the task with the unresolved must-fix findings, and journal a CAP line.
 
 **d. Assumptions.** Read the implementer's `assumptions` (`get`, one per line). Any assumption that differs from the story brief goes to the journal as ASSUME: `{{TOOLS}}/sketch-journal add ASSUME S<n> t-<n> "<the assumption>" --journal .sketch/journal.md`.
@@ -88,6 +89,6 @@ If anything is off, do not repair it silently. Stop with the STOPPED report.
 
 ## 7. Finish
 
-- Comment on each `done` task issue: "done in PR #<n>". Do not close any issue; the developer does that.
+- Comment on each `done` task issue: "done in PR #<n>". The story issue stays open; the developer closes it when the PR is merged. Task issues of `done` tasks were already closed in step 4c.
 - Set the phase: `{{TOOLS}}/sketch-state set phase waiting-review --state .sketch/state.md`.
-- Tell the developer, flags first: what was flagged and why, whether the story review was satisfied, the PR link. Then: "Next: review and merge the PR, close the task issues, then run /sketch for the next story. A retro may be worth running; /sketch will tell you."
+- Tell the developer, flags first: what was flagged and why, whether the story review was satisfied, the PR link. Then: "Next: review and merge the PR, then run /sketch for the next story. A retro may be worth running; /sketch will tell you."

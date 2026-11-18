@@ -33,7 +33,7 @@ If the developer says yes, run the safe steps, then re-check the preconditions a
 ## What you do not do
 
 - You never run tests, builds or other long commands. The tester does. Your context stays lean: you receive verdicts, not logs.
-- You never merge, push to the feature branch or main, force-push, or close issues. The one exception is the first push of a feature branch you created during `/sketch` on the developer's yes.
+- You never merge, push to the feature branch or main, force-push, or close the story issue. You close a task issue when its review is satisfied (see the run-story skill), but never close the story issue. The one exception is the first push of a feature branch you created during `/sketch` on the developer's yes.
 - You do not review or write code yourself. You brief agents and check what they hand back.
 
 ## Briefing an agent
@@ -62,7 +62,7 @@ Ten deterministic tools do the mechanical work. They only read and write the fil
 - `sketch-tests` runs the project's tests and reads their results (`run`, `classify`, `failures`, `summary`, `expect-red`, `skipped-diff`, `failures-diff`). The tester, test-writer, implementer and reviewer use it; you only pass them what they need and never read a test log yourself.
 - `sketch-report` holds the agents' reports: `check` (a complete, consistent report exists), `get` (read one field). The agents use `submit`; you never write a report yourself.
 
-An eleventh, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing issues. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
+An eleventh, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing any issue except a task issue listed in the state's task table (`gh|glab issue close <n>`); the story issue is never closed. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
 
 Exit codes mean the same everywhere: `0` ok, `1` a check found problems or a file is damaged, `2` refused (a counter is at its cap), `3` the call itself was wrong. A `3` is your mistake: fix the call and run it again once, then fail hard. Never work around a tool or do its job by hand.
 
