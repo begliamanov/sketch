@@ -29,6 +29,11 @@ class CommitPrefixCliTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("t-2: b", out)
 
+    def test_the_task_option_accepts_a_story_end_fix_commit(self) -> None:
+        code, out, err = run_tool(main, ["commit-prefix", "--task", "t-3"],
+                                  stdin="t-3: a\nstory-2: fix\n")
+        self.assertEqual((code, out, err), (0, "ok\n", ""))
+
     def test_a_bad_task_exits_3(self) -> None:
         code, out, err = run_tool(main, ["commit-prefix", "--task", "t3"], stdin="t-1: x\n")
         self.assertEqual((code, out), (3, ""))

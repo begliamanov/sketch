@@ -90,8 +90,32 @@ class CommitPrefixTest(unittest.TestCase):
         self.assertEqual(len(check_commit_prefix(lines("t-10: x"), task="t-1")), 1)
         self.assertEqual(len(check_commit_prefix(lines("t-1: x"), task="t-10")), 1)
 
-    def test_a_story_prefix_does_not_pass_for_a_task(self) -> None:
-        self.assertEqual(len(check_commit_prefix(lines("story-2: fix"), task="t-3")), 1)
+    # Criterion 1 (t-4): a task range may contain story-end fix commits.
+    def test_a_story_end_fix_commit_passes_in_a_task_range(self) -> None:
+        text = lines("t-3: tests", "story-2: fix the changelog line", "t-3: [wip] x")
+        self.assertEqual(check_commit_prefix(text, task="t-3"), [])
+
+    def test_a_task_range_of_only_story_end_fix_commits_passes(self) -> None:
+        self.assertEqual(check_commit_prefix(lines("story-12: fix", "story-2: fix"), task="t-3"), [])
+
+    # Criterion 2 (plain task commits pass) is already covered, and green today, by
+    # test_with_a_task_only_that_prefix_passes above.
+
+    # Criterion 3: other or missing prefixes still fail, with today's messages.
+    def test_a_commit_without_a_prefix_still_fails_next_to_a_story_end_fix(self) -> None:
+        problems = check_commit_prefix(lines("story-2: fix", "fix typo", "t-3: ok"), task="t-3")
+        self.assertEqual(problems, ['"fix typo" has no t-3: prefix'])
+
+    def test_another_task_prefix_still_fails_next_to_a_story_end_fix(self) -> None:
+        problems = check_commit_prefix(lines("story-2: fix", "t-2: add banner"), task="t-3")
+        self.assertEqual(problems, ['"t-2: add banner" is not t-3'])
+
+    def test_a_malformed_story_prefix_fails(self) -> None:
+        # Addition: the valid story-2 line makes this red until story prefixes are accepted.
+        for bad in ("story2: fix", "story-: fix", "story-2:fix", "Story-2: fix", "story-x: fix"):
+            with self.subTest(subject=bad):
+                problems = check_commit_prefix(lines("story-2: fix", bad), task="t-3")
+                self.assertEqual(problems, ['"' + bad + '" has no t-3: prefix'])
 
     def test_a_bad_task_argument_is_a_usage_error(self) -> None:
         for bad in ("t3", "story-2", "", "T-1"):
