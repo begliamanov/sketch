@@ -45,7 +45,7 @@ Every agent you start gets a run number for its report, and you check its report
 - `conflicts-with-earlier-test`: flag the task: "conflicts with <id>'s test". That is a decision for the developer.
 - `same-failure-twice`, or the attempt cap (the `bump` above exits 2): flag the task.
 
-**c. Review.** First run the `tester` in mode `task` (`--scope t-<n>`) with the task's test target and a log path. `CANNOT RUN` stops everything (STOPPED report); a `FAIL` is not for you to judge: it goes to the reviewer, which files it as a must-fix. Then run the mechanical checks. Put the tester's report and the checks' output in the `reviewer`'s brief (the reviewer does not run tests). A failing check is not for you to judge: the reviewer files it as a must-fix.
+**c. Review.** First run the `tester` in mode `task` (`--scope t-<n>`) with the task's test target and a log path. Then run it again, one target per run, for every other test file the task changed (`git diff --name-only <task start>..HEAD`, filtered by `test_paths`), and give the reviewer all those reports. Run one tester at a time, never two in parallel: they share the results folder. `CANNOT RUN` stops everything (STOPPED report); a `FAIL` is not for you to judge: it goes to the reviewer, which files it as a must-fix. Then run the mechanical checks. Put the tester's report and the checks' output in the `reviewer`'s brief (the reviewer does not run tests). A failing check is not for you to judge: the reviewer files it as a must-fix.
 - Tests untouched. `<tests-sha>` is the newest commit whose subject is `t-<n>: fix test (rechecked)`, or else `t-<n>: tests`. Pass each glob of `test_paths` from the config as `--tests`: `git diff --name-only <tests-sha>..HEAD | {{TOOLS}}/sketch-repo-check tests-unchanged --tests <glob>`
 - Changelog: `git diff -U99999 <tests-sha>..HEAD -- CHANGELOG.md | {{TOOLS}}/sketch-repo-check changelog --issue <issue number of the task>`
 - Commits: `git log --format=%s <task start>..HEAD | {{TOOLS}}/sketch-repo-check commit-prefix --task t-<n>`
@@ -70,7 +70,7 @@ When no task can progress, set `phase: story-end` (`{{TOOLS}}/sketch-state set p
 1. Run `tester` in mode `full`. Its `result` (`get` it) `CANNOT RUN` stops everything (STOPPED report, quoting `cannot_run_because`). Otherwise continue even if the result is `FAIL`.
 2. Run `story-reviewer` with the diff scope (the story branch against the feature branch), the tester's report (give it the run number to read) and its `log` path, and the flags and assumptions so far. It reviews even when the suite is red.
 3. If its `verdict` is `SATISFIED` and the tester `result` is `PASS`: leave the loop.
-4. Otherwise, if rounds remain: run a **fresh** `implementer` in mode `fix` with the story-reviewer's `must_fix` findings (including failing tests, verbatim), then go back to step 1 and count the round.
+4. Otherwise, if rounds remain: when a finding asks for behavior no test covers yet, first run a **fresh** `test-writer` (mode write, `--scope story-<n>`) with those findings as its criteria; it commits `story-<n>: tests`. Then run a **fresh** `implementer` in mode `fix` (`--scope story-<n>`) with the story-reviewer's `must_fix` findings (including failing tests, verbatim) and the test-writer's red run, then go back to step 1 and count the round.
 5. At the cap: leave the loop. The unresolved items go on top of the PR.
 
 Journal a REVIEW line with the outcome and the rounds used (`{{TOOLS}}/sketch-journal add REVIEW S<n> - "<outcome, rounds used>" --journal .sketch/journal.md`).

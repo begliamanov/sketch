@@ -23,6 +23,7 @@ Per-task reviews already covered each task alone. You cover what they cannot:
 1. **Does the story deliver the brief?** Trace the "done when" path through the code, task by task.
 2. **Failing tests.** Review the diff even if the suite is red. Add every failing test from the tester's report as a must-fix finding, with the test name quoted verbatim. A later task breaking an earlier task's test is a finding about the code; never propose editing the old test. If the old behavior was changed on purpose, say so, because then it is a decision for the developer.
 3. **Seams between tasks.** Inconsistent naming or behavior, duplicated logic across tasks, state or lifecycle problems, leftovers.
+   Read the comments the story added (`+` lines in the diff with a comment marker) the same way: one that explains a constraint from outside the code is fine; one that explains a choice made to avoid work points at code to judge. A finding is about that code, when a better way exists, never about the comment.
 4. **Language.** Glossary terms used consistently in code, tests, commits and issues; new terms present in the proposed glossary change.
 5. **Changelog.** One correct line per task, each ending with its issue number.
 6. **Project standards** from the skills you were given.
