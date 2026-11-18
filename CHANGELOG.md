@@ -8,6 +8,8 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 - `sketch-tests classify` and `summary` treat system failures as CANNOT RUN (alone) or name them in the FAIL reason, and never count them as passed or failed (#9)
 - `sketch-plan issues-todo` matches task issues of the current story only: above the story issue's number, below the next later story issue's, and titled `t-<n>:` (#10)
 - `sketch-plan issues-todo` reports duplicates as "more than one issue for ..." and exits 1, and exits 0 when the answer is only `have` and `todo` lines; the orchestrator and task-writer describe the matching rule and exit codes (#11)
+- `sketch-tests summary --json` prints `{"counts": {...}}`, plus a top-level `system_failures` list only when there are any, so the tester can take `counts` as it is (#9)
+- `sketch-plan issues-todo` marks a link `todo` when either of its tasks is `todo`, so links from earlier stories no longer hide the current story's links; the task-writer passes only the current story's links (#11)
 - `sketch-report` requires `counts` in a tester report that says PASS or FAIL; it stays optional on CANNOT RUN, and the tester agent says so (#12)
 
 ## 0.1.1

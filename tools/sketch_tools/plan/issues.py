@@ -94,5 +94,7 @@ def issues_todo(tasks_text: str, facts: Dict[str, Any]) -> List[str]:
     existing = {(link["blocked"], link["by"]) for link in facts.get("links", [])}
     for task_id, _title, blocked, _scenarios in rows:
         for blocker in ([] if blocked == "none" else [part.strip() for part in blocked.split(",")]):
-            lines.append(("have" if (task_id, blocker) in existing else "todo") + " link " + task_id + " " + blocker)
+            both_have = task_id in task_issues and blocker in task_issues
+            done = both_have and (task_id, blocker) in existing
+            lines.append(("have" if done else "todo") + " link " + task_id + " " + blocker)
     return lines

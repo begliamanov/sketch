@@ -128,7 +128,7 @@ def _run_summary(args: argparse.Namespace, env: Env) -> int:
     counts = logic.summarize(_cases(args, args.results)[1])
     system = _system_failures(args, args.results)
     if args.json:
-        data: Dict[str, Any] = dict(counts)
+        data: Dict[str, Any] = {"counts": dict(counts)}
         if system:
             data["system_failures"] = [{"name": case.name, "message": case.message} for case in system]
         env.stdout.write(json.dumps(data) + "\n")
