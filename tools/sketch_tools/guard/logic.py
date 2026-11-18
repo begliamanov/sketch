@@ -16,34 +16,41 @@ _GIT_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--
                       "--super-prefix", "--config-env"}
 _PUSH_VALUE_OPTIONS = {"--push-option", "--receive-pack", "--exec", "--repo"}
 _FORGE_VALUE_OPTIONS = {"-R", "--repo", "--hostname"}
+_CLOSE_VALUE_OPTIONS = {"-c", "--comment", "-r", "--reason"} | _FORGE_VALUE_OPTIONS
 _MERGE_ENDPOINT = re.compile(r"(^|/)merge($|[/?])")
 _CLOSE_FIELD = re.compile(r"(state|state_event)=(closed?)")
 
 
 def check_command(
-    command: str, protected: Sequence[str] = (), push_block: Optional[str] = None
+    command: str, protected: Sequence[str] = (), push_block: Optional[str] = None,
+    task_issues: Optional[Sequence[str]] = None, close_block: Optional[str] = None,
 ) -> List[str]:
     """Every reason the command must not run, one message each. Empty list means allowed.
 
     `protected` are branch names that may not be pushed to. `push_block`, when given, is a reason
-    to refuse every `git push` (for example: the state file names no feature branch)."""
+    to refuse every `git push` (for example: the state file names no feature branch).
+    `task_issues` are the issue numbers of the current story's tasks: the only issues that may be
+    closed. `close_block`, when given, is the reason no close can be checked (no usable state)."""
     try:
         commands = simple_commands(command)
     except ValueError as err:
         return ["cannot parse the command (" + str(err) + "): rewrite it as plain commands"]
     reasons: List[str] = []
     for tokens in commands:
-        for reason in _check_one(tokens, set(protected), push_block):
+        for reason in _check_one(tokens, set(protected), push_block, set(task_issues or ()), close_block):
             if reason not in reasons:
                 reasons.append(reason)
     return reasons
 
 
-def _check_one(tokens: List[str], protected: Set[str], push_block: Optional[str]) -> List[str]:
+def _check_one(
+    tokens: List[str], protected: Set[str], push_block: Optional[str],
+    task_issues: Set[str], close_block: Optional[str],
+) -> List[str]:
     if tokens[0] == "git":
         return _check_git(tokens[1:], protected, push_block)
     if tokens[0] in ("gh", "glab"):
-        return _check_forge(tokens[0], tokens[1:])
+        return _check_forge(tokens[0], tokens[1:], task_issues, close_block)
     return []
 
 
@@ -123,7 +130,30 @@ def _check_push(args: List[str], protected: Set[str]) -> List[str]:
     return reasons
 
 
-def _check_forge(tool: str, args: List[str]) -> List[str]:
+def _check_close(tool: str, args: List[str], task_issues: Set[str], close_block: Optional[str]) -> List[str]:
+    """`args` follow `issue close`. Only a number in `task_issues` may be closed."""
+    if close_block:
+        return [close_block]
+    number = None
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        if arg in _CLOSE_VALUE_OPTIONS:
+            index += 1
+        elif not arg.startswith("-") and number is None:
+            number = arg.lstrip("#")
+        index += 1
+    if number is not None and number in task_issues:
+        return []
+    return [
+        tool + " issue close " + (number if number is not None else "<no number>")
+        + " is not allowed: it is not a task issue of the current story"
+    ]
+
+
+def _check_forge(
+    tool: str, args: List[str], task_issues: Set[str] = frozenset(), close_block: Optional[str] = None
+) -> List[str]:
     positionals: List[str] = []
     index = 0
     while index < len(args) and len(positionals) < 2:
@@ -138,10 +168,11 @@ def _check_forge(tool: str, args: List[str]) -> List[str]:
         if any(_MERGE_ENDPOINT.search(arg) for arg in args):
             reasons.append(tool + " api call to a merge endpoint is not allowed: agents never merge")
         if any(_CLOSE_FIELD.fullmatch(arg) for arg in args):
-            reasons.append(tool + " api call that closes an issue is not allowed: the developer closes issues")
+            reasons.append(tool + " api call that closes an issue is not allowed: agents never close issues through the api")
         return reasons
     if positionals[1:2] == ["merge"] and positionals[0] in ("pr", "mr"):
         return [tool + " " + positionals[0] + " merge is not allowed: agents never merge"]
     if positionals == ["issue", "close"]:
-        return [tool + " issue close is not allowed: the developer closes issues"]
+        close_args = args[args.index("close") + 1 :]
+        return _check_close(tool, close_args, task_issues, close_block)
     return []

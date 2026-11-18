@@ -11,6 +11,7 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 - `sketch-tests summary --json` prints `{"counts": {...}}`, plus a top-level `system_failures` list only when there are any, so the tester can take `counts` as it is (#9)
 - `sketch-plan issues-todo` marks a link `todo` when either of its tasks is `todo`, so links from earlier stories no longer hide the current story's links; the task-writer passes only the current story's links (#11)
 - `sketch-report` requires `counts` in a tester report that says PASS or FAIL; it stays optional on CANNOT RUN, and the tester agent says so (#12)
+- `sketch-guard` lets `gh|glab issue close <n>` through when <n> is a task issue in the current state file's task table; the story issue, other numbers, a missing or unreadable state file and `api ... state=closed` stay blocked, and the message says why (#15)
 
 ## 0.1.1
 
