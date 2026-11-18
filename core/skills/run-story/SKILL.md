@@ -58,7 +58,7 @@ Then set `status: in-review` and run `reviewer` (its brief gets the red run's re
 
 **d. Assumptions.** Read the implementer's `assumptions` (`get`, one per line). Any assumption that differs from the story brief goes to the journal as ASSUME: `{{TOOLS}}/sketch-journal add ASSUME S<n> t-<n> "<the assumption>" --journal .sketch/journal.md`.
 
-**e. Flags.** To flag a task, do both, in this order: add the flag line with `{{TOOLS}}/sketch-state flag add --task t-<n> "<reason>" --state .sketch/state.md`, then set the status with `{{TOOLS}}/sketch-state set --task t-<n> status flagged --state .sketch/state.md`, and journal a FLAG line. `check` reports a flagged task without a flag line. It does not stop tasks that do not depend on it.
+**e. Flags.** To flag a task, do both, in this order: add the flag line with `{{TOOLS}}/sketch-state flag add --task t-<n> "<reason>" --state .sketch/state.md`, then set the status with `{{TOOLS}}/sketch-state set --task t-<n> status flagged --state .sketch/state.md`, journal a FLAG line, and comment on the task issue saying why (the flag reason; the issue stays open). `check` reports a flagged task without a flag line. It does not stop tasks that do not depend on it.
 
 **f. Push.** When a task is `done` or `flagged`, push the story branch: `git push -u origin <story-branch>` (the first push sets the upstream). Never push the feature branch or main, never force-push. A push that fails is a failure outside the code: stop with the STOPPED report.
 

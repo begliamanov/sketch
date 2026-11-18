@@ -56,7 +56,7 @@ adapters/claude-code/install.sh uninstall    # remove only what it generated
 
 - Writes `~/.claude/agents/*.md` and `~/.claude/skills/*/SKILL.md` (or under `$CLAUDE_HOME`), and copies the tools to `~/.claude/sketch/tools/` with one launcher per tool in its `bin/` (`sketch-state`, `sketch-journal`, `sketch-repo-check`). Launchers run `python3 -I`, so a file in your project folder can never replace a library the tools use.
 - Won't overwrite a file it didn't generate. Edit `core/` and rerun; never edit the generated files.
-- **Permissions:** merge `adapters/claude-code/settings.snippet.json` into your settings by hand. It allows what the loop needs and denies merges, closing issues, force-pushes and pushes to main.
+- **Permissions:** merge `adapters/claude-code/settings.snippet.json` into your settings by hand. It allows what the loop needs and denies merges, force-pushes and pushes to main.
 - Models: only `story-reviewer` is pinned (`opus`), in `adapters/claude-code/agents.list`. The rest inherit your session's model.
 - Start a new session afterwards.
 
@@ -124,7 +124,7 @@ sed -e "s|{{CORE_SOURCE}}|$PWD/core|g" -e "s|{{CORE}}|$PWD/core|g" core/skills/s
                 ▼
  ┌───────────────────────────────┐
  │ review + merge the story PR   │
- │ close the task issues         │
+ │ close the story issue         │
  │ /retro  (when suggested)      │
  └──────────────┬────────────────┘
                 └──────► /sketch the next story ... until the feature is done
@@ -166,7 +166,7 @@ STOP. Wait for you.
 
 | Rule | Why |
 |---|---|
-| Agents never merge, force-push, push to main/feature, or close issues | You own what lands. Enforced by the deny list and a guard hook that reads every shell command, not just prompts. |
+| Agents never merge, force-push, push to main/feature, or close the story issue (they close a task issue when its review is satisfied) | You own what lands. Enforced by the deny list and a guard hook that reads every shell command, not just prompts. |
 | Tests are written before the code, and are a contract | The implementer can't make its own test pass by editing it. Only a fresh test-writer can change a test, and only on the acceptance criteria. |
 | Fresh agent every round | No anchoring on the last attempt. |
 | Round caps (3 / 2 / 2 / 3) | No grinding. Hit the cap → flag the task, carry on with the tasks that don't depend on it. |
@@ -174,7 +174,7 @@ STOP. Wait for you.
 | The orchestrator never runs tests | It gets verdicts, not logs. Its context stays small. |
 | One commit prefix per task (`t-3: ...`), no squashing | You can read the PR task by task. |
 | Every task adds a CHANGELOG line ending `(#issue)` | Missing = must fix. |
-| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`, tests are run and read through `sketch-tests` (structured result files, never console text), every agent hands in its report through `sketch-report`, the "can a new story start?" answer and the WIP commit message come from `sketch-state`, the developer's own journal lines from `sketch-journal`, and which refuses an incomplete or self-contradicting one (a reviewer cannot say SATISFIED with a must-fix open). The PR description is rendered by `sketch-pr`, and a hook (`sketch-guard`) blocks merges, force pushes, pushes to main or the feature branch, and issue closing before they run. Same input, same answer, every time. |
+| Mechanical rules are tools, not prompts | `state.md` and `journal.md` change only through `sketch-state` and `sketch-journal`, which reject bad values and refuse to pass a cap. Commit prefixes, untouched tests, the changelog line and a clean tree are checked by `sketch-repo-check`. The task file, the config and the order tasks run in come from `sketch-plan`, tests are run and read through `sketch-tests` (structured result files, never console text), every agent hands in its report through `sketch-report`, the "can a new story start?" answer and the WIP commit message come from `sketch-state`, the developer's own journal lines from `sketch-journal`, and which refuses an incomplete or self-contradicting one (a reviewer cannot say SATISFIED with a must-fix open). The PR description is rendered by `sketch-pr`, and a hook (`sketch-guard`) blocks merges, force pushes, pushes to main or the feature branch, and closing any issue but a task of the running story before they run. Same input, same answer, every time. |
 
 Caps and rules: [`core/conventions.md`](core/conventions.md).
 
@@ -211,7 +211,7 @@ Commits story-2: glossary
 
 1. `/sketch <idea>`. On the default branch it offers to create and push a feature branch (you agree to the name), or you create it yourself first. It checks whether something like the idea exists, then **stops and lets you explain**. Say as little or as much as you like: the less you say, the more it leads. It exits only when you approve its playback.
 2. That approval is the only one per story. The orchestrator then splits the story into tasks, creates the issues, runs the loop and opens the PR on its own. It shows you the task list as it goes but does not wait. Walk away.
-3. Review the PR. **Flags are at the top.** Merge it, close the issues.
+3. Review the PR. **Flags are at the top.** Merge it and close the story issue (agents close a task issue when its review is satisfied).
 4. `/sketch` again. It shows a one-line summary of the last story and suggests a `/retro` when it looks worth it.
 5. Feature done: open the big PR to main yourself, let the team review, then `/retro final <PR#>`.
 

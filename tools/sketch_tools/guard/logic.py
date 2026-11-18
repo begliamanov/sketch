@@ -1,7 +1,7 @@
 """Pure guard rules: given a shell command, say why it must not run. No file access.
 
 Rules (core/conventions.md): agents never merge, never force-push, never push to the feature branch
-or main, never close issues. `git push` must name its branch (the PR agent already does:
+or main, never close the story issue or any issue outside the running story's tasks. `git push` must name its branch (the PR agent already does:
 `git push -u origin <story-branch>`), because without calling git there is no way to know which
 branch a bare `git push` would update."""
 
