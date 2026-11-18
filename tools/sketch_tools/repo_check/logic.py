@@ -77,10 +77,13 @@ def _added_lines(diff: str) -> Tuple[List[Tuple[Optional[str], str]], bool]:
     return added, saw_unreleased
 
 
-def check_changelog(diff: str, issue: str) -> List[str]:
+def check_changelog(diff: str, issue: Optional[str] = None, *,
+                    story_issues: Optional[List[str]] = None) -> List[str]:
     """A full-context unified diff of CHANGELOG.md. Exactly one added line under `## Unreleased`,
     a list item ending in `(#<issue>)`."""
-    if not re.fullmatch(r"\d+", issue):
+    if story_issues is not None:
+        return ["story mode is not implemented"]  # stub for t-5
+    if issue is None or not re.fullmatch(r"\d+", issue):
         raise UsageError("issue must be a number (got " + repr(issue) + ")")
     added, saw_unreleased = _added_lines(diff)
     if not added:
