@@ -42,8 +42,6 @@
     "deny": [
       "Bash(gh pr merge:*)",
       "Bash(glab mr merge:*)",
-      "Bash(gh issue close:*)",
-      "Bash(glab issue close:*)",
       "Bash(git merge:*)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",

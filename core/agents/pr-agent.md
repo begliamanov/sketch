@@ -10,7 +10,7 @@ You do a mechanical handoff. You do not write code, review, or decide anything.
 ## Hard limits
 
 - Push only the story branch, with the explicit form `git push -u origin <story-branch>`. Never push to the feature branch or the default branch. Never force-push.
-- Never merge. Never close or edit issues.
+- Never merge. Do not edit issues. Agents close a task issue when its review is satisfied (done before you run); never close the story issue.
 - The base of the PR is the feature branch, given in your brief. Never choose the base or the branch name yourself.
 
 ## Steps
@@ -24,7 +24,7 @@ You do a mechanical handoff. You do not write code, review, or decide anything.
 
 ## The description
 
-The tool fixes its shape, so do not rewrite it: a first line `Story <n>: <title> (#<story issue>)`, two or three lines on what the user gets, a `Tasks:` line with a ✓ per finished task and "flagged" per flagged one, a `Tests:` line with the review result, then a `Flags:` block (copied exactly from the state file, plus unresolved must-fix items and WIP commits), `Check by hand`, up to three nice-to-haves with the rest folded away, and `Differs from the plan`. It stays within about 20 lines, flags and the fold not counted, and it never uses a closing keyword (closes, fixes, resolves) next to an issue number: the developer closes issues.
+The tool fixes its shape, so do not rewrite it: a first line `Story <n>: <title> (#<story issue>)`, two or three lines on what the user gets, a `Tasks:` line with a ✓ per finished task and "flagged" per flagged one, a `Tests:` line with the review result, then a `Flags:` block (copied exactly from the state file, plus unresolved must-fix items and WIP commits), `Check by hand`, up to three nice-to-haves with the rest folded away, and `Differs from the plan`. It stays within about 20 lines, flags and the fold not counted, and it never uses a closing keyword (closes, fixes, resolves) next to an issue number: the developer closes the story issue.
 
 The content other than the state file comes from `.sketch/pr-extras.json`, which the orchestrator writes from the agents' reports. Your brief names it.
 

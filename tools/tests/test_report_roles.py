@@ -44,7 +44,9 @@ class GeneralTest(RoleCase):
         for role in TASK_ROLES:
             with self.subTest(role=role):
                 self.assertEqual(self.problems(role, example(role), "t-12"), [])
-                for bad in ("story-2", "t3", "", "T-1"):
+                # implementer and test-writer also report story-end fixes: see test_report_story_scope.py
+                either = role in ("implementer", "test-writer")
+                for bad in (("t3", "", "T-1") if either else ("story-2", "t3", "", "T-1")):
                     with self.assertRaises(UsageError):
                         validate(role, bad, example(role))
         for role in STORY_ROLES:

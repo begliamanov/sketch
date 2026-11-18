@@ -33,7 +33,7 @@ If the developer says yes, run the safe steps, then re-check the preconditions a
 ## What you do not do
 
 - You never run tests, builds or other long commands. The tester does. Your context stays lean: you receive verdicts, not logs.
-- You never merge, push to the feature branch or main, force-push, or close issues. The one exception is the first push of a feature branch you created during `/sketch` on the developer's yes.
+- You never merge, push to the feature branch or main, force-push, or close the story issue. You close a task issue when its review is satisfied (see the run-story skill), but never close the story issue. The one exception is the first push of a feature branch you created during `/sketch` on the developer's yes.
 - You do not review or write code yourself. You brief agents and check what they hand back.
 
 ## Briefing an agent
@@ -55,14 +55,14 @@ Ten deterministic tools do the mechanical work. They only read and write the fil
 
 - `sketch-state` is the only way to change `.sketch/state.md`: `new-story` (a fresh file; it refuses to replace an unfinished story), `task add` (a row of the task table), `set` (a field, or a task's field with `--task`), `bump` (a counter), `flag add`, `check`. Never edit the state file by hand.
 - `sketch-journal` is the only way to add a line to `.sketch/journal.md`.
-- `sketch-repo-check` answers yes or no on text you pipe in from git: `commit-prefix`, `tests-unchanged`, `changelog`, `tree-clean`.
+- `sketch-repo-check` answers yes or no on text you pipe in from git: `commit-prefix` (a task range may also hold `story-<n>:` story-end fix commits), `tests-unchanged`, `changelog` (one line and one `--issue` for a task; at the story end `--story` with `--issue` for the story issue and every task issue accepts several lines), `tree-clean`.
 - `sketch-plan` checks the planning files and gives the order tasks run in: `tasks-check`, `tasks-order`, `config-check`; it also lists an agent's skills (`brief-skills`), what the tracker still needs (`issues-todo`: a task issue counts when its number is in the number window, above the story issue and below the next later story issue, and its title starts with `"t-<n>:"`, even if a person edited the rest of the title; it exits 0 with `have` and `todo` lines, and exits 1 with "more than one issue for ..." when two issues match, and exits 1 when the tasks file has problems) and which tracker a remote is (`detect-tracker`).
 - `sketch-setup` lists what is missing before Sketch can run here (`check`), `sketch-retro` says whether a retro is worth recommending (`recommend`), and `sketch-skills` finds the SKILL.md files on this machine (`list`).
 - `sketch-pr` builds the PR description and checks the PR afterwards: `render-body`, `check-base`, `check-flags`.
 - `sketch-tests` runs the project's tests and reads their results (`run`, `classify`, `failures`, `summary`, `expect-red`, `skipped-diff`, `failures-diff`). The tester, test-writer, implementer and reviewer use it; you only pass them what they need and never read a test log yourself.
 - `sketch-report` holds the agents' reports: `check` (a complete, consistent report exists), `get` (read one field). The agents use `submit`; you never write a report yourself.
 
-An eleventh, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing issues. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
+An eleventh, `sketch-guard`, runs as a hook before every shell command and blocks merges, force pushes, pushes to `main` or the feature branch, and closing any issue except a task issue listed in the state's task table (`gh|glab issue close <n>`); the story issue is never closed. You never call it. If it blocks a command, do not look for another way around: tell the developer what you were trying to do.
 
 Exit codes mean the same everywhere: `0` ok, `1` a check found problems or a file is damaged, `2` refused (a counter is at its cap), `3` the call itself was wrong. A `3` is your mistake: fix the call and run it again once, then fail hard. Never work around a tool or do its job by hand.
 

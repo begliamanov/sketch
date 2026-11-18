@@ -4,6 +4,10 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 
 ## Unreleased
 
+- `sketch-repo-check changelog --story --issue <n> --issue <m> ...` accepts several new lines under Unreleased, each a list item ending in `(#<n>)` for one of the story's issue numbers; task mode stays strict, and repeated `--issue` without `--story` is a usage error (#19)
+- `sketch-repo-check commit-prefix --task t-<n>` accepts `story-<n>:` commits (story-end fixes) in a task's range as well as the task's own prefix; other prefixes still fail (#18)
+- `sketch-report` accepts a story scope (`story-<n>`) from the test-writer and implementer as well as a task scope, so their story-end fixes can be reported; roles with one scope kind keep it (#17)
+- Agents close a task issue when its review is satisfied, with a comment naming the task's commit SHAs, and never close the story issue (#16)
 - The xcresult reader keeps system failures (Test Case nodes under a "System Failures" suite) out of the passed/failed counts and keeps their message (#8)
 - `sketch-tests classify` and `summary` treat system failures as CANNOT RUN (alone) or name them in the FAIL reason, and never count them as passed or failed (#9)
 - `sketch-plan issues-todo` matches task issues of the current story only: above the story issue's number, below the next later story issue's, and titled `t-<n>:` (#10)
@@ -11,6 +15,7 @@ Sketch follows [semantic versioning](https://semver.org). The current version is
 - `sketch-tests summary --json` prints `{"counts": {...}}`, plus a top-level `system_failures` list only when there are any, so the tester can take `counts` as it is (#9)
 - `sketch-plan issues-todo` marks a link `todo` when either of its tasks is `todo`, so links from earlier stories no longer hide the current story's links; the task-writer passes only the current story's links (#11)
 - `sketch-report` requires `counts` in a tester report that says PASS or FAIL; it stays optional on CANNOT RUN, and the tester agent says so (#12)
+- `sketch-guard` lets `gh|glab issue close <n>` through when <n> is a task issue in the current state file's task table; the story issue, other numbers, a missing or unreadable state file and `api ... state=closed` stay blocked, and the message says why (#15)
 
 ## 0.1.1
 

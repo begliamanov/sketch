@@ -29,6 +29,11 @@ class CommitPrefixCliTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("t-2: b", out)
 
+    def test_the_task_option_accepts_a_story_end_fix_commit(self) -> None:
+        code, out, err = run_tool(main, ["commit-prefix", "--task", "t-3"],
+                                  stdin="t-3: a\nstory-2: fix\n")
+        self.assertEqual((code, out, err), (0, "ok\n", ""))
+
     def test_a_bad_task_exits_3(self) -> None:
         code, out, err = run_tool(main, ["commit-prefix", "--task", "t3"], stdin="t-1: x\n")
         self.assertEqual((code, out), (3, ""))
@@ -77,6 +82,39 @@ class ChangelogCliTest(unittest.TestCase):
         self.assertIn("--issue", err)
         code, _, _ = run_tool(main, ["changelog", "--issue", "abc"], stdin=CHANGELOG_OK)
         self.assertEqual(code, 3)
+
+
+STORY_DIFF = (
+    "diff --git a/CHANGELOG.md b/CHANGELOG.md\n--- a/CHANGELOG.md\n+++ b/CHANGELOG.md\n"
+    "@@ -1,3 +1,5 @@\n # Changelog\n \n ## Unreleased\n+- Close task issues (#15)\n+- Fix the story-end step (#14)\n"
+)
+
+
+class ChangelogStoryCliTest(unittest.TestCase):
+    """t-5: `changelog --story --issue 14 --issue 15 ...` names the story's issue numbers."""
+
+    def test_several_lines_ending_in_story_issues_pass(self) -> None:
+        args = ["changelog", "--story", "--issue", "14", "--issue", "15"]
+        code, out, err = run_tool(main, args, stdin=STORY_DIFF)
+        self.assertEqual((code, out, err), (0, "ok\n", ""))
+
+    def test_a_line_ending_in_a_number_outside_the_story_exits_1(self) -> None:
+        code, out, _ = run_tool(main, ["changelog", "--story", "--issue", "15"], stdin=STORY_DIFF)
+        self.assertEqual(code, 1)
+        self.assertIn("does not end with", out)
+        self.assertIn("(#14)", out)
+
+    def test_a_story_without_a_new_line_exits_1(self) -> None:
+        empty = "--- a/CHANGELOG.md\n+++ b/CHANGELOG.md\n@@ -1,2 +1,2 @@\n ## Unreleased\n \n"
+        code, out, _ = run_tool(main, ["changelog", "--story", "--issue", "14"], stdin=empty)
+        self.assertEqual(code, 1)
+        self.assertIn("no new line under Unreleased", out)
+
+    def test_task_mode_with_two_issues_is_a_usage_error(self) -> None:
+        args = ["changelog", "--issue", "14", "--issue", "15"]
+        code, _, err = run_tool(main, args, stdin=STORY_DIFF)
+        self.assertEqual(code, 3)
+        self.assertIn("--story", err)
 
 
 class TreeCleanCliTest(unittest.TestCase):

@@ -71,7 +71,8 @@ class SubmitTest(ReportCliCase):
 
     def test_an_unknown_role_a_bad_scope_or_a_bad_run_exit_3(self) -> None:
         self.assertEqual(self.submit(example("implementer"), role="janitor")[0], 3)
-        self.assertEqual(self.submit(example("implementer"), scope="story-2")[0], 3)
+        # the reviewer keeps a fixed (task) scope kind; implementer and test-writer accept story-<n> since t-3
+        self.assertEqual(self.submit(example("reviewer"), role="reviewer", scope="story-2")[0], 3)
         self.assertEqual(self.submit(example("implementer"), run="0")[0], 3)
         self.assertEqual(self.submit(example("implementer"), run="x")[0], 3)
 

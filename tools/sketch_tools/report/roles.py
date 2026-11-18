@@ -404,8 +404,8 @@ def _retro_agent_rules(report: Dict[str, Any]) -> List[str]:
 ROLES: Dict[str, Role] = {
     role.name: role
     for role in (
-        Role("implementer", "task", _IMPLEMENTER, _implementer_rules, True),
-        Role("test-writer", "task", _TEST_WRITER, _test_writer_rules, True),
+        Role("implementer", "either", _IMPLEMENTER, _implementer_rules, True),
+        Role("test-writer", "either", _TEST_WRITER, _test_writer_rules, True),
         Role("reviewer", "task", _REVIEWER, _reviewer_rules, True),
         Role("story-reviewer", "story", _STORY_REVIEWER, _story_reviewer_rules, True),
         Role("tester", "either", _TESTER, _tester_rules, False, _tester_scope_rules),

@@ -1,7 +1,7 @@
 """repo-check: the pure checks, on the text git prints."""
 
 import unittest
-from typing import List
+from typing import List, Optional
 
 from sketch_tools.core.errors import UsageError
 from sketch_tools.repo_check.globs import glob_to_regex
@@ -90,8 +90,32 @@ class CommitPrefixTest(unittest.TestCase):
         self.assertEqual(len(check_commit_prefix(lines("t-10: x"), task="t-1")), 1)
         self.assertEqual(len(check_commit_prefix(lines("t-1: x"), task="t-10")), 1)
 
-    def test_a_story_prefix_does_not_pass_for_a_task(self) -> None:
-        self.assertEqual(len(check_commit_prefix(lines("story-2: fix"), task="t-3")), 1)
+    # Criterion 1 (t-4): a task range may contain story-end fix commits.
+    def test_a_story_end_fix_commit_passes_in_a_task_range(self) -> None:
+        text = lines("t-3: tests", "story-2: fix the changelog line", "t-3: [wip] x")
+        self.assertEqual(check_commit_prefix(text, task="t-3"), [])
+
+    def test_a_task_range_of_only_story_end_fix_commits_passes(self) -> None:
+        self.assertEqual(check_commit_prefix(lines("story-12: fix", "story-2: fix"), task="t-3"), [])
+
+    # Criterion 2 (plain task commits pass) is already covered, and green today, by
+    # test_with_a_task_only_that_prefix_passes above.
+
+    # Criterion 3: other or missing prefixes still fail, with today's messages.
+    def test_a_commit_without_a_prefix_still_fails_next_to_a_story_end_fix(self) -> None:
+        problems = check_commit_prefix(lines("story-2: fix", "fix typo", "t-3: ok"), task="t-3")
+        self.assertEqual(problems, ['"fix typo" has no t-3: prefix'])
+
+    def test_another_task_prefix_still_fails_next_to_a_story_end_fix(self) -> None:
+        problems = check_commit_prefix(lines("story-2: fix", "t-2: add banner"), task="t-3")
+        self.assertEqual(problems, ['"t-2: add banner" is not t-3'])
+
+    def test_a_malformed_story_prefix_fails(self) -> None:
+        # Addition: the valid story-2 line makes this red until story prefixes are accepted.
+        for bad in ("story2: fix", "story-: fix", "story-2:fix", "Story-2: fix", "story-x: fix"):
+            with self.subTest(subject=bad):
+                problems = check_commit_prefix(lines("story-2: fix", bad), task="t-3")
+                self.assertEqual(problems, ['"' + bad + '" has no t-3: prefix'])
 
     def test_a_bad_task_argument_is_a_usage_error(self) -> None:
         for bad in ("t3", "story-2", "", "T-1"):
@@ -198,6 +222,83 @@ class ChangelogTest(unittest.TestCase):
             with self.subTest(issue=bad):
                 with self.assertRaises(UsageError):
                     check_changelog(diff(*BASE, "+- x (#1)", *TAIL), bad)
+
+
+class ChangelogStoryModeTest(unittest.TestCase):
+    """t-5: `changelog --story` takes the story's issue numbers and accepts one new list item per
+    story line; task mode (a single issue) stays strict."""
+
+    STORY = ["14", "15", "16"]
+
+    def problems(self, text: str, story_issues: Optional[List[str]] = None) -> List[str]:
+        return check_changelog(text, story_issues=story_issues or self.STORY)
+
+    def assert_problem(self, text: str, *needles: str) -> None:
+        found = self.problems(text)
+        self.assertTrue(any(all(n in p for n in needles) for p in found), found)
+
+    # Criterion 1: several new list items, each ending in a story issue, pass.
+    def test_two_new_list_items_ending_in_story_issues_pass(self) -> None:
+        text = diff(*BASE, "+- Guard allows closing a task issue (#15)", "+- Agents close task issues (#16)", *TAIL)
+        self.assertEqual(self.problems(text), [])
+
+    def test_a_story_line_may_end_in_the_story_issue_itself(self) -> None:
+        # Addition: a story-end fix line carries the story issue number.
+        text = diff(*BASE, "+- Fix the story-end step (#14)", "+- Agents close task issues (#16)", *TAIL)
+        self.assertEqual(self.problems(text), [])
+
+    def test_one_new_line_passes_in_story_mode(self) -> None:
+        # Addition: "several" includes one.
+        self.assertEqual(self.problems(diff(*BASE, "+- Add export (#15)", *TAIL)), [])
+
+    def test_existing_unreleased_lines_are_not_checked_against_the_story(self) -> None:
+        # Addition: only new lines count, old ones may end in any number.
+        text = diff(*BASE, " - Earlier entry (#100)", "+- Add export (#15)", *TAIL)
+        self.assertEqual(self.problems(text), [])
+
+    # Criterion 2: a non-list line or a foreign issue number fails.
+    def test_a_line_ending_in_a_foreign_issue_number_fails(self) -> None:
+        text = diff(*BASE, "+- Good line (#15)", "+- Foreign line (#99)", *TAIL)
+        self.assert_problem(text, "does not end with", "Foreign line (#99)")
+        self.assertFalse(any("Good line" in p for p in self.problems(text)))
+
+    def test_a_line_without_an_issue_number_fails(self) -> None:
+        self.assert_problem(diff(*BASE, "+- No number here", *TAIL), "does not end with", "No number here")
+
+    def test_a_non_list_line_fails(self) -> None:
+        text = diff(*BASE, "+Plain prose (#15)", "+- Good line (#16)", *TAIL)
+        self.assert_problem(text, "not a list item", "Plain prose (#15)")
+
+    def test_an_issue_number_that_only_starts_with_a_story_number_fails(self) -> None:
+        # Addition: (#150) is not (#15).
+        self.assert_problem(diff(*BASE, "+- Add export (#150)", *TAIL), "does not end with", "(#150)")
+
+    # Criterion 3: no new line under Unreleased fails.
+    def test_no_new_line_fails(self) -> None:
+        self.assert_problem(diff(*BASE, *TAIL), "no new line under Unreleased")
+        self.assert_problem("", "no new line under Unreleased")
+
+    # Criterion 5: lines outside Unreleased are not counted.
+    def test_a_line_added_under_a_released_version_is_not_counted_as_a_story_line(self) -> None:
+        text = diff(*BASE, "+- Add export (#15)", *TAIL, "+- Old fix (#99)")
+        found = self.problems(text)
+        self.assertTrue(any("not under Unreleased" in p and "Old fix" in p for p in found), found)
+        self.assertFalse(any("does not end with" in p for p in found), found)
+
+    def test_a_released_line_alone_does_not_satisfy_story_mode(self) -> None:
+        self.assert_problem(diff(*BASE, *TAIL, "+- Old fix (#15)"), "no new line under Unreleased")
+
+    # Usage errors.
+    def test_an_empty_story_issue_list_is_a_usage_error(self) -> None:
+        with self.assertRaises(UsageError):
+            check_changelog(diff(*BASE, "+- x (#1)", *TAIL), story_issues=[])
+
+    def test_a_non_numeric_story_issue_is_a_usage_error(self) -> None:
+        with self.assertRaises(UsageError):
+            check_changelog(diff(*BASE, "+- x (#1)", *TAIL), story_issues=["14", "abc"])
+
+    # Criterion 4 (task mode stays strict: two lines, wrong number fail) is already covered, and
+    # green today, by ChangelogTest above.
 
 
 class TreeCleanTest(unittest.TestCase):

@@ -17,15 +17,16 @@ from sketch_tools.core import exitcodes
 from sketch_tools.core.cli import Env, Tool
 from sketch_tools.core.errors import RefusedError, ToolError
 from sketch_tools.guard import logic
-from sketch_tools.state.logic import header_value
+from sketch_tools.state.logic import header_value, read_tasks
 
 
 def _configure_check_command(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--protect", action="append", default=[], metavar="BRANCH",
                         help="a branch nobody may push to, like main. Repeat for more.")
     parser.add_argument("--state", metavar="PATH",
-                        help="the state file: its feature_branch is protected too. A missing file is fine "
-                             "(no story running); one without a feature_branch blocks every push.")
+                        help="the state file: its feature_branch is protected too. A missing file blocks every "
+                             "issue close; one without a feature_branch blocks every push. Its task table says "
+                             "which issues may be closed.")
     parser.add_argument("--raw", action="store_true",
                         help="stdin is the command itself, not the hook's JSON (for trying it out)")
 
@@ -64,6 +65,24 @@ def _protection(args: argparse.Namespace) -> "tuple[List[str], Optional[str]]":
     return protected + [feature], None
 
 
+def _closable_issues(args: argparse.Namespace) -> "tuple[List[str], Optional[str]]":
+    """The issue numbers of the current story's tasks, and a reason to refuse every close when the
+    state file cannot say (not given, missing, unreadable, no task table)."""
+    if not args.state:
+        return [], "no state file is given, so closing an issue cannot be checked"
+    path = Path(args.state)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return [], str(path) + " does not exist, so closing an issue cannot be checked"
+    except OSError as err:
+        return [], "cannot read " + str(path) + " (" + str(err.strerror) + "), so closing an issue cannot be checked"
+    try:
+        return [row["issue"] for row in read_tasks(text)], None
+    except ToolError:
+        return [], str(path) + " has no task table, so closing an issue cannot be checked"
+
+
 def _run_check_command(args: argparse.Namespace, env: Env) -> int:
     raw = env.stdin.read()
     command = raw.strip("\n") if args.raw else _command_from_hook(raw)
@@ -71,7 +90,8 @@ def _run_check_command(args: argparse.Namespace, env: Env) -> int:
         return exitcodes.OK
     try:
         protected, push_block = _protection(args)
-        reasons = logic.check_command(command, protected, push_block)
+        task_issues, close_block = _closable_issues(args)
+        reasons = logic.check_command(command, protected, push_block, task_issues, close_block)
     except ToolError:
         raise
     except Exception as err:  # a bug in the guard must never let a command through

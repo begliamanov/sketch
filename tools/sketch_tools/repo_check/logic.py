@@ -9,13 +9,14 @@ from sketch_tools.core.errors import UsageError
 from sketch_tools.repo_check.globs import glob_to_regex
 
 _TASK = re.compile(r"t-\d+")
+_STORY_PREFIX = re.compile(r"story-\d+: \S.*")
 _ANY_PREFIX = re.compile(r"(?:t-\d+|story-\d+): \S.*")
 _UNRELEASED = "Unreleased"
 
 
 def check_commit_prefix(subjects: str, task: Optional[str] = None) -> List[str]:
     """Commit subjects, one per line. Each must start with `t-N: ` or `story-N: `; with a task
-    given, with exactly `<task>: `. Blank lines are ignored."""
+    given, with exactly `<task>: ` or `story-N: ` (a story-end fix). Blank lines are ignored."""
     required: Optional[re.Pattern[str]] = None
     if task is not None:
         if not _TASK.fullmatch(task):
@@ -27,7 +28,7 @@ def check_commit_prefix(subjects: str, task: Optional[str] = None) -> List[str]:
         if not line.strip():
             continue
         if required is not None:
-            if required.fullmatch(line):
+            if required.fullmatch(line) or _STORY_PREFIX.fullmatch(line):
                 continue
             if _ANY_PREFIX.fullmatch(line):
                 problems.append('"' + line + '" is not ' + str(task))
@@ -76,10 +77,14 @@ def _added_lines(diff: str) -> Tuple[List[Tuple[Optional[str], str]], bool]:
     return added, saw_unreleased
 
 
-def check_changelog(diff: str, issue: str) -> List[str]:
+def check_changelog(diff: str, issue: Optional[str] = None, *,
+                    story_issues: Optional[List[str]] = None) -> List[str]:
     """A full-context unified diff of CHANGELOG.md. Exactly one added line under `## Unreleased`,
-    a list item ending in `(#<issue>)`."""
-    if not re.fullmatch(r"\d+", issue):
+    a list item ending in `(#<issue>)`. With `story_issues`, one or more such lines, each ending
+    in `(#<n>)` for one of those issue numbers."""
+    if story_issues is not None:
+        return _check_story_changelog(diff, story_issues)
+    if issue is None or not re.fullmatch(r"\d+", issue):
         raise UsageError("issue must be a number (got " + repr(issue) + ")")
     added, saw_unreleased = _added_lines(diff)
     if not added:
@@ -104,6 +109,37 @@ def check_changelog(diff: str, issue: str) -> List[str]:
             problems.append("new line is not a list item: " + text)
         if not text.endswith("(#" + issue + ")"):
             problems.append("new line does not end with (#" + issue + "): " + text)
+    return problems
+
+
+def _check_story_changelog(diff: str, story_issues: List[str]) -> List[str]:
+    if not story_issues:
+        raise UsageError("give at least one story issue number")
+    for number in story_issues:
+        if not re.fullmatch(r"\d+", number):
+            raise UsageError("issue must be a number (got " + repr(number) + ")")
+    added, saw_unreleased = _added_lines(diff)
+    if not added:
+        return ["no new line under Unreleased"]
+    if not saw_unreleased:
+        return [
+            "cannot find the Unreleased heading in the diff: pass a full-context diff "
+            "(git diff -U99999 ... -- CHANGELOG.md)"
+        ]
+    problems: List[str] = []
+    endings = ["(#" + number + ")" for number in story_issues]
+    inside = [content for section, content in added if section == _UNRELEASED]
+    for section, content in added:
+        if section != _UNRELEASED:
+            problems.append("new line is not under Unreleased: " + content)
+    if not inside:
+        problems.append("no new line under Unreleased")
+    for content in inside:
+        text = content.rstrip()
+        if not text.startswith("- "):
+            problems.append("new line is not a list item: " + text)
+        if not any(text.endswith(ending) for ending in endings):
+            problems.append("new line does not end with " + " or ".join(endings) + ": " + text)
     return problems
 
 
