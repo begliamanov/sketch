@@ -19,6 +19,9 @@ Reader = Callable[[str], List[Case]]
 BUILTIN: Dict[str, Reader] = {junit.FORMAT: junit.read, xcresult.FORMAT: xcresult.read}
 BUILTIN_NAMES: Sequence[str] = tuple(BUILTIN)
 
+# Formats whose runner reports system failures apart from the tests (see the glossary).
+SYSTEM_FAILURES: Dict[str, Reader] = {xcresult.FORMAT: xcresult.read_system_failures}
+
 
 def _load(path: Path) -> object:
     """Run one reader file. No bytecode is written next to it."""

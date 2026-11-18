@@ -22,12 +22,28 @@ def failing(cases: Sequence[Case]) -> List[Case]:
     return [case for case in cases if case.status == FAILED]
 
 
-def classify(exit_code: int, files_found: int, cases: Sequence[Case]) -> Tuple[str, str]:
+def describe_system_failures(system: Sequence[Case]) -> str:
+    """One line naming each system failure with its message."""
+    return "; ".join(
+        "system failure " + case.name + (": " + case.message if case.message else "") for case in system
+    )
+
+
+def classify(
+    exit_code: int, files_found: int, cases: Sequence[Case], system: Sequence[Case] = ()
+) -> Tuple[str, str]:
     """PASS, FAIL, CANNOT RUN or UNKNOWN, with the reason (empty for PASS). UNKNOWN is for a person
-    or an agent to judge: it cannot be told from the files whether the code or the environment broke."""
+    or an agent to judge: it cannot be told from the files whether the code or the environment broke.
+    `system` are the system failures: alone they mean CANNOT RUN, beside failing tests they are
+    named in the FAIL reason."""
     failed = len(failing(cases))
     if failed:
-        return FAIL, str(failed) + (" failing test" if failed == 1 else " failing tests")
+        reason = str(failed) + (" failing test" if failed == 1 else " failing tests")
+        if system:
+            reason += "; " + describe_system_failures(system)
+        return FAIL, reason
+    if system:
+        return CANNOT_RUN, describe_system_failures(system) + ": the tests could not run, the code was not judged"
     if cases:
         if exit_code == 0:
             return PASS, ""

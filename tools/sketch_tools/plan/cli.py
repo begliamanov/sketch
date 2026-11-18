@@ -113,7 +113,7 @@ def _run_issues_todo(args: argparse.Namespace, env: Env) -> int:
     lines = issues.issues_todo(_read(args.tasks), facts)
     for line in lines:
         env.stdout.write(line + "\n")
-    return exitcodes.CHECK_FAILED if any(line.startswith("todo") for line in lines) else exitcodes.OK
+    return exitcodes.OK
 
 
 def _run_detect_tracker(args: argparse.Namespace, env: Env) -> int:

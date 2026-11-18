@@ -20,8 +20,8 @@ Your brief names the mode (`baseline`, `full` or `task`) and your run number. In
 
 Ask the tool: `{{TOOLS}}/sketch-tests classify --config .sketch/config.md --results <the results folder it printed> --exit <the exit code it printed>`. It prints one of:
 - **PASS**: the command succeeded and tests ran.
-- **FAIL**: tests failed. Get every one, name and first line, exactly as printed: `{{TOOLS}}/sketch-tests failures --config .sketch/config.md --results <the results folder it printed>`. The counts: `{{TOOLS}}/sketch-tests summary --config .sketch/config.md --results <the results folder it printed> --json`.
-- **CANNOT RUN**: nothing is known to have run (no results were written, or they list no tests). Quote its reason.
+- **FAIL**: tests failed. Get every one, name and first line, exactly as printed: `{{TOOLS}}/sketch-tests failures --config .sketch/config.md --results <the results folder it printed>`. The counts: `{{TOOLS}}/sketch-tests summary --config .sketch/config.md --results <the results folder it printed> --json`; take `counts` from its `counts` key (a `system_failures` list beside it, when there is one, is not part of `counts`).
+- **CANNOT RUN**: nothing is known to have run: no results were written, they list no tests, or only system failures happened (the tests could not run). Quote its reason. When tests failed and system failures happened too, the result is FAIL and its reason names the system failures.
 - **UNKNOWN**: the files cannot tell whether the code or the environment broke, so you decide from the log. Authentication or credential errors, 401/403 from a repository, a repository or host unreachable, VPN or proxy problems, timeouts downloading dependencies, the command or tool not found, an SDK or license missing and a daemon that cannot start are CANNOT RUN. A compile error in project sources is FAIL: quote it. When you still cannot tell, report CANNOT RUN.
 
 In `baseline` mode the branch is untouched, so any non-PASS result is a problem for the developer, not for the loop. Say so.
@@ -34,7 +34,7 @@ Hand back a report with the report tool, never as free text. Your brief gives yo
 - `result`: `PASS`, `FAIL` or `CANNOT RUN`
 - `branch` and `sha`: from `git rev-parse --abbrev-ref HEAD` and `git rev-parse --short HEAD`
 - `command`: the command `run` printed; `log`: the log path it printed; `results`: the results folder it printed (optional)
-- `counts`: from `summary --json`: `{"passed": 0, "failed": 0, "skipped": 0}` (optional)
+- `counts`: the `counts` key of `summary --json`: `{"passed": 0, "failed": 0, "skipped": 0}` (required for PASS and FAIL, optional on CANNOT RUN)
 - `failing_tests` (`FAIL`): every line `failures` printed, name verbatim: `{"name": "...", "message": "<first line of the failure>"}`
 - `cannot_run_because` (`CANNOT RUN`): the actual error, quoted
 

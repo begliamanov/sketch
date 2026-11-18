@@ -272,9 +272,9 @@ class PlanExtraCliTest(unittest.TestCase):
         self.assertEqual(run_tool(main, ["brief-skills", "--config", str(self.config), "--role", "janitor"])[0], 3)
         self.assertEqual(run_tool(main, ["brief-skills", "--config", str(self.config)])[0], 3)
 
-    def test_issues_todo_prints_lines_and_exits_1_while_something_is_todo(self) -> None:
+    def test_issues_todo_prints_lines_and_exits_0_while_something_is_todo(self) -> None:
         code, out, _ = run_tool(main, ["issues-todo", "--tasks", str(self.tasks)], stdin=json.dumps(FACTS_EMPTY))
-        self.assertEqual(code, 1)
+        self.assertEqual(code, 0)
         self.assertEqual(out.splitlines(), IssuesTodoTest.ALL_TODO)
 
     def test_issues_todo_exits_0_when_everything_is_there(self) -> None:

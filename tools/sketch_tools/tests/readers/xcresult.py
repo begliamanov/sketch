@@ -42,18 +42,24 @@ def _case(node: dict) -> Case:
     return Case(str(name), status, _first_message(node) if status != PASSED else "")
 
 
-def _walk(node: Any, found: List[Case]) -> None:
+SYSTEM_FAILURES = "System Failures"
+
+
+def _walk(node: Any, found: List[Case], system: bool, in_system: bool = False) -> None:
+    """Collect the cases: the system failures when `system` is true, the real tests otherwise."""
     if not isinstance(node, dict):
         return
     if node.get("nodeType") == "Test Case":
-        found.append(_case(node))
+        if in_system == system:
+            found.append(_case(node))
         return
+    if node.get("nodeType") == "Test Suite" and node.get("name") == SYSTEM_FAILURES:
+        in_system = True
     for child in node.get("children", []):
-        _walk(child, found)
+        _walk(child, found, system, in_system)
 
 
-def read(text: str) -> List[Case]:
-    """The test cases in one xcresulttool JSON file. Raises ValueError when it is not one."""
+def _read(text: str, system: bool) -> List[Case]:
     try:
         data = json.loads(text)
     except ValueError as err:
@@ -62,5 +68,17 @@ def read(text: str) -> List[Case]:
         raise ValueError("not xcresulttool test-results JSON: there is no testNodes list")
     found: List[Case] = []
     for node in data["testNodes"]:
-        _walk(node, found)
+        _walk(node, found, system)
     return found
+
+
+def read(text: str) -> List[Case]:
+    """The test cases in one xcresulttool JSON file, system failures left out. Raises ValueError
+    when it is not one."""
+    return _read(text, False)
+
+
+def read_system_failures(text: str) -> List[Case]:
+    """The system failures in one xcresulttool JSON file: Test Case nodes under a Test Suite named
+    "System Failures". `read` leaves them out of its cases."""
+    return _read(text, True)
