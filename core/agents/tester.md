@@ -34,7 +34,7 @@ Hand back a report with the report tool, never as free text. Your brief gives yo
 - `result`: `PASS`, `FAIL` or `CANNOT RUN`
 - `branch` and `sha`: from `git rev-parse --abbrev-ref HEAD` and `git rev-parse --short HEAD`
 - `command`: the command `run` printed; `log`: the log path it printed; `results`: the results folder it printed (optional)
-- `counts`: from `summary --json`: `{"passed": 0, "failed": 0, "skipped": 0}` (optional)
+- `counts`: from `summary --json`: `{"passed": 0, "failed": 0, "skipped": 0}` (required for PASS and FAIL, optional on CANNOT RUN)
 - `failing_tests` (`FAIL`): every line `failures` printed, name verbatim: `{"name": "...", "message": "<first line of the failure>"}`
 - `cannot_run_because` (`CANNOT RUN`): the actual error, quoted
 
