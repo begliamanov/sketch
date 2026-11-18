@@ -78,10 +78,10 @@ def issues_todo(tasks_text: str, facts: Dict[str, Any]) -> List[str]:
                 continue
             task_issues.setdefault(task.group(1), []).append(issue["number"])
     if len(story_issues) > 1:
-        raise DataError("two issues for the story: " + " and ".join("#" + str(n) for n in story_issues))
+        raise DataError("more than one issue for the story: " + " and ".join("#" + str(n) for n in story_issues))
     for task_id, numbers in task_issues.items():
         if len(numbers) > 1:
-            raise DataError("two issues for " + task_id + ": " + " and ".join("#" + str(n) for n in numbers))
+            raise DataError("more than one issue for " + task_id + ": " + " and ".join("#" + str(n) for n in numbers))
 
     lines: List[str] = []
     lines.append(("have story: #" + str(story_issues[0])) if story_issues else ("todo story: " + story_title))
